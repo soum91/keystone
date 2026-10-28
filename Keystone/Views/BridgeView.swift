@@ -122,7 +122,11 @@ struct BridgeView: View {
                         Text("Changing Wi-Fi puts the bridge back into setup: join HomeSpan-Setup from your phone and pick the new network.")
                     }
                 } else {
-                    Section { Text("Waiting for the bridge…").foregroundStyle(.secondary) }
+                    Section {
+                        Text("Waiting for the bridge…").foregroundStyle(.secondary)
+                        if let e = store.lastError { Text(e).font(.caption).foregroundStyle(.secondary) }
+                        LabeledContent("Remote access on this phone", value: store.relay?.on == true ? "Set up" : "Not set up")
+                    }
                 }
 
                 Section {

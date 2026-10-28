@@ -9,6 +9,7 @@ struct DashboardView: View {
                 Theme.background
                 ScrollView {
                     VStack(spacing: 14) {
+                        problems
                         if let i = store.info {
                             header(i)
                             if let c = i.countdown { countdownCard(c) }
@@ -24,7 +25,7 @@ struct DashboardView: View {
                             if i.bar?.configured == true { barCard(i) }
                             if let r = i.ir?.remotes, !r.isEmpty { irCard(r) }
                             eventsCard(i)
-                        } else {
+                        } else if store.lastError == nil {
                             ProgressView().padding(.top, 80)
                         }
                     }
@@ -39,6 +40,28 @@ struct DashboardView: View {
     private var tempF: Bool { store.display.tempF }
 
     // MARK: Cards
+
+    @ViewBuilder private var problems: some View {
+        if store.forgotten {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("The bridge doesn't know this phone anymore", systemImage: "exclamationmark.triangle.fill")
+                    .fontWeight(.semibold).foregroundStyle(Theme.bad)
+                Text("It was reset, so Keystone's old pairing and remote-access key are gone. Pair again at home: controls and remote access start working right away.")
+                    .font(.caption).foregroundStyle(.secondary)
+                Button("Pair again") { Task { await store.repair() } }.buttonStyle(.borderedProminent).tint(Theme.yellow).foregroundStyle(.black)
+            }
+            .card()
+        } else if !store.reachable, let e = store.lastError {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Can't reach the bridge", systemImage: "wifi.exclamationmark").fontWeight(.semibold)
+                Text(e).font(.caption).foregroundStyle(.secondary)
+                Text(store.relay?.on == true ? "Keystone tried your Wi-Fi, then the remote relay." : "Remote access isn't set up on this phone yet: open Keystone once at home.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .card()
+        }
+    }
+
 
     private func header(_ i: BridgeInfo) -> some View {
         HStack(spacing: 12) {

@@ -18,6 +18,8 @@ final class Store: ObservableObject {
     @Published var updateRunning = false
     @Published var relay = RelayConfig.stored
     @Published var viaRelay = false
+    @Published var lastError: String?
+    @Published var forgotten = false   // the bridge was reset and no longer knows this phone
 
     private var pollTask: Task<Void, Never>?
     private var displayTask: Task<Void, Never>?
@@ -85,6 +87,23 @@ final class Store: ObservableObject {
         if borrowedOwner { show("Paired.") }
     }
 
+    /// After the bridge was reset: claim a fresh token at the same address, keeping everything else.
+    func repair() async {
+        do {
+            let token = try await BridgeAPI.claim(host: link.host, port: link.port)
+            link.token = token
+            BridgeLink.stored = link
+            forgotten = false
+            await fetchRelay()
+            await refresh()
+            show("Paired again. Remote access is set up for this phone.")
+        } catch BridgeError.alreadyPaired {
+            show("Another Keystone is paired. Reset Keystone's pairing in Bridge › Apps, or hold BOOT on the bridge for 8 s, then try again.")
+        } catch {
+            show("Do this at home on the bridge's Wi-Fi: \(error.localizedDescription)")
+        }
+    }
+
     func forget() {
         stopPolling()
         link = BridgeLink()
@@ -121,11 +140,15 @@ final class Store: ObservableObject {
         do {
             let i = try await BridgeAPI.info(link, timeout: 3)
             viaRelay = Transport.lastWasRelay
+            lastError = nil
             apply(i)
-            // At home: pick up the relay key (or a rotated one) so remote access works when away.
-            if !viaRelay, relay == nil || relay?.on != i.remote?.on, i.remote != nil { await fetchRelay() }
+            forgotten = i.auth == false
+            // At home: pick up the relay key (or a new one after a reset) so remote access works when away.
+            if !viaRelay, !forgotten, let r = i.remote,
+               relay == nil || relay?.on != r.on || (r.id != nil && relay?.id != r.id) { await fetchRelay() }
         } catch {
             reachable = false
+            lastError = error.localizedDescription
         }
     }
 

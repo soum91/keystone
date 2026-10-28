@@ -262,7 +262,8 @@ enum Transport {
                 let r = try await lan(link, method, path, headers, body, relayReady ? min(timeout, 2.5) : timeout)
                 lastWasRelay = false
                 return r
-            } catch let e as URLError where relayReady && [.timedOut, .cannotConnectToHost, .notConnectedToInternet, .networkConnectionLost, .cannotFindHost].contains(e.code) {
+            } catch let e as URLError where relayReady && e.code != .cancelled {
+                // Any network failure on the LAN path (cellular, VPN, other Wi-Fi): go through the relay.
                 lock.lock(); preferRelayUntil = Date().addingTimeInterval(45); lock.unlock()
             }
         }
