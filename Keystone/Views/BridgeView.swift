@@ -34,7 +34,7 @@ struct BridgeView: View {
                             Button { Task { await store.installUpdate() } } label: {
                                 Label("Update to build \(l.build)", systemImage: "arrow.down.circle.fill")
                             }
-                            .disabled(store.updating != nil && !(store.updating ?? "").hasPrefix("Updated") && !(store.updating ?? "").contains("failed"))
+                            .disabled(store.updateRunning)
                         } else if store.latest != nil {
                             LabeledContent("Updates", value: "Up to date")
                         }

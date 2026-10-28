@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 import WidgetKit
 
 @MainActor
@@ -14,6 +15,7 @@ final class Store: ObservableObject {
     @Published var toast: String?
     @Published var latest: Firmware.Latest?
     @Published var updating: String?
+    @Published var updateRunning = false
 
     private var pollTask: Task<Void, Never>?
     private var displayTask: Task<Void, Never>?
@@ -169,8 +171,16 @@ final class Store: ObservableObject {
     }
 
     func installUpdate() async {
-        guard let l = latest else { return }
+        guard let l = latest, !updateRunning else { return }
+        updateRunning = true
+        defer { updateRunning = false }
         updating = "Starting…"
+        // The bridge's web server handles one request at a time: no status polling while the upload runs.
+        stopPolling()
+        defer { startPolling() }
+        var bg = UIBackgroundTaskIdentifier.invalid
+        bg = UIApplication.shared.beginBackgroundTask(withName: "firmware") { UIApplication.shared.endBackgroundTask(bg) }
+        defer { UIApplication.shared.endBackgroundTask(bg) }
         do {
             try await Firmware.install(l, link: link) { msg in Task { @MainActor in self.updating = msg } }
             reachable = false
@@ -223,7 +233,6 @@ enum Firmware {
         guard (resp as? HTTPURLResponse)?.statusCode == 200, bin.count > 100_000, bin.first == 0xE9 else {
             throw BridgeError.message("The download didn't look like ESP32 firmware.")
         }
-        progress("Sending \(bin.count / 1024) KB to the bridge… keep Keystone open.")
         guard let u = BridgeAPI.url(link.host, link.port, "/api/update") else { throw BridgeError.message("Bad address.") }
         let boundary = "keystone-\(UUID().uuidString)"
         var body = Data()
@@ -232,10 +241,33 @@ enum Firmware {
         body.append(Data("\r\n--\(boundary)--\r\n".utf8))
         var req = URLRequest(url: u)
         req.httpMethod = "POST"
-        req.timeoutInterval = 180
+        req.timeoutInterval = 300
         req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         req.setValue(link.token, forHTTPHeaderField: header)
-        let (data, r) = try await URLSession.shared.upload(for: req, from: body)
+        req.setValue("close", forHTTPHeaderField: "Connection")
+        // Its own session: one connection, nothing else queued to the bridge, long timeouts.
+        let cfg = URLSessionConfiguration.ephemeral
+        cfg.httpMaximumConnectionsPerHost = 1
+        cfg.timeoutIntervalForRequest = 120
+        cfg.timeoutIntervalForResource = 600
+        let session = URLSession(configuration: cfg)
+        defer { session.finishTasksAndInvalidate() }
+        var result: (Data, URLResponse)?
+        var lastError: Error?
+        for attempt in 1...3 {
+            progress(attempt == 1 ? "Sending \(bin.count / 1024) KB to the bridge… keep Keystone open (about a minute)."
+                                  : "Connection dropped. Trying again (\(attempt) of 3)…")
+            do {
+                result = try await session.upload(for: req, from: body)
+                break
+            } catch let e as URLError where [.networkConnectionLost, .timedOut, .cannotConnectToHost, .notConnectedToInternet].contains(e.code) {
+                lastError = e
+                try? await Task.sleep(nanoseconds: 4_000_000_000)   // let the bridge drop the half-finished upload
+            }
+        }
+        guard let (data, r) = result else {
+            throw BridgeError.message("The upload kept dropping (\(lastError?.localizedDescription ?? "unknown")). Stay close to the router and try again, or flash the full file over USB.")
+        }
         let code = (r as? HTTPURLResponse)?.statusCode ?? 0
         if code == 401 { throw BridgeError.message("The bridge rejected Keystone's token.") }
         guard code == 200 else { throw BridgeError.message("Update failed: \(String(decoding: data, as: UTF8.self))") }
