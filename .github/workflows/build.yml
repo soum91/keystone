@@ -3,6 +3,7 @@ name: Build unsigned IPA
 on:
   push:
     branches: [main]
+    paths-ignore: ["Bridge/**", ".github/workflows/bridge.yml", "**.md"]
   workflow_dispatch:
 
 permissions:

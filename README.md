@@ -12,3 +12,8 @@ Pairing needs bridge firmware 1.4 or newer. Older bridges: update once from Afte
 ## Build
 
 Every push to `main` builds `Keystone-<version>-build-<N>.ipa` on GitHub Actions and publishes it as release `build-N` with a changelog. Sideload with AltStore, SideStore or Sideloadly (keep app extensions for the widget). FlareStore/AltStore source: `https://raw.githubusercontent.com/soum91/keystone/source/source.json`.
+
+## Bridge firmware
+
+The Keystone Bridge firmware lives in [`Bridge/`](Bridge/README.md) (moved here from soum91/afterglow). Every firmware change builds `KeystoneBridge-<chip>-build-<N>-{full,app}.bin` as release `firmware-build-N` and moves `firmware-latest`, which Keystone (and Afterglow) update from. Build numbers continue from the afterglow era (run + 100). The web installer is published to the `gh-pages` branch for https://soum91.github.io/keystone/.
+

@@ -1,0 +1,165 @@
+name: Build Keystone Bridge firmware
+
+on:
+  push:
+    branches: [main]
+    paths: ["Bridge/**", ".github/workflows/bridge.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # Firmware used to build in soum91/afterglow (up to build ~30). Keep numbers climbing so the apps
+  # still see newer builds as updates.
+  BUILD_OFFSET: 100
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install arduino-cli
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install ESP32 core and libraries
+        env:
+          ESP_URL: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+        run: |
+          arduino-cli core update-index --additional-urls "$ESP_URL"
+          arduino-cli core install esp32:esp32 --additional-urls "$ESP_URL"
+          arduino-cli lib update-index
+          arduino-cli lib install "HomeSpan" "ArduinoJson" "U8g2" "NimBLE-Arduino@2.5.1" "PubSubClient"
+          arduino-cli core list
+          arduino-cli lib list
+
+      - name: Compile for ESP32, ESP32-S3, ESP32-C3
+        run: |
+          set -o pipefail
+          BUILD=$(( ${{ github.run_number }} + BUILD_OFFSET ))
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+          # The bridge only listens for Bluetooth broadcasts; drop the other roles to save flash.
+          NIMBLE_FLAGS="-DCONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED -DCONFIG_BT_NIMBLE_ROLE_BROADCASTER_DISABLED -DCONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED"
+          mkdir -p dist
+          : > build.log
+          for chip in esp32 esp32s3 esp32c3; do
+            echo "=== $chip ===" | tee -a build.log
+            arduino-cli compile \
+              --fqbn "esp32:esp32:${chip}:PartitionScheme=min_spiffs" \
+              --build-property "compiler.cpp.extra_flags=-DFW_BUILD=$BUILD $NIMBLE_FLAGS" \
+              --build-property "compiler.c.extra_flags=$NIMBLE_FLAGS" \
+              --build-property "upload.maximum_size=2031616" \
+              --export-binaries --output-dir "build/${chip}" \
+              Bridge/KeystoneBridge 2>&1 | tee -a build.log
+            cp "build/${chip}/KeystoneBridge.ino.merged.bin" "dist/KeystoneBridge-${chip}-full.bin"
+            cp "build/${chip}/KeystoneBridge.ino.bin" "dist/KeystoneBridge-${chip}-app.bin"
+          done
+          ls -lh dist
+
+      - name: Publish build log
+        if: always()
+        run: |
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git checkout -B ci-logs-bridge
+          tail -n 400 build.log > ci-build.log 2>/dev/null || echo "no build.log produced" > ci-build.log
+          git add -f ci-build.log
+          git commit -m "Bridge CI log for ${GITHUB_SHA}" || true
+          git push -f origin ci-logs-bridge
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeystoneBridge-firmware
+          path: dist/*.bin
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="firmware-build-$BUILD"
+          mkdir -p rel
+          for f in dist/*.bin; do
+            n=$(basename "$f")
+            cp "$f" "rel/$(echo "$n" | sed -E "s/-(full|app)\.bin$/-build-$BUILD-\1.bin/")"
+          done
+          ls -lh rel
+          PREV=$(git describe --tags --abbrev=0 --match 'firmware-build-*' "$GITHUB_SHA" 2>/dev/null || true)
+          {
+            echo "## Keystone Bridge firmware (build $BUILD)"
+            echo
+            if [ -n "$PREV" ]; then
+              echo "### Changes since $PREV"
+              LOG=$(git log "$PREV..$GITHUB_SHA" --no-merges --pretty='- %s (%h)' -- Bridge .github/workflows/bridge.yml)
+            else
+              echo "### Changes"
+              LOG=$(git log "$GITHUB_SHA" --no-merges --pretty='- %s (%h)' -- Bridge .github/workflows/bridge.yml)
+            fi
+            echo
+            if [ -n "$LOG" ]; then echo "$LOG" | head -n 60; else echo "- Rebuild, no firmware changes"; fi
+            echo
+            echo "---"
+            echo "First install: flash \`KeystoneBridge-<chip>-build-$BUILD-full.bin\` at 0x0. Update: the \`-app.bin\` at 0x10000 keeps your Wi-Fi and Apple Home pairing. See Bridge/README.md."
+          } > fw-notes.md
+          cat fw-notes.md
+          gh release create "$TAG" rel/*.bin --target "$GITHUB_SHA" --title "Bridge firmware build $BUILD" --notes-file fw-notes.md --latest=false
+          # Moving pointer the app links to.
+          git tag -f firmware-latest "$GITHUB_SHA"
+          git push -f origin firmware-latest
+          if gh release view firmware-latest >/dev/null 2>&1; then
+            for a in $(gh release view firmware-latest --json assets --jq '.assets[].name'); do gh release delete-asset firmware-latest "$a" -y; done
+            gh release edit firmware-latest --title "Bridge firmware (latest: build $BUILD)" --notes-file fw-notes.md --latest=false
+          else
+            gh release create firmware-latest --title "Bridge firmware (latest: build $BUILD)" --notes-file fw-notes.md --latest=false
+          fi
+          gh release upload firmware-latest rel/*.bin --clobber
+
+      - name: Publish web installer (GitHub Pages, gh-pages branch)
+        if: success()
+        run: |
+          FW=$(grep -oP '#define FW_VERSION "\K[^"]+' Bridge/KeystoneBridge/KeystoneBridge.ino)
+          rm -rf site && mkdir -p site/fw
+          cp Bridge/web/index.html site/
+          cp dist/*-full.bin dist/*-app.bin site/fw/
+          for c in esp32 esp32s3 esp32c3; do mv "site/fw/KeystoneBridge-$c-build-$BUILD-app.bin" "site/fw/KeystoneBridge-$c-app.bin" 2>/dev/null || true; done
+          head -c 8192 /dev/zero | tr '\0' '\377' > site/fw/otadata-blank.bin
+          # Repair: blank boot selector + app only. Wi-Fi, Apple Home and app pairings (NVS, 0x9000) are untouched.
+          cat > site/manifest-keep.json <<JSON
+          {
+            "name": "Keystone Bridge (keep settings)",
+            "version": "$FW (build $BUILD)",
+            "new_install_prompt_erase": false,
+            "builds": [
+              { "chipFamily": "ESP32",    "parts": [{ "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32-app.bin",   "offset": 65536 }] },
+              { "chipFamily": "ESP32-S3", "parts": [{ "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32s3-app.bin", "offset": 65536 }] },
+              { "chipFamily": "ESP32-C3", "parts": [{ "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32c3-app.bin", "offset": 65536 }] }
+            ]
+          }
+          JSON
+          cat > site/manifest.json <<JSON
+          {
+            "name": "Keystone Bridge",
+            "version": "$FW (build $BUILD)",
+            "new_install_prompt_erase": true,
+            "builds": [
+              { "chipFamily": "ESP32",    "parts": [{ "path": "fw/KeystoneBridge-esp32-full.bin",   "offset": 0 }] },
+              { "chipFamily": "ESP32-S3", "parts": [{ "path": "fw/KeystoneBridge-esp32s3-full.bin", "offset": 0 }] },
+              { "chipFamily": "ESP32-C3", "parts": [{ "path": "fw/KeystoneBridge-esp32c3-full.bin", "offset": 0 }] }
+            ]
+          }
+          JSON
+          touch site/.nojekyll
+          cat site/manifest.json
+          cd site
+          git init -q -b gh-pages
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git add -A
+          git commit -qm "Web installer for firmware $FW build $BUILD"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages

@@ -279,14 +279,14 @@ enum Firmware {
     struct Latest: Equatable { var build: Int; var url: URL }
 
     static func latest(chip: String) async throws -> Latest? {
-        var req = URLRequest(url: URL(string: "https://api.github.com/repos/soum91/afterglow/releases/tags/firmware-latest")!)
+        var req = URLRequest(url: URL(string: "https://api.github.com/repos/soum91/keystone/releases/tags/firmware-latest")!)
         req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         let (data, _) = try await URLSession.shared.data(for: req)
         guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let assets = obj["assets"] as? [[String: Any]] else { return nil }
-        let prefix = "AfterglowBridge-\(chip)-build-"
         for a in assets {
-            guard let name = a["name"] as? String, name.hasPrefix(prefix), name.hasSuffix("-app.bin"),
+            guard let name = a["name"] as? String, name.hasSuffix("-app.bin"),
+                  let prefix = ["KeystoneBridge-\(chip)-build-", "AfterglowBridge-\(chip)-build-"].first(where: { name.hasPrefix($0) }),
                   let n = Int(name.dropFirst(prefix.count).dropLast("-app.bin".count)),
                   let s = a["browser_download_url"] as? String, let u = URL(string: s) else { continue }
             return Latest(build: n, url: u)
