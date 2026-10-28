@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.10",
+          "buildVersion": "10",
+          "date": "2026-10-28T19:04:49Z",
+          "localizedDescription": "- Control everything from the dashboard, at home or away (b951f75)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-10/Keystone-1.0.0-build-10.ipa",
+          "size": 763907,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.9",
           "buildVersion": "9",
           "date": "2026-10-28T18:54:28Z",
@@ -83,11 +92,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.9",
-      "versionDate": "2026-10-28T18:54:28Z",
-      "versionDescription": "- Health section for the bridge (7272d78)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-9/Keystone-1.0.0-build-9.ipa",
-      "size": 712345,
+      "version": "1.0.0.10",
+      "versionDate": "2026-10-28T19:04:49Z",
+      "versionDescription": "- Control everything from the dashboard, at home or away (b951f75)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-10/Keystone-1.0.0-build-10.ipa",
+      "size": 763907,
       "appPermissions": {}
     }
   ],
