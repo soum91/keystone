@@ -29,7 +29,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.0"
+#define FW_VERSION "1.9.1"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -996,6 +996,7 @@ static void handleInfo() {
 #endif
   if (safeMode && d["ac"].is<JsonObject>()) d["ac"]["error"] = "paused: bridge was crash-looping (safe mode)";
   relay::info(d);
+  d["auth"] = screen::adminOK();   // does the bridge know the phone asking? (false after a reset)
 #ifdef HAS_GOVEE
   govee::info(d);
 #endif

@@ -228,6 +228,7 @@ static void info(JsonDocument &d) {
   o["on"] = on;
   o["connected"] = (bool)connected;
   o["served"] = served;
+  o["id"] = id;   // not secret (the key is): lets a phone notice the bridge was reset and fetch the new key
   if (lastError.length()) o["error"] = lastError;
 }
 
