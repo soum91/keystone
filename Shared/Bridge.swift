@@ -113,7 +113,13 @@ struct DisplaySettings: Codable, Equatable {
 
 enum BridgeError: LocalizedError {
     case message(String)
-    var errorDescription: String? { if case .message(let m) = self { return m }; return nil }
+    case alreadyPaired
+    var errorDescription: String? {
+        switch self {
+        case .message(let m): return m
+        case .alreadyPaired: return "The bridge still remembers an older Keystone pairing."
+        }
+    }
 }
 
 enum BridgeAPI {
@@ -140,7 +146,7 @@ enum BridgeAPI {
         req.timeoutInterval = 5
         let (data, resp) = try await URLSession.shared.data(for: req)
         let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
-        if code == 409 { throw BridgeError.message("Keystone on another phone already paired with this bridge. Reset it from that phone (Bridge › Pairings), or flash the bridge again.") }
+        if code == 409 { throw BridgeError.alreadyPaired }
         if code == 400 { throw BridgeError.message("This bridge firmware is too old for Keystone. Update it once from Afterglow (Settings › Apple Home bridge › Firmware), then pair here.") }
         guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any], let t = obj["token"] as? String else {
             throw BridgeError.message("The bridge didn't hand out a token.")
@@ -162,6 +168,17 @@ enum BridgeAPI {
             throw BridgeError.message("The bridge didn't answer the claim.")
         }
         return t
+    }
+
+    /// Clears a stale Keystone pairing using the owner (Afterglow) token.
+    static func resetKeystone(host: String, port: Int, ownerToken: String) async throws {
+        guard let u = url(host, port, "/api/dev/reset?app=keystone") else { throw BridgeError.message("Bad address.") }
+        var req = URLRequest(url: u)
+        req.httpMethod = "POST"
+        req.timeoutInterval = 5
+        req.setValue(ownerToken, forHTTPHeaderField: "X-Afterglow-Token")
+        let (_, resp) = try await URLSession.shared.data(for: req)
+        guard (resp as? HTTPURLResponse)?.statusCode == 200 else { throw BridgeError.message("The bridge wouldn't clear the old pairing.") }
     }
 
     @discardableResult

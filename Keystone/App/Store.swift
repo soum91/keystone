@@ -54,7 +54,23 @@ final class Store: ObservableObject {
         }
         pairStatus = "Pairing…"
         defer { pairStatus = nil }
-        let token = try await BridgeAPI.claim(host: host, port: port)
+        var token: String
+        do {
+            token = try await BridgeAPI.claim(host: host, port: port)
+        } catch BridgeError.alreadyPaired {
+            // Keystone was deleted or reinstalled, so its old key is gone but the bridge remembers the pairing.
+            // If Afterglow isn't paired, borrow its slot to clear the stale Keystone pairing, then pair again.
+            pairStatus = "Clearing the old Keystone pairing…"
+            let owner: String
+            do {
+                owner = try await BridgeAPI.claimOwner(host: host, port: port)
+            } catch {
+                throw BridgeError.message("The bridge still remembers an older Keystone pairing, and Afterglow is paired so Keystone can't clear it itself. In Afterglow › Settings › Apple Home bridge, tap Reset Keystone pairing, then pair here.")
+            }
+            borrowedOwner = true
+            try await BridgeAPI.resetKeystone(host: host, port: port, ownerToken: owner)
+            token = try await BridgeAPI.claim(host: host, port: port)
+        }
         link = BridgeLink(host: host, port: port, token: token)
         BridgeLink.stored = link
         if borrowedOwner {
@@ -63,7 +79,7 @@ final class Store: ObservableObject {
         }
         apply(i)
         startPolling()
-        if borrowedOwner { show("Updated the bridge and paired.") }
+        if borrowedOwner { show("Paired.") }
     }
 
     func forget() {
