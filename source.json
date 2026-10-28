@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.13",
+          "buildVersion": "13",
+          "date": "2026-10-28T23:33:27Z",
+          "localizedDescription": "- Fix remote access after a bridge reset, and say why it can't connect (d941f23)\n- Firmware CI: build only for the plain ESP32 board (882d509)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-13/Keystone-1.0.0-build-13.ipa",
+          "size": 819499,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.12",
           "buildVersion": "12",
           "date": "2026-10-28T22:01:52Z",
@@ -110,11 +119,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.12",
-      "versionDate": "2026-10-28T22:01:52Z",
-      "versionDescription": "- Move the Keystone Bridge firmware here from soum91/afterglow (95557ad)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-12/Keystone-1.0.0-build-12.ipa",
-      "size": 805916,
+      "version": "1.0.0.13",
+      "versionDate": "2026-10-28T23:33:27Z",
+      "versionDescription": "- Fix remote access after a bridge reset, and say why it can't connect (d941f23)\n- Firmware CI: build only for the plain ESP32 board (882d509)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-13/Keystone-1.0.0-build-13.ipa",
+      "size": 819499,
       "appPermissions": {}
     }
   ],
