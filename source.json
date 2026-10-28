@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.12",
+          "buildVersion": "12",
+          "date": "2026-10-28T22:01:52Z",
+          "localizedDescription": "- Move the Keystone Bridge firmware here from soum91/afterglow (95557ad)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-12/Keystone-1.0.0-build-12.ipa",
+          "size": 805916,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.11",
           "buildVersion": "11",
           "date": "2026-10-28T20:26:32Z",
@@ -101,11 +110,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.11",
-      "versionDate": "2026-10-28T20:26:32Z",
-      "versionDescription": "- Camera card from the bridge (Nightjar's Vicohome camera) (77dc6ce)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-11/Keystone-1.0.0-build-11.ipa",
-      "size": 805844,
+      "version": "1.0.0.12",
+      "versionDate": "2026-10-28T22:01:52Z",
+      "versionDescription": "- Move the Keystone Bridge firmware here from soum91/afterglow (95557ad)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-12/Keystone-1.0.0-build-12.ipa",
+      "size": 805916,
       "appPermissions": {}
     }
   ],
