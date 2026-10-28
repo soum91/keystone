@@ -1,0 +1,41 @@
+{
+  "name": "Keystone by soum91",
+  "identifier": "io.github.soum91.keystone",
+  "subtitle": "Control panel for the home bridge",
+  "description": "Dashboard and settings for the ESP32 Apple Home bridge: room temperature, TV, purifier and lights status, the OLED screen's pages and night mode, firmware updates and pairings.",
+  "iconURL": "https://raw.githubusercontent.com/soum91/keystone/main/Keystone/Assets.xcassets/AppIcon.appiconset/icon.png",
+  "website": "https://github.com/soum91/keystone",
+  "sourceURL": "https://raw.githubusercontent.com/soum91/keystone/source/source.json",
+  "tintColor": "FFD60A",
+  "apps": [
+    {
+      "name": "Keystone",
+      "bundleIdentifier": "com.soum91.keystone",
+      "developerName": "soum91",
+      "subtitle": "Control panel for the home bridge",
+      "localizedDescription": "Dashboard and settings for the ESP32 Apple Home bridge: room temperature, TV, purifier and lights status, the OLED screen's pages and night mode, firmware updates and pairings.",
+      "iconURL": "https://raw.githubusercontent.com/soum91/keystone/main/Keystone/Assets.xcassets/AppIcon.appiconset/icon.png",
+      "tintColor": "FFD60A",
+      "category": "utilities",
+      "screenshotURLs": [],
+      "versions": [
+        {
+          "version": "1.0.0.3",
+          "buildVersion": "3",
+          "date": "2026-10-28T03:26:18Z",
+          "localizedDescription": "- README: what Keystone does (4e8f0a4)\n- Keystone: control panel for the home bridge (7203e29)\n- Initial commit (867b9c2)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-3/Keystone-1.0.0-build-3.ipa",
+          "size": 545821,
+          "minOSVersion": "17.0"
+        }
+      ],
+      "version": "1.0.0.3",
+      "versionDate": "2026-10-28T03:26:18Z",
+      "versionDescription": "- README: what Keystone does (4e8f0a4)\n- Keystone: control panel for the home bridge (7203e29)\n- Initial commit (867b9c2)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-3/Keystone-1.0.0-build-3.ipa",
+      "size": 545821,
+      "appPermissions": {}
+    }
+  ],
+  "news": []
+}
