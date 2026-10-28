@@ -17,6 +17,7 @@ struct DashboardView: View {
                                 airCard(i)
                             }
                             if i.ac?.configured == true { acCard(i) }
+                            if let c = i.camera, c.configured == true { cameraCard(c, i) }
                             if let p = i.purifier, p.configured == true { purifierCard(p) }
                             tvCard(i)
                             lightsCard(i)
@@ -286,6 +287,56 @@ struct DashboardView: View {
             }
         }
         .card()
+    }
+
+    private func cameraCard(_ c: BridgeInfo.Camera, _ i: BridgeInfo) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                CardTitle(text: c.name ?? "Camera", icon: "video")
+                Spacer()
+                if let b = c.battery {
+                    Label("\(b)%", systemImage: c.charging == true ? "battery.100percent.bolt" : b <= 15 ? "battery.25" : "battery.75")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            HStack(spacing: 14) {
+                Label(c.person == true ? "Person" : c.motion == true ? "Motion" : "Quiet",
+                      systemImage: c.person == true ? "figure.walk" : c.motion == true ? "waveform.path.ecg" : "moon.zzz")
+                    .font(.headline)
+                    .foregroundStyle(c.person == true || c.motion == true ? Color.orange : .primary)
+                Spacer()
+                if let ago = c.lastEventAgo {
+                    Text("\(c.lastType == "person" ? "Person" : "Motion") \(Self.ago(ago))")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            if let err = c.error, c.ok != true {
+                Label(err, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(.orange)
+            } else if c.online == false {
+                Label("Camera offline", systemImage: "wifi.slash").font(.caption).foregroundStyle(.orange)
+            }
+            if let r = c.rule, r.enabled == true {
+                Text(Self.ruleText(r, i)).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .card()
+    }
+
+    private static func ruleText(_ r: BridgeInfo.Camera.Rule, _ i: BridgeInfo) -> String {
+        let names: [String] = (r.lights ?? []).compactMap { id in i.lights?.first(where: { $0.id == id })?.name }
+        var t = "Person turns on " + (names.isEmpty ? "lights" : names.joined(separator: ", "))
+        if r.window == true { t += " between " + clock(r.from ?? 0) + " and " + clock(r.to ?? 0) }
+        if let off = r.offIn, off > 0 { t += " · off in " + (off < 60 ? "\(off)s" : "\(off / 60)m") }
+        return t
+    }
+
+    private static func ago(_ s: Int) -> String {
+        s < 60 ? "\(s)s ago" : s < 3600 ? "\(s / 60)m ago" : "\(s / 3600)h ago"
+    }
+
+    private static func clock(_ m: Int) -> String {
+        var c = DateComponents(); c.hour = m / 60; c.minute = m % 60
+        return Calendar.current.date(from: c).map { $0.formatted(date: .omitted, time: .shortened) } ?? "\(m / 60):\(m % 60)"
     }
 
     private func eventsCard(_ i: BridgeInfo) -> some View {

@@ -26,7 +26,13 @@ struct BridgeInfo: Codable, Equatable {
     struct Govee: Codable, Equatable { var locked: Bool?; var name: String?; var temp: Double?; var humidity: Double?; var battery: Int?; var heardAgo: Int? }
     struct TVTile: Codable, Equatable { var inHome: Bool?; var inputs: [String]? }
     struct Bar: Codable, Equatable { var claimed: Bool?; var configured: Bool?; var state: String?; var follow: Bool?; var events: [String]? }
-    struct Paired: Codable, Equatable { var afterglow: Bool?; var subwave: Bool?; var exhale: Bool?; var redshift: Bool?; var equinox: Bool? }
+    struct Paired: Codable, Equatable { var afterglow: Bool?; var subwave: Bool?; var exhale: Bool?; var redshift: Bool?; var equinox: Bool?; var nightjar: Bool? }
+    struct Camera: Codable, Equatable {
+        struct Rule: Codable, Equatable { var enabled: Bool?; var window: Bool?; var from: Int?; var to: Int?; var offAfter: Int?; var lights: [String]?; var offIn: Int? }
+        var paired: Bool?; var configured: Bool?; var name: String?; var ok: Bool?; var error: String?
+        var online: Bool?; var charging: Bool?; var battery: Int?; var motion: Bool?; var person: Bool?
+        var lastEventAgo: Int?; var lastType: String?; var rule: Rule?
+    }
     struct AC: Codable, Equatable {
         struct Auto: Codable, Equatable { var enabled: Bool?; var setpoint: Double?; var band: Double?; var lastSwitchAgo: Int? }
         var configured: Bool?; var name: String?; var ok: Bool?; var error: String?; var on: Bool?; var mode: Int?
@@ -62,6 +68,7 @@ struct BridgeInfo: Codable, Equatable {
     var keystone: Bool?
     var claimed: Bool?
     var ac: AC?
+    var camera: Camera?
     var remote: Remote?
     var boot: Boot?
     var heapBlock: Int?
