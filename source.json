@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.4",
+          "buildVersion": "4",
+          "date": "2026-10-28T03:58:18Z",
+          "localizedDescription": "- Update an old bridge before pairing; call it Keystone Bridge (acb69c0)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-4/Keystone-1.0.0-build-4.ipa",
+          "size": 554664,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.3",
           "buildVersion": "3",
           "date": "2026-10-28T03:26:18Z",
@@ -29,11 +38,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.3",
-      "versionDate": "2026-10-28T03:26:18Z",
-      "versionDescription": "- README: what Keystone does (4e8f0a4)\n- Keystone: control panel for the home bridge (7203e29)\n- Initial commit (867b9c2)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-3/Keystone-1.0.0-build-3.ipa",
-      "size": 545821,
+      "version": "1.0.0.4",
+      "versionDate": "2026-10-28T03:58:18Z",
+      "versionDescription": "- Update an old bridge before pairing; call it Keystone Bridge (acb69c0)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-4/Keystone-1.0.0-build-4.ipa",
+      "size": 554664,
       "appPermissions": {}
     }
   ],
