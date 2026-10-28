@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.8",
+          "buildVersion": "8",
+          "date": "2026-10-28T15:23:41Z",
+          "localizedDescription": "- Remote access through the bridge's encrypted relay (c0925f3)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-8/Keystone-1.0.0-build-8.ipa",
+          "size": 700085,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.7",
           "buildVersion": "7",
           "date": "2026-10-28T05:22:11Z",
@@ -65,11 +74,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.7",
-      "versionDate": "2026-10-28T05:22:11Z",
-      "versionDescription": "- Recover from a stale pairing after reinstalling Keystone (b278c17)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-7/Keystone-1.0.0-build-7.ipa",
-      "size": 592661,
+      "version": "1.0.0.8",
+      "versionDate": "2026-10-28T15:23:41Z",
+      "versionDescription": "- Remote access through the bridge's encrypted relay (c0925f3)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-8/Keystone-1.0.0-build-8.ipa",
+      "size": 700085,
       "appPermissions": {}
     }
   ],
