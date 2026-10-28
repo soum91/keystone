@@ -13,7 +13,7 @@ struct RoomEntry: TimelineEntry {
     let live: Bool
 
     static let preview: RoomEntry = {
-        let json = #"{"app":"afterglow-bridge","name":"Afterglow Bridge","govee":{"locked":true,"temp":21.6,"humidity":46,"battery":80},"tv":{"state":"standby"},"lights":[{"id":"a","name":"Desk","on":true},{"id":"b","name":"Strip","on":false}],"purifier":{"configured":true,"pm25":4,"on":true},"display":{"tempF":false}}"#
+        let json = #"{"app":"afterglow-bridge","name":"Keystone Bridge","govee":{"locked":true,"temp":21.6,"humidity":46,"battery":80},"tv":{"state":"standby"},"lights":[{"id":"a","name":"Desk","on":true},{"id":"b","name":"Strip","on":false}],"purifier":{"configured":true,"pm25":4,"on":true},"display":{"tempF":false}}"#
         let info = try? JSONDecoder().decode(BridgeInfo.self, from: Data(json.utf8))
         return RoomEntry(date: .now, info: info, seen: .now, live: true)
     }()

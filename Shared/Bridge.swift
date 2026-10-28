@@ -55,8 +55,9 @@ struct BridgeInfo: Codable, Equatable {
     var display: DisplaySettings?
     var paired: Paired?
     var keystone: Bool?
+    var claimed: Bool?
 
-    var displayName: String { name ?? "Afterglow Bridge" }
+    var displayName: String { name ?? "Keystone Bridge" }
     var lightsOn: Int { (lights ?? []).filter { $0.on == true }.count }
     var tvIsOn: Bool { tv?.state == "on" }
     var supportsKeystone: Bool { display != nil }
@@ -118,7 +119,7 @@ enum BridgeAPI {
         req.timeoutInterval = timeout
         let (data, _) = try await URLSession.shared.data(for: req)
         let info = try JSONDecoder().decode(BridgeInfo.self, from: data)
-        guard info.app == "afterglow-bridge" else { throw BridgeError.message("That isn't an Afterglow bridge.") }
+        guard info.app == "afterglow-bridge" else { throw BridgeError.message("That isn't a Keystone bridge.") }
         return info
     }
 
@@ -137,6 +138,22 @@ enum BridgeAPI {
         if code == 400 { throw BridgeError.message("This bridge firmware is too old for Keystone. Update it once from Afterglow (Settings › Apple Home bridge › Firmware), then pair here.") }
         guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any], let t = obj["token"] as? String else {
             throw BridgeError.message("The bridge didn't hand out a token.")
+        }
+        return t
+    }
+
+    /// The owner slot older firmware gives to Afterglow. Keystone borrows it only to update an old bridge.
+    static func claimOwner(host: String, port: Int) async throws -> String {
+        guard let u = url(host, port, "/api/claim") else { throw BridgeError.message("Bad address.") }
+        var req = URLRequest(url: u)
+        req.httpMethod = "POST"
+        req.timeoutInterval = 5
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        if (resp as? HTTPURLResponse)?.statusCode == 409 {
+            throw BridgeError.message("Afterglow is already paired with this bridge, so the update has to come from there: Afterglow › Settings › Apple Home bridge › Firmware › Update. Then pair here.")
+        }
+        guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any], let t = obj["token"] as? String else {
+            throw BridgeError.message("The bridge didn't answer the claim.")
         }
         return t
     }

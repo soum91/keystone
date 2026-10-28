@@ -60,11 +60,19 @@ struct PairView: View {
                     }
                     .card()
 
+                    if let p = store.pairStatus {
+                        HStack(spacing: 10) {
+                            ProgressView()
+                            Text(p).font(.footnote)
+                        }
+                        .card()
+                    }
+
                     if let error {
                         Text(error).font(.footnote).foregroundStyle(Theme.bad).card()
                     }
 
-                    Text("No bridge yet? Set one up from Afterglow › Settings › Apple Home bridge.")
+                    Text("No bridge yet? Flash an ESP32 from soum91.github.io/afterglow on a computer, join its HomeSpan-Setup Wi-Fi, then pair here.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 .padding(20)
@@ -79,6 +87,6 @@ struct PairView: View {
         busy = true
         error = nil
         defer { busy = false }
-        do { try await store.pair(host: host, port: port) } catch { self.error = error.localizedDescription }
+        do { try await store.pair(host: host, port: port) } catch { self.error = error.localizedDescription; store.pairStatus = nil }
     }
 }

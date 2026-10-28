@@ -24,16 +24,44 @@ final class Store: ObservableObject {
 
     // MARK: Pairing
 
+    @Published var pairStatus: String?
+
     func pair(host: String, port: Int) async throws {
-        let i = try await BridgeAPI.info(host: host, port: port)
-        guard i.supportsKeystone else {
-            throw BridgeError.message("This bridge firmware is too old for Keystone. Update it once from Afterglow (Settings › Apple Home bridge › Firmware), then pair here.")
+        var i = try await BridgeAPI.info(host: host, port: port)
+        var borrowedOwner = false
+        if !i.supportsKeystone {
+            // Old firmware only lets Afterglow update it. If Afterglow hasn't paired yet, borrow its slot,
+            // update, and give the slot back afterwards.
+            pairStatus = "This bridge has old firmware. Updating it first…"
+            let owner = try await BridgeAPI.claimOwner(host: host, port: port)
+            borrowedOwner = true
+            guard let l = try await Firmware.latest(chip: i.chip ?? "esp32") else {
+                throw BridgeError.message("Couldn't find the firmware on GitHub. Check your internet and try again.")
+            }
+            try await Firmware.install(l, link: BridgeLink(host: host, port: port, token: owner), header: "X-Afterglow-Token") { msg in
+                Task { @MainActor in self.pairStatus = msg }
+            }
+            pairStatus = "Waiting for the bridge to restart…"
+            var fresh: BridgeInfo?
+            for _ in 0..<30 {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                if let n = try? await BridgeAPI.info(host: host, port: port, timeout: 3), n.supportsKeystone { fresh = n; break }
+            }
+            guard let fresh else { throw BridgeError.message("The bridge didn't come back with the new firmware. Give it a minute and tap Pair again.") }
+            i = fresh
         }
+        pairStatus = "Pairing…"
+        defer { pairStatus = nil }
         let token = try await BridgeAPI.claim(host: host, port: port)
         link = BridgeLink(host: host, port: port, token: token)
         BridgeLink.stored = link
+        if borrowedOwner {
+            // Free Afterglow's slot again so Afterglow can still pair to send lights.
+            _ = try? await BridgeAPI.admin("resetPairing", ["app": "afterglow"], link)
+        }
         apply(i)
         startPolling()
+        if borrowedOwner { show("Updated the bridge and paired.") }
     }
 
     func forget() {
@@ -189,7 +217,7 @@ enum Firmware {
         return nil
     }
 
-    static func install(_ latest: Latest, link: BridgeLink, progress: @escaping (String) -> Void) async throws {
+    static func install(_ latest: Latest, link: BridgeLink, header: String = "X-Device-Token", progress: @escaping (String) -> Void) async throws {
         progress("Downloading build \(latest.build)…")
         let (bin, resp) = try await URLSession.shared.data(from: latest.url)
         guard (resp as? HTTPURLResponse)?.statusCode == 200, bin.count > 100_000, bin.first == 0xE9 else {
@@ -206,7 +234,7 @@ enum Firmware {
         req.httpMethod = "POST"
         req.timeoutInterval = 180
         req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        req.setValue(link.token, forHTTPHeaderField: "X-Device-Token")
+        req.setValue(link.token, forHTTPHeaderField: header)
         let (data, r) = try await URLSession.shared.upload(for: req, from: body)
         let code = (r as? HTTPURLResponse)?.statusCode ?? 0
         if code == 401 { throw BridgeError.message("The bridge rejected Keystone's token.") }
