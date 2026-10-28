@@ -37,7 +37,7 @@ jobs:
           arduino-cli core list
           arduino-cli lib list
 
-      - name: Compile for ESP32, ESP32-S3, ESP32-C3
+      - name: Compile for ESP32
         run: |
           set -o pipefail
           BUILD=$(( ${{ github.run_number }} + BUILD_OFFSET ))
@@ -46,7 +46,7 @@ jobs:
           NIMBLE_FLAGS="-DCONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED -DCONFIG_BT_NIMBLE_ROLE_BROADCASTER_DISABLED -DCONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED"
           mkdir -p dist
           : > build.log
-          for chip in esp32 esp32s3 esp32c3; do
+          for chip in esp32; do   # the ideaspark WROOM-32 board; add esp32s3/esp32c3 here for other boards
             echo "=== $chip ===" | tee -a build.log
             arduino-cli compile \
               --fqbn "esp32:esp32:${chip}:PartitionScheme=min_spiffs" \
@@ -127,7 +127,7 @@ jobs:
           rm -rf site && mkdir -p site/fw
           cp Bridge/web/index.html site/
           cp dist/*-full.bin dist/*-app.bin site/fw/
-          for c in esp32 esp32s3 esp32c3; do mv "site/fw/KeystoneBridge-$c-build-$BUILD-app.bin" "site/fw/KeystoneBridge-$c-app.bin" 2>/dev/null || true; done
+          for c in esp32; do mv "site/fw/KeystoneBridge-$c-build-$BUILD-app.bin" "site/fw/KeystoneBridge-$c-app.bin" 2>/dev/null || true; done
           head -c 8192 /dev/zero | tr '\0' '\377' > site/fw/otadata-blank.bin
           # Repair: blank boot selector + app only. Wi-Fi, Apple Home and app pairings (NVS, 0x9000) are untouched.
           cat > site/manifest-keep.json <<JSON
@@ -136,9 +136,7 @@ jobs:
             "version": "$FW (build $BUILD)",
             "new_install_prompt_erase": false,
             "builds": [
-              { "chipFamily": "ESP32",    "parts": [{ "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32-app.bin",   "offset": 65536 }] },
-              { "chipFamily": "ESP32-S3", "parts": [{ "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32s3-app.bin", "offset": 65536 }] },
-              { "chipFamily": "ESP32-C3", "parts": [{ "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32c3-app.bin", "offset": 65536 }] }
+              { "chipFamily": "ESP32",    "parts": [{ "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32-app.bin",   "offset": 65536 }] }
             ]
           }
           JSON
@@ -148,9 +146,7 @@ jobs:
             "version": "$FW (build $BUILD)",
             "new_install_prompt_erase": true,
             "builds": [
-              { "chipFamily": "ESP32",    "parts": [{ "path": "fw/KeystoneBridge-esp32-full.bin",   "offset": 0 }] },
-              { "chipFamily": "ESP32-S3", "parts": [{ "path": "fw/KeystoneBridge-esp32s3-full.bin", "offset": 0 }] },
-              { "chipFamily": "ESP32-C3", "parts": [{ "path": "fw/KeystoneBridge-esp32c3-full.bin", "offset": 0 }] }
+              { "chipFamily": "ESP32",    "parts": [{ "path": "fw/KeystoneBridge-esp32-full.bin",   "offset": 0 }] }
             ]
           }
           JSON

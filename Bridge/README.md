@@ -9,14 +9,14 @@ In Home you get:
 - **Air purifier** from Exhale (Settings › Apple Home bridge): purifier tile with speed and auto/manual, PM2.5 air quality sensor, filter life, child lock, display switch. With Keep display off on in Exhale, the bridge turns the display back off whenever it comes on by itself.
 - **IR remotes** from Redshift (Settings › Apple Home bridge): power as a switch, other buttons as one-tap buttons. IR can't report back, so the switch shows what was last sent.
 - **Vizio sound bar** from Subwave.
-- **Govee thermometer** (H5102 and similar) over Bluetooth, like a Govee gateway: temperature, humidity, battery. On first boot it picks the strongest Govee sensor it hears within 30 s; `@G` on the serial console picks again. Not on ESP32-C3 builds (no flash room).
+- **Govee thermometer** (H5102 and similar) over Bluetooth, like a Govee gateway: temperature, humidity, battery. On first boot it picks the strongest Govee sensor it hears within 30 s; `@G` on the serial console picks again.
 - **Vicohome camera** from Nightjar (Settings › Apple Home bridge): a Motion sensor, a Person sensor and the battery, from Vicohome's cloud every ~20 s, so expect 10 to 30 s of lag. Optional rule the bridge runs itself (no home hub needed): a person on camera turns chosen lights on, and they go off after a few quiet minutes. It can also push **ntfy alerts** (the ntfy iOS app shows the snapshot in the notification; tap opens Nightjar) when the camera sees a person, optionally checked by Claude first (flags someone right at the lens, touching or covering the camera, or at the food).
 
 Firmware updates go over Wi-Fi from Afterglow › Settings › Apple Home bridge › Firmware, after the first USB flash.
 
 ## What you need
 
-- Any ESP32, ESP32-S3 or ESP32-C3 dev board with USB (about $8 to $12), on a USB charger
+- An ESP32 (WROOM-32) dev board with USB, like the ideaspark one with the built-in OLED, on a USB charger. CI builds only plain ESP32 firmware; S3/C3 builds can be re-enabled in .github/workflows/bridge.yml
 - A computer with Chrome or Edge, once, for flashing
 - 2.4 GHz Wi-Fi, same network as the lights
 
