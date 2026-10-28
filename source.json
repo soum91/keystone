@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.11",
+          "buildVersion": "11",
+          "date": "2026-10-28T20:26:32Z",
+          "localizedDescription": "- Camera card from the bridge (Nightjar's Vicohome camera) (77dc6ce)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-11/Keystone-1.0.0-build-11.ipa",
+          "size": 805844,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.10",
           "buildVersion": "10",
           "date": "2026-10-28T19:04:49Z",
@@ -92,11 +101,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.10",
-      "versionDate": "2026-10-28T19:04:49Z",
-      "versionDescription": "- Control everything from the dashboard, at home or away (b951f75)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-10/Keystone-1.0.0-build-10.ipa",
-      "size": 763907,
+      "version": "1.0.0.11",
+      "versionDate": "2026-10-28T20:26:32Z",
+      "versionDescription": "- Camera card from the bridge (Nightjar's Vicohome camera) (77dc6ce)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-11/Keystone-1.0.0-build-11.ipa",
+      "size": 805844,
       "appPermissions": {}
     }
   ],
