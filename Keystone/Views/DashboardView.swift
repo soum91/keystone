@@ -17,6 +17,7 @@ struct DashboardView: View {
                                 airCard(i)
                             }
                             if i.ac?.configured == true { acCard(i) }
+                            if let p = i.purifier, p.configured == true { purifierCard(p) }
                             tvCard(i)
                             lightsCard(i)
                             if i.bar?.configured == true { barCard(i) }
@@ -121,23 +122,71 @@ struct DashboardView: View {
         let a = i.ac!
         let modes = ["Fan", "Heat", "Cool", "Dry", "Auto"]
         let auto = a.auto?.enabled == true
-        return VStack(alignment: .leading, spacing: 8) {
+        let f = a.fahrenheit == true
+        let targetC: Double? = auto ? a.auto?.setpoint : a.target.map { f ? (Double($0) - 32) * 5 / 9 : Double($0) }
+        return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 CardTitle(text: a.name ?? "AC", icon: "air.conditioner.horizontal")
                 Spacer()
-                if a.ok == false { Text(a.error ?? "not answering").font(.caption).foregroundStyle(Theme.bad).lineLimit(1) }
+                if a.ok == false { Text(a.error ?? "not answering").font(.caption).foregroundStyle(Theme.bad).lineLimit(2).multilineTextAlignment(.trailing) }
             }
             HStack(alignment: .firstTextBaseline) {
                 Text(a.on == true ? (auto ? "Smart Auto" : modes[min(4, max(0, a.mode ?? 2))]) : "Off")
                     .font(.title3.weight(.semibold))
                 Spacer()
-                if a.on == true, let t = a.target { Text("set \(t)°\(a.fahrenheit == true ? "F" : "C")").foregroundStyle(.secondary) }
+                Toggle("", isOn: Binding(get: { a.on == true }, set: { v in Task { await store.control(["device": "ac", "on": v]) } }))
+                    .labelsHidden()
+            }
+            Picker("Mode", selection: Binding(
+                get: { auto ? "smart" : ["fan", "heat", "cool", "dry", "cool"][min(4, max(0, a.mode ?? 2))] },
+                set: { m in Task { await store.control(["device": "ac", "mode": m]) } })) {
+                Text("Cool").tag("cool")
+                Text("Heat").tag("heat")
+                Text("Fan").tag("fan")
+                Text("Dry").tag("dry")
+                Text("Smart").tag("smart")
+            }
+            .pickerStyle(.segmented)
+            if let t = targetC {
+                HStack {
+                    Text(auto ? "Aim for" : "Set to").foregroundStyle(.secondary)
+                    Spacer()
+                    Button { Task { await store.control(["device": "ac", "target": t - (f ? 5.0 / 9 : 0.5)]) } } label: { Image(systemName: "minus.circle.fill").font(.title2) }
+                    Text(Fmt.temp(t, f: tempF)).font(.title3.monospacedDigit().weight(.semibold)).frame(minWidth: 70)
+                    Button { Task { await store.control(["device": "ac", "target": t + (f ? 5.0 / 9 : 0.5)]) } } label: { Image(systemName: "plus.circle.fill").font(.title2) }
+                }
+                .buttonStyle(.plain).foregroundStyle(Theme.yellow)
             }
             if auto, let sp = a.auto?.setpoint, let b = a.auto?.band {
                 Text(String(format: "Cools above %.1f°C, heats below %.1f°C", sp + b, sp - b) + (a.auto?.lastSwitchAgo.map { " · last switch \(Fmt.uptime($0)) ago" } ?? ""))
                     .font(.caption).foregroundStyle(.secondary)
             }
             if let r = a.room { Text(String(format: "Room %.1f°C (what Smart Auto goes by)", r)).font(.caption).foregroundStyle(.secondary) }
+        }
+        .card()
+    }
+
+    private func purifierCard(_ p: BridgeInfo.Purifier) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                CardTitle(text: p.name ?? "Purifier", icon: "wind")
+                Spacer()
+                Toggle("", isOn: Binding(get: { p.on == true }, set: { v in Task { await store.control(["device": "purifier", "on": v]) } }))
+                    .labelsHidden()
+            }
+            HStack {
+                Toggle("Auto", isOn: Binding(get: { p.auto == true }, set: { v in Task { await store.control(["device": "purifier", "auto": v]) } }))
+                    .fixedSize()
+                Spacer()
+                if let sp = p.speed, p.auto != true {
+                    Button { Task { await store.control(["device": "purifier", "speed": max(1, sp - 1)]) } } label: { Image(systemName: "minus.circle.fill").font(.title2) }
+                    Text("Fan \(sp)").monospacedDigit().frame(minWidth: 50)
+                    Button { Task { await store.control(["device": "purifier", "speed": sp + 1]) } } label: { Image(systemName: "plus.circle.fill").font(.title2) }
+                } else if p.auto != true {
+                    Button("Fan 1") { Task { await store.control(["device": "purifier", "speed": 1]) } }
+                }
+            }
+            .buttonStyle(.plain).foregroundStyle(Theme.yellow)
         }
         .card()
     }
@@ -153,19 +202,37 @@ struct DashboardView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
+            if i.tv?.host?.isEmpty == false {
+                HStack(spacing: 10) {
+                    Button { Task { await store.control(["device": "tv", "on": !i.tvIsOn]) } } label: {
+                        Label(i.tvIsOn ? "Turn off" : "Turn on", systemImage: "power")
+                    }
+                    .buttonStyle(.borderedProminent).tint(Theme.yellow).foregroundStyle(.black)
+                    Spacer()
+                    Button { Task { await store.control(["device": "tv", "vol": "down"]) } } label: { Image(systemName: "speaker.minus.fill") }
+                        .buttonStyle(.bordered)
+                    Button { Task { await store.control(["device": "tv", "vol": "up"]) } } label: { Image(systemName: "speaker.plus.fill") }
+                        .buttonStyle(.bordered)
+                    if let ins = i.tvTile?.inputs, !ins.isEmpty {
+                        Menu {
+                            ForEach(Array(ins.enumerated()), id: \.offset) { n, name in
+                                Button(name) { Task { await store.control(["device": "tv", "input": n]) } }
+                            }
+                        } label: { Image(systemName: "rectangle.on.rectangle") }
+                        .buttonStyle(.bordered)
+                    }
+                }
+            }
             Toggle("Lights follow the TV", isOn: Binding(get: { i.followTV ?? true }, set: { v in Task { await store.setFollow(lights: v) } }))
             if i.bar?.configured == true {
                 Toggle("Sound bar follows the TV", isOn: Binding(get: { i.barFollow ?? true }, set: { v in Task { await store.setFollow(bar: v) } }))
-            }
-            if let ins = i.tvTile?.inputs, !ins.isEmpty {
-                Text("In Home with \(ins.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary)
             }
         }
         .card()
     }
 
     private func lightsCard(_ i: BridgeInfo) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 CardTitle(text: "Lights", icon: "lightbulb")
                 Spacer()
@@ -174,15 +241,12 @@ struct DashboardView: View {
             if (i.lights ?? []).isEmpty {
                 Text("No lights yet. Send them from Afterglow.").font(.caption).foregroundStyle(.secondary)
             }
-            ForEach(i.lights ?? []) { l in
-                HStack {
-                    Image(systemName: l.on == true ? "lightbulb.fill" : "lightbulb")
-                        .foregroundStyle(l.ok == false ? Theme.bad : l.on == true ? Theme.yellow : .secondary)
-                        .frame(width: 22)
-                    Text(l.name)
-                    Spacer()
-                    Text(l.ok == false ? "not answering" : l.on == true ? "\(l.bri ?? 100)%" : "off")
-                        .font(.subheadline).foregroundStyle(.secondary)
+            ForEach(Array((i.lights ?? []).enumerated()), id: \.element.id) { n, l in
+                LightRow(light: l) { body in
+                    var b = body
+                    b["device"] = "light"
+                    b["idx"] = n
+                    Task { await store.control(b) }
                 }
             }
         }
@@ -194,18 +258,30 @@ struct DashboardView: View {
             CardTitle(text: "Sound bar", icon: "hifispeaker")
             Spacer()
             Text(i.bar?.state ?? "–").foregroundStyle(.secondary)
+            Button("On") { Task { await store.control(["device": "bar", "on": true]) } }.buttonStyle(.bordered)
+            Button("Off") { Task { await store.control(["device": "bar", "on": false]) } }.buttonStyle(.bordered)
         }
         .card()
     }
 
     private func irCard(_ r: [BridgeInfo.IR.R]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             CardTitle(text: "IR remotes", icon: "dot.radiowaves.right")
-            ForEach(r, id: \.name) { x in
-                HStack {
-                    Text(x.name)
-                    Spacer()
-                    Text("power\((x.buttons ?? 0) > 0 ? " + \(x.buttons!) buttons" : "")").font(.caption).foregroundStyle(.secondary)
+            ForEach(Array(r.enumerated()), id: \.offset) { n, x in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(x.name).fontWeight(.medium)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            if x.power != false {
+                                Button { Task { await store.control(["device": "ir", "remote": n, "button": -1]) } } label: { Label("Power", systemImage: "power") }
+                                    .buttonStyle(.borderedProminent).tint(Theme.yellow).foregroundStyle(.black)
+                            }
+                            ForEach(Array((x.names ?? []).enumerated()), id: \.offset) { b, name in
+                                Button(name) { Task { await store.control(["device": "ir", "remote": n, "button": b]) } }
+                                    .buttonStyle(.bordered)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -222,5 +298,40 @@ struct DashboardView: View {
             }
         }
         .card()
+    }
+}
+
+/// One light: tap to switch, slide to dim (sent when you let go).
+struct LightRow: View {
+    let light: BridgeInfo.Light
+    let send: ([String: Any]) -> Void
+    @State private var bri: Double = 100
+    @State private var dragging = false
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack {
+                Image(systemName: light.on == true ? "lightbulb.fill" : "lightbulb")
+                    .foregroundStyle(light.ok == false ? Theme.bad : light.on == true ? Theme.yellow : .secondary)
+                    .frame(width: 22)
+                Text(light.name)
+                Spacer()
+                if light.ok == false { Text("not answering").font(.caption).foregroundStyle(.secondary) }
+                Toggle("", isOn: Binding(get: { light.on == true }, set: { v in send(["on": v]) })).labelsHidden()
+            }
+            if light.on == true {
+                HStack {
+                    Image(systemName: "sun.min").foregroundStyle(.secondary)
+                    Slider(value: $bri, in: 1...100) { editing in
+                        dragging = editing
+                        if !editing { send(["bri": Int(bri)]) }
+                    }
+                    .tint(Theme.yellow)
+                    Text("\(Int(bri))%").font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 40)
+                }
+            }
+        }
+        .onAppear { bri = Double(light.bri ?? 100) }
+        .onChange(of: light.bri) { _, v in if !dragging, let v { bri = Double(v) } }
     }
 }

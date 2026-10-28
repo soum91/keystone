@@ -22,7 +22,7 @@ struct BridgeInfo: Codable, Equatable {
         var paired: Bool?; var configured: Bool?; var name: String?; var ok: Bool?; var on: Bool?; var auto: Bool?
         var pm25: Double?; var speed: Int?; var display: Bool?; var keepDisplayOff: Bool?
     }
-    struct IR: Codable, Equatable { struct R: Codable, Equatable { var name: String; var buttons: Int? }; var paired: Bool?; var remotes: [R]? }
+    struct IR: Codable, Equatable { struct R: Codable, Equatable { var name: String; var buttons: Int?; var power: Bool?; var names: [String]? }; var paired: Bool?; var remotes: [R]? }
     struct Govee: Codable, Equatable { var locked: Bool?; var name: String?; var temp: Double?; var humidity: Double?; var battery: Int?; var heardAgo: Int? }
     struct TVTile: Codable, Equatable { var inHome: Bool?; var inputs: [String]? }
     struct Bar: Codable, Equatable { var claimed: Bool?; var configured: Bool?; var state: String?; var follow: Bool?; var events: [String]? }

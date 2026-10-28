@@ -192,6 +192,18 @@ final class Store: ObservableObject {
         catch { show(error.localizedDescription) }
     }
 
+    // MARK: Control (LAN or relay)
+
+    func control(_ body: [String: Any]) async {
+        do {
+            try await BridgeAPI.post("/api/control", body, link, timeout: 8)
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            await refresh()
+        } catch {
+            show(error.localizedDescription)
+        }
+    }
+
     // MARK: Admin
 
     func admin(_ action: String, _ extra: [String: Any] = [:], done: String) async {
