@@ -26,7 +26,12 @@ struct BridgeInfo: Codable, Equatable {
     struct Govee: Codable, Equatable { var locked: Bool?; var name: String?; var temp: Double?; var humidity: Double?; var battery: Int?; var heardAgo: Int? }
     struct TVTile: Codable, Equatable { var inHome: Bool?; var inputs: [String]? }
     struct Bar: Codable, Equatable { var claimed: Bool?; var configured: Bool?; var state: String?; var follow: Bool?; var events: [String]? }
-    struct Paired: Codable, Equatable { var afterglow: Bool?; var subwave: Bool?; var exhale: Bool?; var redshift: Bool? }
+    struct Paired: Codable, Equatable { var afterglow: Bool?; var subwave: Bool?; var exhale: Bool?; var redshift: Bool?; var equinox: Bool? }
+    struct AC: Codable, Equatable {
+        struct Auto: Codable, Equatable { var enabled: Bool?; var setpoint: Double?; var band: Double?; var lastSwitchAgo: Int? }
+        var configured: Bool?; var name: String?; var ok: Bool?; var error: String?; var on: Bool?; var mode: Int?
+        var target: Int?; var fahrenheit: Bool?; var indoor: Double?; var room: Double?; var auto: Auto?
+    }
 
     var app: String
     var version: String?
@@ -56,6 +61,7 @@ struct BridgeInfo: Codable, Equatable {
     var paired: Paired?
     var keystone: Bool?
     var claimed: Bool?
+    var ac: AC?
 
     var displayName: String { name ?? "Keystone Bridge" }
     var lightsOn: Int { (lights ?? []).filter { $0.on == true }.count }

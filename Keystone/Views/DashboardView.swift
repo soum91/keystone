@@ -16,6 +16,7 @@ struct DashboardView: View {
                                 roomCard(i)
                                 airCard(i)
                             }
+                            if i.ac?.configured == true { acCard(i) }
                             tvCard(i)
                             lightsCard(i)
                             if i.bar?.configured == true { barCard(i) }
@@ -112,6 +113,31 @@ struct DashboardView: View {
                 Text("No purifier").foregroundStyle(.secondary)
                 Text("Send it from Exhale").font(.caption).foregroundStyle(.secondary)
             }
+        }
+        .card()
+    }
+
+    private func acCard(_ i: BridgeInfo) -> some View {
+        let a = i.ac!
+        let modes = ["Fan", "Heat", "Cool", "Dry", "Auto"]
+        let auto = a.auto?.enabled == true
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                CardTitle(text: a.name ?? "AC", icon: "air.conditioner.horizontal")
+                Spacer()
+                if a.ok == false { Text(a.error ?? "not answering").font(.caption).foregroundStyle(Theme.bad).lineLimit(1) }
+            }
+            HStack(alignment: .firstTextBaseline) {
+                Text(a.on == true ? (auto ? "Smart Auto" : modes[min(4, max(0, a.mode ?? 2))]) : "Off")
+                    .font(.title3.weight(.semibold))
+                Spacer()
+                if a.on == true, let t = a.target { Text("set \(t)°\(a.fahrenheit == true ? "F" : "C")").foregroundStyle(.secondary) }
+            }
+            if auto, let sp = a.auto?.setpoint, let b = a.auto?.band {
+                Text(String(format: "Cools above %.1f°C, heats below %.1f°C", sp + b, sp - b) + (a.auto?.lastSwitchAgo.map { " · last switch \(Fmt.uptime($0)) ago" } ?? ""))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if let r = a.room { Text(String(format: "Room %.1f°C (what Smart Auto goes by)", r)).font(.caption).foregroundStyle(.secondary) }
         }
         .card()
     }

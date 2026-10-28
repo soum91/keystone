@@ -60,6 +60,7 @@ struct BridgeView: View {
                         pairingRow("Subwave", "sound bar", i.paired?.subwave, app: "subwave")
                         pairingRow("Exhale", "air purifier", i.paired?.exhale, app: "exhale")
                         pairingRow("Redshift", "IR remotes", i.paired?.redshift, app: "redshift")
+                        pairingRow("Equinox", "air conditioner", i.paired?.equinox, app: "equinox")
                     } header: {
                         Text("Apps paired with the bridge")
                     } footer: {
