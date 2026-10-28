@@ -46,6 +46,26 @@ struct BridgeView: View {
                         Text("Downloads from GitHub and goes to the bridge over Wi-Fi. Wi-Fi, pairings and the Home setup are kept.")
                     }
 
+                    Section {
+                        if let r = i.remote {
+                            Toggle("Reach the bridge from anywhere", isOn: Binding(
+                                get: { r.on ?? false },
+                                set: { v in Task { await store.setRemote(on: v) } }))
+                                .disabled(store.viaRelay)
+                            LabeledContent("Relay", value: r.on == true ? (r.connected == true ? "Connected" : (r.error ?? "Connecting…")) : "Off")
+                            LabeledContent("This phone", value: store.relay?.on == true ? (store.viaRelay ? "Using it now" : "Ready for when you're away") : "Not set up")
+                            if !store.viaRelay {
+                                Button("New key (logs out other phones)") { Task { await store.setRemote(rotate: true) } }
+                            }
+                        } else {
+                            Text("Update the firmware to 1.6 or newer for remote access.").foregroundStyle(.secondary)
+                        }
+                    } header: {
+                        Text("Remote access")
+                    } footer: {
+                        Text("Away from home, Keystone talks to the bridge through a public MQTT relay. Everything is encrypted end to end with a key that never leaves your home Wi-Fi, so the relay only sees noise. Firmware updates still need home Wi-Fi.")
+                    }
+
                     Section("Network") {
                         LabeledContent("Wi-Fi", value: i.ssid ?? "–")
                         LabeledContent("Signal", value: Fmt.signal(i.rssi).text)

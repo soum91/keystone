@@ -42,7 +42,7 @@ struct DashboardView: View {
         HStack(spacing: 12) {
             Circle().fill(store.reachable ? Theme.good : Theme.bad).frame(width: 10, height: 10)
             VStack(alignment: .leading, spacing: 2) {
-                Text(store.reachable ? "Online" : "Not reachable").fontWeight(.semibold)
+                Text(store.reachable ? (store.viaRelay ? "Online · remote" : "Online") : "Not reachable").fontWeight(.semibold)
                 Text(store.reachable ? "\(i.ip ?? store.link.host) · up \(Fmt.uptime(i.uptime))"
                      : "Last seen \(store.lastSeen?.formatted(.relative(presentation: .named)) ?? "never")")
                     .font(.caption).foregroundStyle(.secondary)

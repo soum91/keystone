@@ -16,6 +16,8 @@ final class Store: ObservableObject {
     @Published var latest: Firmware.Latest?
     @Published var updating: String?
     @Published var updateRunning = false
+    @Published var relay = RelayConfig.stored
+    @Published var viaRelay = false
 
     private var pollTask: Task<Void, Never>?
     private var displayTask: Task<Void, Never>?
@@ -78,6 +80,7 @@ final class Store: ObservableObject {
             _ = try? await BridgeAPI.admin("resetPairing", ["app": "afterglow"], link)
         }
         apply(i)
+        await fetchRelay()
         startPolling()
         if borrowedOwner { show("Paired.") }
     }
@@ -86,6 +89,9 @@ final class Store: ObservableObject {
         stopPolling()
         link = BridgeLink()
         BridgeLink.stored = link
+        RelayConfig.stored = nil
+        relay = nil
+        Task { await RelayClient.shared.disconnect() }
         info = nil
         WidgetCenter.shared.reloadAllTimelines()
     }
@@ -98,7 +104,8 @@ final class Store: ObservableObject {
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.refresh()
-                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                let away = await self?.viaRelay ?? false
+                try? await Task.sleep(nanoseconds: away ? 6_000_000_000 : 3_000_000_000)
             }
         }
         if latest == nil { Task { await checkFirmware() } }
@@ -113,9 +120,40 @@ final class Store: ObservableObject {
         guard isPaired else { return }
         do {
             let i = try await BridgeAPI.info(link, timeout: 3)
+            viaRelay = Transport.lastWasRelay
             apply(i)
+            // At home: pick up the relay key (or a rotated one) so remote access works when away.
+            if !viaRelay, relay == nil || relay?.on != i.remote?.on, i.remote != nil { await fetchRelay() }
         } catch {
             reachable = false
+        }
+    }
+
+    // MARK: Remote access
+
+    func fetchRelay() async {
+        guard let c = try? await BridgeAPI.relayConfig(link) else { return }
+        if c != relay {
+            RelayConfig.stored = c
+            relay = c
+            await RelayClient.shared.disconnect()
+        }
+    }
+
+    func setRemote(on: Bool? = nil, rotate: Bool = false) async {
+        var body: [String: Any] = [:]
+        if let on { body["on"] = on }
+        if rotate { body["rotate"] = true }
+        do {
+            if let c = try await BridgeAPI.setRelay(body, link) {
+                RelayConfig.stored = c
+                relay = c
+                await RelayClient.shared.disconnect()
+                show(rotate ? "New key. Other phones need to open Keystone at home once." : (c.on ? "Remote access on." : "Remote access off."))
+            }
+            await refresh()
+        } catch {
+            show(error.localizedDescription)
         }
     }
 
@@ -188,6 +226,7 @@ final class Store: ObservableObject {
 
     func installUpdate() async {
         guard let l = latest, !updateRunning else { return }
+        if viaRelay { show("Firmware updates only go over your home Wi-Fi."); return }
         updateRunning = true
         defer { updateRunning = false }
         updating = "Starting…"

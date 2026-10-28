@@ -62,6 +62,8 @@ struct BridgeInfo: Codable, Equatable {
     var keystone: Bool?
     var claimed: Bool?
     var ac: AC?
+    var remote: Remote?
+    struct Remote: Codable, Equatable { var on: Bool?; var connected: Bool?; var served: Int?; var error: String? }
 
     var displayName: String { name ?? "Keystone Bridge" }
     var lightsOn: Int { (lights ?? []).filter { $0.on == true }.count }
@@ -135,8 +137,44 @@ enum BridgeAPI {
         return info
     }
 
+    /// LAN when home, the encrypted relay when not.
     static func info(_ link: BridgeLink = .stored, timeout: Double = 4) async throws -> BridgeInfo {
-        try await info(host: link.host, port: link.port, timeout: timeout)
+        let (_, data) = try await Transport.send(link, method: "GET", path: "/api/info",
+                                                 headers: ["X-Device-Token": link.token], timeout: timeout)
+        let info = try JSONDecoder().decode(BridgeInfo.self, from: data)
+        guard info.app == "afterglow-bridge" else { throw BridgeError.message("That isn't a Keystone bridge.") }
+        return info
+    }
+
+    /// The relay details. The bridge only hands them out over the home network.
+    static func relayConfig(_ link: BridgeLink = .stored) async throws -> RelayConfig? {
+        guard let u = url(link.host, link.port, "/api/remote") else { return nil }
+        var req = URLRequest(url: u)
+        req.timeoutInterval = 4
+        req.setValue(link.token, forHTTPHeaderField: "X-Device-Token")
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard (resp as? HTTPURLResponse)?.statusCode == 200,
+              let o = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let b = o["broker"] as? String, let id = o["id"] as? String, let k = o["key"] as? String else { return nil }
+        return RelayConfig(broker: b, id: id, key: k, on: (o["on"] as? Bool) ?? true)
+    }
+
+    /// Remote access on/off or a new key. LAN only, like the key itself.
+    static func setRelay(_ body: [String: Any], _ link: BridgeLink = .stored) async throws -> RelayConfig? {
+        guard let u = url(link.host, link.port, "/api/remote") else { return nil }
+        var req = URLRequest(url: u)
+        req.httpMethod = "POST"
+        req.timeoutInterval = 5
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue(link.token, forHTTPHeaderField: "X-Device-Token")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard (resp as? HTTPURLResponse)?.statusCode == 200,
+              let o = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let b = o["broker"] as? String, let id = o["id"] as? String, let k = o["key"] as? String else {
+            throw BridgeError.message("Remote access settings can only be changed on your home Wi-Fi.")
+        }
+        return RelayConfig(broker: b, id: id, key: k, on: (o["on"] as? Bool) ?? true)
     }
 
     static func claim(host: String, port: Int) async throws -> String {
@@ -183,15 +221,9 @@ enum BridgeAPI {
 
     @discardableResult
     static func post(_ path: String, _ body: [String: Any] = [:], _ link: BridgeLink = .stored, timeout: Double = 6) async throws -> [String: Any] {
-        guard let u = url(link.host, link.port, path) else { throw BridgeError.message("Bad address.") }
-        var req = URLRequest(url: u)
-        req.httpMethod = "POST"
-        req.timeoutInterval = timeout
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.setValue(link.token, forHTTPHeaderField: "X-Device-Token")
-        req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, resp) = try await URLSession.shared.data(for: req)
-        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        let (code, data) = try await Transport.send(link, method: "POST", path: path,
+                                                    headers: ["X-Device-Token": link.token],
+                                                    body: try JSONSerialization.data(withJSONObject: body), timeout: timeout)
         if code == 401 { throw BridgeError.message("The bridge doesn't recognise this phone anymore. Forget it in Keystone and pair again.") }
         let obj = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
         guard code == 200 else { throw BridgeError.message((obj["error"] as? String) ?? "Bridge said HTTP \(code).") }
