@@ -63,6 +63,9 @@ struct BridgeInfo: Codable, Equatable {
     var claimed: Bool?
     var ac: AC?
     var remote: Remote?
+    var boot: Boot?
+    var heapBlock: Int?
+    struct Boot: Codable, Equatable { var reason: String?; var crashes: Int?; var safeMode: Bool?; var minHeap: Int? }
     struct Remote: Codable, Equatable { var on: Bool?; var connected: Bool?; var served: Int?; var error: String? }
 
     var displayName: String { name ?? "Keystone Bridge" }

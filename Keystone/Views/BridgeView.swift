@@ -66,13 +66,31 @@ struct BridgeView: View {
                         Text("Away from home, Keystone talks to the bridge through a public MQTT relay. Everything is encrypted end to end with a key that never leaves your home Wi-Fi, so the relay only sees noise. Firmware updates still need home Wi-Fi.")
                     }
 
+                    if let b = i.boot {
+                        Section {
+                            LabeledContent("Last start", value: (b.reason ?? "?").capitalized)
+                            if let c = b.crashes, c > 0 { LabeledContent("Crashes in a row", value: "\(c)") }
+                            if let h = i.heap { LabeledContent("Free memory", value: "\(h / 1024) KB") }
+                            if let m = b.minHeap { LabeledContent("Lowest since start", value: "\(m / 1024) KB") }
+                            if let blk = i.heapBlock { LabeledContent("Largest free block", value: "\(blk / 1024) KB") }
+                            if b.safeMode == true {
+                                Button("Restart in normal mode") { Task { await store.admin("normal", done: "Restarting normally.") } }
+                            }
+                        } header: {
+                            Text("Health")
+                        } footer: {
+                            Text(b.safeMode == true
+                                 ? "Safe mode: the bridge crashed twice in a row, so the AC and remote access are paused. Lights and Home still work. If it lands back here after restarting, send these numbers."
+                                 : "Free memory under about 40 KB, or a crash as the last start, points to a problem.")
+                        }
+                    }
+
                     Section("Network") {
                         LabeledContent("Wi-Fi", value: i.ssid ?? "–")
                         LabeledContent("Signal", value: Fmt.signal(i.rssi).text)
                         LabeledContent("Address", value: i.ip ?? store.link.host)
                         LabeledContent("Up", value: Fmt.uptime(i.uptime))
                         LabeledContent("Chip", value: (i.chip ?? "?").uppercased())
-                        if let h = i.heap { LabeledContent("Free memory", value: "\(h / 1024) KB") }
                     }
 
                     Section {
