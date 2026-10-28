@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.7",
+          "buildVersion": "7",
+          "date": "2026-10-28T05:22:11Z",
+          "localizedDescription": "- Recover from a stale pairing after reinstalling Keystone (b278c17)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-7/Keystone-1.0.0-build-7.ipa",
+          "size": 592661,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.6",
           "buildVersion": "6",
           "date": "2026-10-28T05:05:12Z",
@@ -56,11 +65,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.6",
-      "versionDate": "2026-10-28T05:05:12Z",
-      "versionDescription": "- Firmware updates: no polling during the upload, own connection, auto-retry, survive screen lock (8ac056b)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-6/Keystone-1.0.0-build-6.ipa",
-      "size": 589086,
+      "version": "1.0.0.7",
+      "versionDate": "2026-10-28T05:22:11Z",
+      "versionDescription": "- Recover from a stale pairing after reinstalling Keystone (b278c17)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-7/Keystone-1.0.0-build-7.ipa",
+      "size": 592661,
       "appPermissions": {}
     }
   ],
