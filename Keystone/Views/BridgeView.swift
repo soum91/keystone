@@ -1,0 +1,134 @@
+import SwiftUI
+
+struct BridgeView: View {
+    @EnvironmentObject var store: Store
+    @State private var name = ""
+    @State private var confirm: Confirm?
+
+    enum Confirm: String, Identifiable {
+        case restart, wifi, govee, forget
+        var id: String { rawValue }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let i = store.info {
+                    Section {
+                        TextField("Name", text: $name)
+                            .onAppear { if name.isEmpty { name = i.displayName } }
+                        if name.trimmingCharacters(in: .whitespaces) != i.displayName && !name.isEmpty {
+                            Button("Rename") {
+                                Task { await store.admin("rename", ["name": name.trimmingCharacters(in: .whitespaces)], done: "Renamed.") }
+                            }
+                        }
+                    } header: {
+                        Text("Name in Apple Home")
+                    } footer: {
+                        Text("Renaming restarts the bridge. Your Home setup, rooms and automations stay.")
+                    }
+
+                    Section {
+                        LabeledContent("Firmware", value: "\(i.version ?? "?")\(i.build.map { " · build \($0)" } ?? "")")
+                        if store.updateAvailable, let l = store.latest {
+                            Button { Task { await store.installUpdate() } } label: {
+                                Label("Update to build \(l.build)", systemImage: "arrow.down.circle.fill")
+                            }
+                            .disabled(store.updating != nil && !(store.updating ?? "").hasPrefix("Updated") && !(store.updating ?? "").contains("failed"))
+                        } else if store.latest != nil {
+                            LabeledContent("Updates", value: "Up to date")
+                        }
+                        if let u = store.updating { Text(u).font(.footnote).foregroundStyle(.secondary) }
+                        Button("Check for updates") { Task { await store.checkFirmware() } }
+                    } header: {
+                        Text("Firmware")
+                    } footer: {
+                        Text("Downloads from GitHub and goes to the bridge over Wi-Fi. Wi-Fi, pairings and the Home setup are kept.")
+                    }
+
+                    Section("Network") {
+                        LabeledContent("Wi-Fi", value: i.ssid ?? "–")
+                        LabeledContent("Signal", value: Fmt.signal(i.rssi).text)
+                        LabeledContent("Address", value: i.ip ?? store.link.host)
+                        LabeledContent("Up", value: Fmt.uptime(i.uptime))
+                        LabeledContent("Chip", value: (i.chip ?? "?").uppercased())
+                        if let h = i.heap { LabeledContent("Free memory", value: "\(h / 1024) KB") }
+                    }
+
+                    Section {
+                        pairingRow("Afterglow", "lights, TV", i.paired?.afterglow, app: "afterglow")
+                        pairingRow("Subwave", "sound bar", i.paired?.subwave, app: "subwave")
+                        pairingRow("Exhale", "air purifier", i.paired?.exhale, app: "exhale")
+                        pairingRow("Redshift", "IR remotes", i.paired?.redshift, app: "redshift")
+                    } header: {
+                        Text("Apps paired with the bridge")
+                    } footer: {
+                        Text("Reset one if you reinstalled that app and it can't pair again. What it already put in Home stays.")
+                    }
+
+                    if i.govee != nil {
+                        Section {
+                            LabeledContent("Thermometer", value: i.govee?.name ?? "not picked yet")
+                            Button("Pick a different Govee sensor") { confirm = .govee }
+                        } footer: {
+                            Text("The bridge restarts and locks onto the strongest Govee sensor it hears in 30 s, so hold the right one close.")
+                        }
+                    }
+
+                    Section {
+                        Button("Restart the bridge") { confirm = .restart }
+                        Button("Change Wi-Fi network", role: .destructive) { confirm = .wifi }
+                    } footer: {
+                        Text("Changing Wi-Fi puts the bridge back into setup: join HomeSpan-Setup from your phone and pick the new network.")
+                    }
+                } else {
+                    Section { Text("Waiting for the bridge…").foregroundStyle(.secondary) }
+                }
+
+                Section {
+                    LabeledContent("Keystone talks to", value: "\(store.link.host):\(store.link.port)")
+                    Button("Forget this bridge in Keystone", role: .destructive) { confirm = .forget }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.background)
+            .navigationTitle("Bridge")
+            .confirmationDialog(title, isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }), titleVisibility: .visible) {
+                switch confirm {
+                case .restart: Button("Restart") { Task { await store.admin("restart", done: "Restarting.") } }
+                case .wifi: Button("Forget Wi-Fi", role: .destructive) { Task { await store.admin("forgetWifi", done: "Wi-Fi forgotten.") } }
+                case .govee: Button("Pick again") { Task { await store.admin("forgetGovee", done: "Picking again.") } }
+                case .forget: Button("Forget", role: .destructive) { store.forget() }
+                case nil: EmptyView()
+                }
+            }
+        }
+    }
+
+    private var title: String {
+        switch confirm {
+        case .restart: return "Restart the bridge? Home shows it as not responding for about 20 s."
+        case .wifi: return "Forget its Wi-Fi? It goes back to setup mode until you pick a network again."
+        case .govee: return "Forget the Govee sensor and pick again?"
+        case .forget: return "Forget the bridge in Keystone? The bridge itself keeps working."
+        case nil: return ""
+        }
+    }
+
+    private func pairingRow(_ name: String, _ what: String, _ paired: Bool?, app: String) -> some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(name)
+                Text(what).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if paired == true {
+                Button("Reset") { Task { await store.admin("resetPairing", ["app": app], done: "\(name) can pair again.") } }
+                    .buttonStyle(.bordered)
+                    .font(.caption)
+            } else {
+                Text("not paired").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+}

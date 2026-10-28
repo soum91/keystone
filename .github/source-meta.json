@@ -1,0 +1,13 @@
+{
+  "name": "Keystone",
+  "sourceName": "Keystone by soum91",
+  "sourceIdentifier": "io.github.soum91.keystone",
+  "subtitle": "Control panel for the home bridge",
+  "description": "Dashboard and settings for the ESP32 Apple Home bridge: room temperature, TV, purifier and lights status, the OLED screen's pages and night mode, firmware updates and pairings.",
+  "developerName": "soum91",
+  "iconURL": "https://raw.githubusercontent.com/soum91/keystone/main/Keystone/Assets.xcassets/AppIcon.appiconset/icon.png",
+  "tintColor": "FFD60A",
+  "category": "utilities",
+  "website": "https://github.com/soum91/keystone",
+  "sourceURL": "https://raw.githubusercontent.com/soum91/keystone/source/source.json"
+}
