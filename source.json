@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.6",
+          "buildVersion": "6",
+          "date": "2026-10-28T05:05:12Z",
+          "localizedDescription": "- Firmware updates: no polling during the upload, own connection, auto-retry, survive screen lock (8ac056b)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-6/Keystone-1.0.0-build-6.ipa",
+          "size": 589086,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.5",
           "buildVersion": "5",
           "date": "2026-10-28T04:39:13Z",
@@ -47,11 +56,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.5",
-      "versionDate": "2026-10-28T04:39:13Z",
-      "versionDescription": "- Show the AC and Equinox pairing (c28d55f)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-5/Keystone-1.0.0-build-5.ipa",
-      "size": 582205,
+      "version": "1.0.0.6",
+      "versionDate": "2026-10-28T05:05:12Z",
+      "versionDescription": "- Firmware updates: no polling during the upload, own connection, auto-retry, survive screen lock (8ac056b)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-6/Keystone-1.0.0-build-6.ipa",
+      "size": 589086,
       "appPermissions": {}
     }
   ],
