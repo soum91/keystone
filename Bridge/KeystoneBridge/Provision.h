@@ -80,6 +80,11 @@ static String page() {
   return h;
 }
 
+static String pendSsid, pendPass, pendCode;
+static bool pend = false, pendFromWeb = false;
+
+// Improv Serial (Wi-Fi over USB from the web installer). Off: the firmware is out of flash room.
+#ifdef KS_IMPROV
 // ---- Improv Serial (https://www.improv-wifi.com/serial/) -----------------------------------------
 
 static void improvSend(uint8_t type, const std::vector<uint8_t> &data) {
@@ -105,8 +110,6 @@ static void improvResult(uint8_t cmd, const std::vector<String> &strs) {
 
 static uint8_t ibuf[256];
 static size_t ilen = 0;
-static String pendSsid, pendPass, pendCode;
-static bool pend = false, pendFromWeb = false;
 
 static void improvHandle(uint8_t type, const uint8_t *d, uint8_t len) {
   if (type != 0x03 || len < 2) return;
@@ -151,6 +154,8 @@ static void improvPoll() {
   }
 }
 
+#endif
+
 // ---- The setup loop (runs instead of HomeSpan's access point; never returns) ----------------------
 
 static void run() {
@@ -183,25 +188,28 @@ static void run() {
   web.onNotFound([&]() { web.send(200, "text/html", page()); });   // every URL is the setup page (captive portal)
   web.begin();
   status = "";
+#ifdef KS_IMPROV
   improvState(0x02);
+#endif
   Serial.println("\n[keystone] Wi-Fi setup: join Keystone-Setup, or use the web installer's Connect to Wi-Fi.");
 
   for (;;) {
     dns.processNextRequest();
     web.handleClient();
+#ifdef KS_IMPROV
     improvPoll();
+#endif
     if (pend && (!pendFromWeb || millis() - pendAt > 1500)) {
       pend = false;
       if (tryJoin(pendSsid, pendPass)) {
         save(pendSsid, pendPass, pendCode);
+#ifdef KS_IMPROV
         if (!pendFromWeb) {
           improvState(0x04);
           improvResult(0x01, {"http://" + WiFi.localIP().toString() + ":8080/api/info"});
         }
+#endif
         doneSsid = pendSsid;
-      } else if (!pendFromWeb) {
-        improvError(0x03);   // unable to connect
-        improvState(0x02);
       }
     }
     if (doneSsid.length()) {

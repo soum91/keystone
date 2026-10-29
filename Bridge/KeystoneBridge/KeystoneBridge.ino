@@ -29,7 +29,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.1"
+#define FW_VERSION "1.9.2"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -1332,6 +1332,14 @@ void setup() {
 
   addExtraAccessories(used);
   ac::addAccessory(used);
+  // The bridge itself in Home: its screen as a switch.
+  new SpanAccessory(65020);
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();
+      new Characteristic::Name("Bridge Screen");
+      new Characteristic::Manufacturer("soum91");
+      new Characteristic::Model("Keystone Bridge");
+    new screen::HomeSwitch();
   cam::addAccessory(used);
 #ifdef HAS_GOVEE
   govee::addAccessory(used);

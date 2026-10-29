@@ -423,6 +423,17 @@ static void handleIdentify() {
   server.send(200, "application/json", "{\"ok\":true}");
 }
 
+// The screen as a switch in Apple Home (on = the screen's normal settings, off = dark).
+struct HomeSwitch : Service::Switch {
+  SpanCharacteristic *on;
+  HomeSwitch() : Service::Switch() {
+    on = new Characteristic::On(cfg.on);
+    new Characteristic::Name("Bridge Screen");
+  }
+  boolean update() override { cfg.on = on->getNewVal(); save(); return true; }
+  void loop() override { if (on->getVal() != (int)cfg.on && on->timeVal() > 2000) on->setVal(cfg.on); }
+};
+
 static void handleAdmin() {
   if (!adminOK()) return deny();
   JsonDocument d;
