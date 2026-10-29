@@ -202,20 +202,21 @@ struct DashboardView: View {
                 if a.ok == false { Text(a.error ?? "not answering").font(.caption).foregroundStyle(Theme.bad).lineLimit(2).multilineTextAlignment(.trailing) }
             }
             HStack(alignment: .firstTextBaseline) {
-                Text(a.on == true ? (auto ? "Auto" : modes[min(4, max(0, a.mode ?? 2))]) : "Off")
+                Text(a.on == true ? (auto ? "Smart" : modes[min(4, max(0, a.mode ?? 2))]) : "Off")
                     .font(.title3.weight(.semibold))
                 Spacer()
                 Toggle("", isOn: Binding(get: { a.on == true }, set: { v in Task { await store.control(["device": "ac", "on": v]) } }))
                     .labelsHidden()
             }
             Picker("Mode", selection: Binding(
-                get: { auto ? "smart" : ["fan", "heat", "cool", "dry", "cool"][min(4, max(0, a.mode ?? 2))] },
+                get: { auto ? "smart" : ["fan", "heat", "cool", "dry", "auto"][min(4, max(0, a.mode ?? 2))] },
                 set: { m in Task { await store.control(["device": "ac", "mode": m]) } })) {
                 Text("Cool").tag("cool")
                 Text("Heat").tag("heat")
                 Text("Fan").tag("fan")
                 Text("Dry").tag("dry")
-                Text("Auto").tag("smart")
+                Text("Smart").tag("smart")
+                Text("Auto").tag("auto")
             }
             .pickerStyle(.segmented)
             if let t = targetC {

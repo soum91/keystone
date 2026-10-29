@@ -125,7 +125,7 @@ static void airco(JsonDocument &d) {
     saveAuto();
     if (!st.on) { add("t_power", 1); st.on = true; }
   } else if (mode.length()) {
-    int m = mode == "fan" ? 0 : mode == "heat" ? 1 : mode == "dry" ? 3 : 2;
+    int m = mode == "fan" ? 0 : mode == "heat" ? 1 : mode == "dry" ? 3 : mode == "auto" ? 4 : 2;   // auto = the unit's own
     if (m == 1 && !cfg.heatSupported) return reply(400, "this AC can't heat");
     cfg.autoOn = false;
     smart = false;
