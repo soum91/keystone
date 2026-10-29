@@ -221,7 +221,7 @@ struct DashboardView: View {
             .pickerStyle(.segmented)
             if let t = targetC {
                 HStack {
-                    Text(auto ? "Aim for" : "Set to").foregroundStyle(.secondary)
+                    Text(auto ? "Set temp" : "Set to").foregroundStyle(.secondary)
                     Spacer()
                     Button { Task { await store.control(["device": "ac", "target": t - (f ? 5.0 / 9 : (auto ? 1 : 0.5))]) } } label: { Image(systemName: "minus.circle.fill").font(.title2) }
                     Text(Fmt.temp(t, f: tempF)).font(.title3.monospacedDigit().weight(.semibold)).frame(minWidth: 70)
@@ -239,7 +239,7 @@ struct DashboardView: View {
                 .buttonStyle(.plain).foregroundStyle(Theme.yellow)
             }
             if auto, let sp = a.auto?.setpoint, let b = a.auto?.band {
-                Text(String(format: "Cools above %.1f°C, heats below %.1f°C", sp + b, sp - b) + (a.auto?.lastSwitchAgo.map { " · last switch \(Fmt.uptime($0)) ago" } ?? ""))
+                Text(String(format: "The AC holds %.0f°. Smart only switches it to cooling if the room gets above %.0f°, or to heating below %.0f°.", sp, sp + b, sp - b) + (a.auto?.lastSwitchAgo.map { " · last switch \(Fmt.uptime($0)) ago" } ?? ""))
                     .font(.caption).foregroundStyle(.secondary)
             }
             if let r = a.room { Text(String(format: "Room %.1f°C (what Smart Auto goes by)", r)).font(.caption).foregroundStyle(.secondary) }
