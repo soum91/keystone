@@ -15,13 +15,13 @@ namespace control {
 
 static bool anyAppOK() {
   if (screen::adminOK()) return true;
-  String t = server.header("X-Device-Token");
+  String t = reqHeader("X-Device-Token");
   for (const char *app : {"exhale", "redshift", "equinox"}) if (t.length() && devToken(app) == t) return true;
-  return barToken.length() && server.header("X-Subwave-Token") == barToken;
+  return barToken.length() && reqHeader("X-Subwave-Token") == barToken;
 }
 
 static void reply(int code, const String &err = "") {
-  server.send(code, "application/json", err.length() ? "{\"error\":\"" + err + "\"}" : String("{\"ok\":true}"));
+  respond(code, err.length() ? "{\"error\":\"" + err + "\"}" : String("{\"ok\":true}"));
 }
 
 static void light(JsonDocument &d) {
@@ -152,7 +152,7 @@ static void airco(JsonDocument &d) {
 static void handle() {
   if (!anyAppOK()) return reply(401, "unauthorized");
   JsonDocument d;
-  if (deserializeJson(d, server.arg("plain"))) return reply(400, "bad json");
+  if (deserializeJson(d, reqBody())) return reply(400, "bad json");
   String dev = d["device"] | "";
   if (dev == "light") return light(d);
   if (dev == "tv") return tv(d);

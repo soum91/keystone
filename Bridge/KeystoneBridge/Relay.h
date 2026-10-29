@@ -123,6 +123,14 @@ static void handle(const String &sealed) {
   r["i"] = rid;
   if (!path.startsWith("/api/") || path.startsWith("/api/update")) {
     r["c"] = 403; r["b"] = "{\"error\":\"not over the relay\"}";
+  } else if (path.startsWith("/api/info") || path.startsWith("/api/control")) {
+    // Answered in place (no loopback through the web server, which could fail or be busy).
+    relayTask = xTaskGetCurrentTaskHandle(); relayFlag = true; relayCode = 500; relayOut = "{\"error\":\"no answer\"}";
+    relayTok = d["h"]["X-Device-Token"] | ""; relayBody = body;
+    if (path.startsWith("/api/info")) handleInfo(); else control::handle();
+    relayFlag = false;
+    r["c"] = relayCode; r["b"] = relayOut;
+    relayOut = ""; relayBody = "";
   } else {
     WiFiClient c;
     HTTPClient h;

@@ -393,8 +393,8 @@ static volatile int pendingAction = 0;   // run on HomeSpan's core: 1 restart, 2
 
 static bool adminOK() {
   String k = devToken("keystone");
-  if (k.length() && server.header("X-Device-Token") == k) return true;
-  return token.length() && server.header("X-Afterglow-Token") == token;
+  if (k.length() && reqHeader("X-Device-Token") == k) return true;
+  return token.length() && reqHeader("X-Afterglow-Token") == token;
 }
 
 static void deny() { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); }

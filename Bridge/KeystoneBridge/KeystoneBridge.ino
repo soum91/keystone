@@ -29,7 +29,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.8"
+#define FW_VERSION "1.9.9"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -134,6 +134,18 @@ static SemaphoreHandle_t stateLock;
 static std::vector<Cmd> queue;
 static Preferences prefs;
 static WebServer server(API_PORT);
+// A request can also come from the relay, handled right here without a trip through the web server.
+static bool relayFlag = false;
+static TaskHandle_t relayTask = nullptr;
+#define viaRelay (relayFlag && xTaskGetCurrentTaskHandle() == relayTask)   // only for the task handling it
+static String relayTok, relayBody, relayOut;
+static int relayCode = 0;
+static String reqHeader(const char *n) { return viaRelay ? (String(n) == "X-Device-Token" ? relayTok : String()) : server.header(n); }
+static String reqBody() { return viaRelay ? relayBody : server.arg("plain"); }
+static bool reqLite() { return viaRelay || server.hasArg("lite"); }
+static void respond(int code, const String &body) {
+  if (viaRelay) { relayCode = code; relayOut = body; } else server.send(code, "application/json", body);
+}
 static bool serverUp = false, mdnsUp = false;
 
 // Events log for the app
@@ -865,6 +877,8 @@ static void stopBluetoothForOta() {
 #include "Camera.h"
 namespace provision { static String status; }   // Wi-Fi setup progress, drawn by Screen.h, set by Provision.h
 #include "Screen.h"
+static void handleInfo();
+namespace control { static void handle(); }
 #include "Relay.h"
 #include "Provision.h"
 #include "Control.h"
@@ -972,7 +986,7 @@ static void handleInfo() {
     if (L.known) { o["on"] = L.on; o["bri"] = L.pct; }
     o["ok"] = L.ok;
   }
-  bool lite = server.hasArg("lite");
+  bool lite = reqLite();
   if (!lite) {
     JsonArray ev = d["events"].to<JsonArray>();
     for (auto &e : events) ev.add(e);
@@ -1016,7 +1030,7 @@ static void handleInfo() {
   }
   String out;
   serializeJson(d, out);
-  server.send(200, "application/json", out);
+  respond(200, out);
 }
 
 static void handleClaim() {
