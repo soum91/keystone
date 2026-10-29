@@ -165,6 +165,24 @@ final class Store: ObservableObject {
         }
     }
 
+    @Published var relayTest: String?
+
+    /// Round trip through the relay even at home, so remote access can be checked before leaving.
+    func testRelay() async {
+        relayTest = "Testing…"
+        if !viaRelay { await fetchRelay() }
+        let t0 = Date()
+        do {
+            let (code, data) = try await RelayClient.shared.request("GET", "/api/info", headers: ["X-Device-Token": link.token], body: nil, timeout: 12)
+            let ok = code == 200 && (try? JSONDecoder().decode(BridgeInfo.self, from: data)) != nil
+            relayTest = ok ? String(format: "Works: the bridge answered through the relay in %.1f s.", Date().timeIntervalSince(t0))
+                           : "The bridge answered, but with HTTP \(code)."
+        } catch {
+            relayTest = "Failed: \(error.localizedDescription)"
+        }
+        await refresh()
+    }
+
     func setRemote(on: Bool? = nil, rotate: Bool = false) async {
         var body: [String: Any] = [:]
         if let on { body["on"] = on }

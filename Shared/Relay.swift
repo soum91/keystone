@@ -99,10 +99,12 @@ actor RelayClient {
         ws = task
         task.resume()
         receiveLoop(task)
-        try await send(Self.connectPacket(clientID: "ks-app-\(UUID().uuidString.prefix(12))"))
+        // Wait for CONNACK, registered before CONNECT goes out so a fast answer can't be missed.
+        let hello = Self.connectPacket(clientID: "ks-app-\(UUID().uuidString.prefix(12))")
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             connack = cont
             Task {
+                do { try await self.send(hello) } catch { await self.failConnack(error) }
                 try? await Task.sleep(nanoseconds: 8_000_000_000)
                 await self.failConnack(RelayError.broker("no answer from the broker"))
             }

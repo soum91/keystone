@@ -58,6 +58,15 @@ struct BridgeView: View {
                                 if (r.badKey ?? 0) > 0 { LabeledContent("Wrong key", value: "\(r.badKey!) (tap Pair again at home)") }
                                 if (r.tooBig ?? 0) > 0 { LabeledContent("Replies too big", value: "\(r.tooBig!)") }
                             }
+                            if let bid = r.id {
+                                let pid = store.relay?.id ?? "none"
+                                LabeledContent("Channel", value: bid == pid ? "\(bid.prefix(6))… (matches)" : "bridge \(bid.prefix(6))…, phone \(pid.prefix(6))…")
+                                if bid != pid && !store.viaRelay {
+                                    Button("Get the bridge's current key") { Task { await store.fetchRelay(); await store.refresh() } }
+                                }
+                            }
+                            Button("Test remote access") { Task { await store.testRelay() } }
+                            if let t = store.relayTest { Text(t).font(.footnote).foregroundStyle(.secondary) }
                             LabeledContent("This phone", value: store.relay?.on == true ? (store.viaRelay ? "Using it now" : "Ready for when you're away") : "Not set up")
                             if !store.viaRelay {
                                 Button("New key (logs out other phones)") { Task { await store.setRemote(rotate: true) } }

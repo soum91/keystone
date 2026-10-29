@@ -173,9 +173,8 @@ static void poll() {
     String cid = "ks-" + id + "-" + String(esp_random() & 0xffff, HEX);
     if (!relayHolding) { if (!mq.setBufferSize(5120)) { lastError = "low memory"; return; } relayHolding = true; }
     if (mq.connect(cid.c_str())) {
-      mq.subscribe(tReq.c_str());
       connected = true;
-      lastError = "";
+      lastError = mq.subscribe(tReq.c_str()) ? "" : "couldn't subscribe to its channel";
     } else {
       lastError = "broker state " + String(mq.state());
     }
