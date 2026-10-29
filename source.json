@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.17",
+          "buildVersion": "17",
+          "date": "2026-10-29T11:05:34Z",
+          "localizedDescription": "- Remote access: test it at home, show the channel (f643262)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-17/Keystone-1.0.0-build-17.ipa",
+          "size": 925915,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.16",
           "buildVersion": "16",
           "date": "2026-10-29T09:28:41Z",
@@ -137,11 +146,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.16",
-      "versionDate": "2026-10-29T09:28:41Z",
-      "versionDescription": "- Remote access diagnostics (24f37ba)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-16/Keystone-1.0.0-build-16.ipa",
-      "size": 920711,
+      "version": "1.0.0.17",
+      "versionDate": "2026-10-29T11:05:34Z",
+      "versionDescription": "- Remote access: test it at home, show the channel (f643262)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-17/Keystone-1.0.0-build-17.ipa",
+      "size": 925915,
       "appPermissions": {}
     }
   ],
