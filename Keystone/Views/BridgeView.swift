@@ -53,6 +53,11 @@ struct BridgeView: View {
                                 set: { v in Task { await store.setRemote(on: v) } }))
                                 .disabled(store.viaRelay)
                             LabeledContent("Relay", value: r.on == true ? (r.connected == true ? "Connected" : (r.error ?? "Connecting…")) : "Off")
+                            if let h = r.heard {
+                                LabeledContent("Requests from away", value: "\(h) heard · \(r.served ?? 0) answered")
+                                if (r.badKey ?? 0) > 0 { LabeledContent("Wrong key", value: "\(r.badKey!) (tap Pair again at home)") }
+                                if (r.tooBig ?? 0) > 0 { LabeledContent("Replies too big", value: "\(r.tooBig!)") }
+                            }
                             LabeledContent("This phone", value: store.relay?.on == true ? (store.viaRelay ? "Using it now" : "Ready for when you're away") : "Not set up")
                             if !store.viaRelay {
                                 Button("New key (logs out other phones)") { Task { await store.setRemote(rotate: true) } }

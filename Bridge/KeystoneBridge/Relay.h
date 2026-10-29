@@ -28,6 +28,7 @@ static volatile bool connected = false;
 static uint32_t lastTry = 0;
 static String lastError;
 static uint32_t served = 0;
+static uint32_t heard = 0, badKey = 0, stale = 0, tooBig = 0;   // diagnostics for Keystone
 
 static String hex(const uint8_t *b, size_t n) {
   String s;
@@ -105,13 +106,14 @@ static void onMessage(char *, byte *payload, unsigned int len) {
 // Replays one request against the local web API.
 static void handle(const String &sealed) {
   String plain;
-  if (!open(sealed, plain)) return;   // not ours, or tampered
+  heard++;
+  if (!open(sealed, plain)) { badKey++; lastError = "a request with the wrong key (phone has an old key?)"; return; }
   JsonDocument d;
   if (deserializeJson(d, plain)) return;
   String rid = d["i"] | "";
   long ts = d["t"] | 0L;
   long now = (long)time(nullptr);
-  if (!rid.length() || (now > 1700000000 && labs(now - ts) > 300)) return;   // stale
+  if (!rid.length() || (now > 1700000000 && labs(now - ts) > 300)) { stale++; lastError = "a request with the wrong time"; return; }
   for (auto &x : seen) if (x == rid) return;                                 // replay
   seen.push_back(rid);
   if (seen.size() > 40) seen.erase(seen.begin());
@@ -141,8 +143,12 @@ static void handle(const String &sealed) {
   }
   String out;
   serializeJson(r, out);
-  mq.publish(tRes.c_str(), seal(out).c_str());
-  served++;
+  String sealedOut = seal(out);
+  size_t need = sealedOut.length() + tRes.length() + 16;
+  bool grew = need > mq.getBufferSize() && mq.setBufferSize(need + 64);   // a big status: grow just for this reply
+  if (mq.publish(tRes.c_str(), sealedOut.c_str())) { served++; if (lastError.startsWith("a reply")) lastError = ""; }
+  else { tooBig++; lastError = "a reply too big to send (" + String(sealedOut.length()) + " bytes)"; }
+  if (grew) mq.setBufferSize(5120);
 }
 
 // One pass, called from the Arduino loop (no task of its own: saves 10 KB of stack).
@@ -228,6 +234,7 @@ static void info(JsonDocument &d) {
   o["on"] = on;
   o["connected"] = (bool)connected;
   o["served"] = served;
+  o["heard"] = heard; o["badKey"] = badKey; o["stale"] = stale; o["tooBig"] = tooBig;
   o["id"] = id;   // not secret (the key is): lets a phone notice the bridge was reset and fetch the new key
   if (lastError.length()) o["error"] = lastError;
 }
