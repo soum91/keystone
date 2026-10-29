@@ -202,7 +202,7 @@ struct DashboardView: View {
                 if a.ok == false { Text(a.error ?? "not answering").font(.caption).foregroundStyle(Theme.bad).lineLimit(2).multilineTextAlignment(.trailing) }
             }
             HStack(alignment: .firstTextBaseline) {
-                Text(a.on == true ? (auto ? "Smart Auto" : modes[min(4, max(0, a.mode ?? 2))]) : "Off")
+                Text(a.on == true ? (auto ? "Auto" : modes[min(4, max(0, a.mode ?? 2))]) : "Off")
                     .font(.title3.weight(.semibold))
                 Spacer()
                 Toggle("", isOn: Binding(get: { a.on == true }, set: { v in Task { await store.control(["device": "ac", "on": v]) } }))
@@ -215,16 +215,25 @@ struct DashboardView: View {
                 Text("Heat").tag("heat")
                 Text("Fan").tag("fan")
                 Text("Dry").tag("dry")
-                Text("Smart").tag("smart")
+                Text("Auto").tag("smart")
             }
             .pickerStyle(.segmented)
             if let t = targetC {
                 HStack {
                     Text(auto ? "Aim for" : "Set to").foregroundStyle(.secondary)
                     Spacer()
-                    Button { Task { await store.control(["device": "ac", "target": t - (f ? 5.0 / 9 : 0.5)]) } } label: { Image(systemName: "minus.circle.fill").font(.title2) }
+                    Button { Task { await store.control(["device": "ac", "target": t - (f ? 5.0 / 9 : (auto ? 1 : 0.5))]) } } label: { Image(systemName: "minus.circle.fill").font(.title2) }
                     Text(Fmt.temp(t, f: tempF)).font(.title3.monospacedDigit().weight(.semibold)).frame(minWidth: 70)
-                    Button { Task { await store.control(["device": "ac", "target": t + (f ? 5.0 / 9 : 0.5)]) } } label: { Image(systemName: "plus.circle.fill").font(.title2) }
+                    Button { Task { await store.control(["device": "ac", "target": t + (f ? 5.0 / 9 : (auto ? 1 : 0.5))]) } } label: { Image(systemName: "plus.circle.fill").font(.title2) }
+                }
+                .buttonStyle(.plain).foregroundStyle(Theme.yellow)
+            }
+            if auto, let b = a.auto?.band {
+                HStack {
+                    Text(String(format: "Switch at ±%.0f°C", b)).foregroundStyle(.secondary)
+                    Spacer()
+                    Button { Task { await store.control(["device": "ac", "band": max(1, b - 1)]) } } label: { Image(systemName: "minus.circle") .font(.title3) }
+                    Button { Task { await store.control(["device": "ac", "band": min(6, b + 1)]) } } label: { Image(systemName: "plus.circle").font(.title3) }
                 }
                 .buttonStyle(.plain).foregroundStyle(Theme.yellow)
             }

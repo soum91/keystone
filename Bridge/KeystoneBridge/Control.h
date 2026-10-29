@@ -138,12 +138,14 @@ static void airco(JsonDocument &d) {
     if (smart) { cfg.setpoint = target; saveAuto(); }
     else { int t = fromC(target, f); add("t_temp", t); st.target = t; }
   }
+  float band = d["band"] | NAN;   // Auto: how far past the target before it switches between cooling and heating
+  if (!isnan(band)) { cfg.band = constrain(band, 0.5f, 6.0f); saveAuto(); }
   String fan = d["fan"] | "";
   if (fan.length()) add("t_fan_speed", fan == "low" ? 2 : fan == "med" ? 3 : fan == "high" ? 4 : 0);
   homeSetAt = 0;   // let the tile pick the new state up from the next poll
   if (p.length()) enqueueProps(p);
   if (smart) enqueueAutoNow();
-  if (!p.length() && !smart) return reply(400, "nothing to do");
+  if (!p.length() && !smart && isnan(band)) return reply(400, "nothing to do");
   reply(200);
 }
 

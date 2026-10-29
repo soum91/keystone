@@ -74,7 +74,7 @@ struct KScene: Codable, Identifiable, Hashable {
         if let a = i.ac, a.configured == true {
             if a.on == true {
                 if a.auto?.enabled == true {
-                    out.append(Action(label: String(format: "AC Smart Auto %.1f°", a.auto?.setpoint ?? 23), device: "ac",
+                    out.append(Action(label: String(format: "AC Auto %.1f°", a.auto?.setpoint ?? 23), device: "ac",
                                       mode: "smart", target: a.auto?.setpoint))
                 } else {
                     let f = a.fahrenheit == true
@@ -103,7 +103,7 @@ struct KScene: Codable, Identifiable, Hashable {
         if bar { movie.append(Action(label: "Sound bar on", device: "bar", on: true)) }
         var bed = allOff
         if i.ac?.configured == true {
-            bed.append(Action(label: String(format: "AC Smart Auto %.1f°", i.ac?.auto?.setpoint ?? 22), device: "ac",
+            bed.append(Action(label: String(format: "AC Auto %.1f°", i.ac?.auto?.setpoint ?? 22), device: "ac",
                               mode: "smart", target: i.ac?.auto?.setpoint ?? 22))
         }
         if i.purifier?.configured == true { bed.append(Action(label: "Purifier on, auto", device: "purifier", on: true, auto: true)) }
