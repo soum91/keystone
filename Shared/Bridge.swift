@@ -76,6 +76,8 @@ struct BridgeInfo: Codable, Equatable {
     struct Remote: Codable, Equatable { var on: Bool?; var connected: Bool?; var served: Int?; var error: String?; var id: String?
         var heard: Int?; var badKey: Int?; var stale: Int?; var tooBig: Int? }
     var auth: Bool?
+    var features: Features?
+    struct Features: Codable, Equatable { var ac: Bool?; var cam: Bool? }
 
     var displayName: String { name ?? "Keystone Bridge" }
     var lightsOn: Int { (lights ?? []).filter { $0.on == true }.count }

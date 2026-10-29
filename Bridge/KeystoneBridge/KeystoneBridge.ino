@@ -29,7 +29,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.7"
+#define FW_VERSION "1.9.8"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -45,7 +45,8 @@ static volatile uint32_t workerBeat = 0;   // the worker's heartbeat (see worker
 // connection and its message buffer) so the memory is there.
 static volatile bool acNetBusy = false;
 static volatile bool relayHolding = false;
-static void (*relayLetGo)() = nullptr;   // set by Relay.h: drop the relay and its buffer right now
+static void (*relayLetGo)() = nullptr;
+static bool acEnabled = true, camEnabled = true;   // switched in Keystone: off = no cloud calls, more free memory   // set by Relay.h: drop the relay and its buffer right now
 #define API_PORT 8080
 #define POLL_MS 15000UL          // per light when reachable
 #define POLL_FAIL_MS 60000UL     // per light after repeated failures
@@ -997,7 +998,8 @@ static void handleInfo() {
 #endif
   if (safeMode && d["ac"].is<JsonObject>()) d["ac"]["error"] = "paused: bridge was crash-looping (safe mode)";
   relay::info(d);
-  d["auth"] = screen::adminOK();   // does the bridge know the phone asking? (false after a reset)
+  d["auth"] = screen::adminOK();
+  d["features"]["ac"] = acEnabled; d["features"]["cam"] = camEnabled;   // does the bridge know the phone asking? (false after a reset)
 #ifdef HAS_GOVEE
   govee::info(d);
 #endif
@@ -1271,6 +1273,7 @@ void setup() {
     if (len) nvs_close(h);
     if (setupOnly) { Serial.println("[keystone] no Wi-Fi saved: lean setup boot"); }
   }
+  acEnabled = prefs.getBool("en_ac", true); camEnabled = prefs.getBool("en_cam", true);
   ac::load();
   cam::load();
   relay::begin();

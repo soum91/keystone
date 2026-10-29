@@ -401,7 +401,7 @@ static void netWork(const Cmd &c, bool have);
 
 static void step() {
   if (!started) { refreshToken = prefs.getString("ac_rt", ""); started = true; }
-  if (millis() < 30000UL || otaActive || safeMode || setupOnly || !cfg.configured || govee::radioOn ||
+  if (!acEnabled || millis() < 30000UL || otaActive || safeMode || setupOnly || !cfg.configured || govee::radioOn ||
       WiFi.status() != WL_CONNECTED || time(nullptr) < 1700000000) return;
   Cmd c{"", false};
   bool have = false;

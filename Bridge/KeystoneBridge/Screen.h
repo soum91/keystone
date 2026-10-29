@@ -439,7 +439,10 @@ static void handleAdmin() {
   JsonDocument d;
   deserializeJson(d, server.arg("plain"));
   String a = d["action"] | "";
-  if (a == "restart" || a == "normal") {
+  if (a == "features") {
+    if (!d["ac"].isNull()) { acEnabled = d["ac"]; prefs.putBool("en_ac", acEnabled); }
+    if (!d["cam"].isNull()) { camEnabled = d["cam"]; prefs.putBool("en_cam", camEnabled); }
+  } else if (a == "restart" || a == "normal") {
     prefs.putInt("crashes", 0);   // a deliberate restart always comes back in normal mode
     pendingAction = 1;
   } else if (a == "forgetWifi") {

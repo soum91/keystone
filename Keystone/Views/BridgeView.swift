@@ -80,6 +80,17 @@ struct BridgeView: View {
                         Text("Away from home, Keystone talks to the bridge through a public MQTT relay. Everything is encrypted end to end with a key that never leaves your home Wi-Fi, so the relay only sees noise. Firmware updates still need home Wi-Fi.")
                     }
 
+                    if let f = i.features {
+                        Section {
+                            Toggle("AC (ConnectLife cloud)", isOn: Binding(get: { f.ac ?? true },
+                                set: { v in Task { await store.admin("features", ["ac": v], done: v ? "AC on." : "AC off: its memory is free.") } }))
+                            Toggle("Camera (Vicohome cloud)", isOn: Binding(get: { f.cam ?? true },
+                                set: { v in Task { await store.admin("features", ["cam": v], done: v ? "Camera on." : "Camera off: its memory is free.") } }))
+                        } header: { Text("Cloud devices on the bridge") } footer: {
+                            Text("Each one needs about 50 KB of the bridge's memory while it talks to its cloud. Turn off what you don't need right now so the rest (and remote access) run smoothly. Their apps still work on their own.")
+                        }
+                    }
+
                     if let b = i.boot {
                         Section {
                             LabeledContent("Last start", value: (b.reason ?? "?").capitalized)

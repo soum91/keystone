@@ -339,7 +339,7 @@ static void pollDevice() {
 // From the worker, like ac::step(). Never while Bluetooth has the memory.
 static void step() {
   runRuleTimer();
-  if (!cfg.configured || millis() < 30000UL || otaActive || safeMode || setupOnly || govee::radioOn ||
+  if (!camEnabled || !cfg.configured || millis() < 30000UL || otaActive || safeMode || setupOnly || govee::radioOn ||
       WiFi.status() != WL_CONNECTED || time(nullptr) < 1700000000) return;
   if (!lastDevice || millis() - lastDevice > CAM_DEVICE_MS) { lastDevice = millis(); pollDevice(); return; }
   if (millis() - lastEvents > (st.ok ? CAM_POLL_MS : CAM_SLOW_MS)) { lastEvents = millis(); pollEvents(); return; }
