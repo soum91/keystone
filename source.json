@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.23",
+          "buildVersion": "23",
+          "date": "2026-10-29T21:07:54Z",
+          "localizedDescription": "- Switch the AC and camera on the bridge on or off (e9c2dcc)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-23/Keystone-1.0.0-build-23.ipa",
+          "size": 939793,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.22",
           "buildVersion": "22",
           "date": "2026-10-29T20:54:17Z",
@@ -191,11 +200,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.22",
-      "versionDate": "2026-10-29T20:54:17Z",
-      "versionDescription": "- Remote access and Wi-Fi reachability: fix the real causes (1c958c0)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-22/Keystone-1.0.0-build-22.ipa",
-      "size": 933031,
+      "version": "1.0.0.23",
+      "versionDate": "2026-10-29T21:07:54Z",
+      "versionDescription": "- Switch the AC and camera on the bridge on or off (e9c2dcc)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-23/Keystone-1.0.0-build-23.ipa",
+      "size": 939793,
       "appPermissions": {}
     }
   ],
