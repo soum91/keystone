@@ -27,7 +27,8 @@ struct RunSceneIntent: AppIntent {
             return .result(dialog: "That scene is gone.")
         }
         let failed = await KScene.run(s)
-        return .result(dialog: failed.isEmpty ? "\(s.name) is set." : "\(s.name): couldn't do \(failed.joined(separator: ", ")).")
+        let msg = failed.isEmpty ? "\(s.name) is set." : "\(s.name): couldn't do \(failed.joined(separator: ", "))."
+        return .result(dialog: IntentDialog(stringLiteral: msg))
     }
 }
 
