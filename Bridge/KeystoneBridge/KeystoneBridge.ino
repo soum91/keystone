@@ -29,7 +29,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.6"
+#define FW_VERSION "1.9.7"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -45,6 +45,7 @@ static volatile uint32_t workerBeat = 0;   // the worker's heartbeat (see worker
 // connection and its message buffer) so the memory is there.
 static volatile bool acNetBusy = false;
 static volatile bool relayHolding = false;
+static void (*relayLetGo)() = nullptr;   // set by Relay.h: drop the relay and its buffer right now
 #define API_PORT 8080
 #define POLL_MS 15000UL          // per light when reachable
 #define POLL_FAIL_MS 60000UL     // per light after repeated failures
@@ -1174,7 +1175,7 @@ static void worker(void *) {
     workerBeat = millis();
     if (millis() - lastDraw > 500) { lastDraw = millis(); screen::draw(); }
     if (millis() - lastNet > 3000) { lastNet = millis(); startNetworkServices(); }
-    if (serverUp) server.handleClient();
+    relay::poll();   // the web server runs in loop() now, so slow cloud calls here can't freeze it
     if (WiFi.status() != WL_CONNECTED) { vTaskDelay(pdMS_TO_TICKS(200)); continue; }
 
     // Commands first, they're what a person is waiting on.
@@ -1359,7 +1360,7 @@ void loop() {
     ESP.restart();
   }
   screen::runPending();
-  relay::poll();
+  if (serverUp) server.handleClient();
   static bool stable = false;
   if (!stable && millis() > 180000UL) { stable = true; if (crashCount) prefs.putInt("crashes", 0); }
 }

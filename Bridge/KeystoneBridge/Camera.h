@@ -82,9 +82,9 @@ static int post(const String &url, const String &body, JsonDocument &filter, Jso
                 const char *h1 = nullptr, const String &v1 = "", const char *h2 = nullptr, const char *v2 = nullptr) {
   workerBeat = millis();
   bool borrowed = false;
-  if (ESP.getMaxAllocHeap() < 40000 && relayHolding) {
+  if (ESP.getMaxAllocHeap() < 34000 && relayHolding) {   // only when it really can't fit otherwise
     borrowed = acNetBusy = true;
-    for (int i = 0; i < 80 && relayHolding; i++) vTaskDelay(pdMS_TO_TICKS(25));
+    if (relayLetGo) relayLetGo();
   }
   int code = -1;
   if (ESP.getMaxAllocHeap() < 30000) {

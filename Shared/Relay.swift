@@ -242,9 +242,12 @@ actor RelayClient {
         return Data([0x82]) + remaining(v.count) + v
     }
 
+    private static var nextID: UInt16 = 1
+    /// QoS 1: the broker holds it for the bridge's persistent session if the bridge is reconnecting.
     static func publish(topic: String, payload: Data) -> Data {
-        let v = str(topic) + payload
-        return Data([0x30]) + remaining(v.count) + v
+        nextID = nextID &+ 1; if nextID == 0 { nextID = 1 }
+        let v = str(topic) + Data([UInt8(nextID >> 8), UInt8(nextID & 0xff)]) + payload
+        return Data([0x32]) + remaining(v.count) + v
     }
 
     /// (first byte, body, bytes used), or nil if the buffer doesn't hold a whole packet yet.

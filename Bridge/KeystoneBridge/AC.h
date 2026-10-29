@@ -411,7 +411,7 @@ static void step() {
   if (!have && !(wantPoll || millis() - lastPoll > 60000UL)) return;
   // Clear the decks: ask the relay to let go of its memory, wait (briefly) until it has.
   acNetBusy = true;
-  for (int i = 0; i < 80 && relayHolding; i++) vTaskDelay(pdMS_TO_TICKS(25));
+  if (relayLetGo) relayLetGo();   // same task as the relay: hand its memory over directly
   netWork(c, have);
   acNetBusy = false;
 }

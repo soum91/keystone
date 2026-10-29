@@ -151,7 +151,10 @@ static void handle(const String &sealed) {
   if (grew) mq.setBufferSize(5120);
 }
 
-// One pass, called from the Arduino loop (no task of its own: saves 10 KB of stack).
+// One pass, called from the worker (no task of its own: saves 10 KB of stack). The AC and camera calls run
+// on the same task and drop the relay through relayLetGo when they need its memory. The broker keeps a
+// persistent session (fixed client id, clean session off, QoS 1), so a request sent while the relay is
+// reconnecting waits at the broker and arrives a moment later instead of being lost.
 static void letGo() {
   if (mq.connected()) mq.disconnect();
   net.stop();
@@ -167,14 +170,14 @@ static void poll() {
   }
   if (!mq.connected()) {
     connected = false;
-    if (lastTry && millis() - lastTry < 30000UL) return;
+    if (lastTry && millis() - lastTry < 10000UL) return;
     lastTry = millis();
     if (ESP.getMaxAllocHeap() < 12000) { lastError = "low memory"; return; }
-    String cid = "ks-" + id + "-" + String(esp_random() & 0xffff, HEX);
+    String cid = "ks-" + id;   // fixed, so the broker keeps this bridge's session and queued requests
     if (!relayHolding) { if (!mq.setBufferSize(5120)) { lastError = "low memory"; return; } relayHolding = true; }
-    if (mq.connect(cid.c_str())) {
+    if (mq.connect(cid.c_str(), nullptr, nullptr, nullptr, 0, false, nullptr, false)) {
       connected = true;
-      lastError = mq.subscribe(tReq.c_str()) ? "" : "couldn't subscribe to its channel";
+      lastError = mq.subscribe(tReq.c_str(), 1) ? "" : "couldn't subscribe to its channel";
     } else {
       lastError = "broker state " + String(mq.state());
     }
@@ -199,6 +202,7 @@ static void begin() {
   mq.setServer(BROKER, BROKER_PORT);
   mq.setCallback(onMessage);
   mq.setBufferSize(16);   // the real buffer is taken when connecting
+  relayLetGo = [] { letGo(); lastTry = 0; };
   mq.setKeepAlive(45);
   mq.setSocketTimeout(4);
 }
