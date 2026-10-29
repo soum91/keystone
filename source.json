@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.21",
+          "buildVersion": "21",
+          "date": "2026-10-29T16:36:09Z",
+          "localizedDescription": "- Smart: say what the number is (2457464)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-21/Keystone-1.0.0-build-21.ipa",
+          "size": 932563,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.20",
           "buildVersion": "20",
           "date": "2026-10-29T16:26:35Z",
@@ -173,11 +182,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.20",
-      "versionDate": "2026-10-29T16:26:35Z",
-      "versionDescription": "- AC: both Smart and the unit's own Auto (35b8c46)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-20/Keystone-1.0.0-build-20.ipa",
-      "size": 932866,
+      "version": "1.0.0.21",
+      "versionDate": "2026-10-29T16:36:09Z",
+      "versionDescription": "- Smart: say what the number is (2457464)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-21/Keystone-1.0.0-build-21.ipa",
+      "size": 932563,
       "appPermissions": {}
     }
   ],
