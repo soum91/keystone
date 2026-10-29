@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.20",
+          "buildVersion": "20",
+          "date": "2026-10-29T16:26:35Z",
+          "localizedDescription": "- AC: both Smart and the unit's own Auto (35b8c46)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-20/Keystone-1.0.0-build-20.ipa",
+          "size": 932866,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.19",
           "buildVersion": "19",
           "date": "2026-10-29T16:18:47Z",
@@ -164,11 +173,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.19",
-      "versionDate": "2026-10-29T16:18:47Z",
-      "versionDescription": "- AC: one Auto, same as Equinox (73256a9)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-19/Keystone-1.0.0-build-19.ipa",
-      "size": 932280,
+      "version": "1.0.0.20",
+      "versionDate": "2026-10-29T16:26:35Z",
+      "versionDescription": "- AC: both Smart and the unit's own Auto (35b8c46)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-20/Keystone-1.0.0-build-20.ipa",
+      "size": 932866,
       "appPermissions": {}
     }
   ],
