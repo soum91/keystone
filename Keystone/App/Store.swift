@@ -135,6 +135,7 @@ final class Store: ObservableObject {
     func stopPolling() {
         pollTask?.cancel()
         pollTask = nil
+        Task { await RelayClient.shared.disconnect() }   // iOS kills it in the background anyway; start clean
     }
 
     func refresh() async {

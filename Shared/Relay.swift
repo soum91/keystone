@@ -55,6 +55,19 @@ actor RelayClient {
 
     func request(_ method: String, _ path: String, headers: [String: String], body: String?, timeout: Double) async throws -> (Int, Data) {
         guard let c = RelayConfig.stored, c.on, let key = c.symmetricKey else { throw RelayError.notSetUp }
+        let reused = ready && cfg == c && ws != nil
+        do {
+            return try await attempt(c, key, method, path, headers, body, reused ? min(timeout, 6) : timeout)
+        } catch {
+            guard reused else { throw error }
+            // The kept-open connection may be dead (network change, app suspended): start fresh, once.
+            disconnect()
+            return try await attempt(c, key, method, path, headers, body, timeout)
+        }
+    }
+
+    private func attempt(_ c: RelayConfig, _ key: SymmetricKey, _ method: String, _ path: String,
+                         _ headers: [String: String], _ body: String?, _ timeout: Double) async throws -> (Int, Data) {
         try await ensureConnected(c)
         let rid = UUID().uuidString
         var msg: [String: Any] = ["i": rid, "t": Int(Date().timeIntervalSince1970), "m": method, "p": path, "h": headers]
@@ -147,12 +160,15 @@ actor RelayClient {
                 Task { await self.ingest(d) }
                 self.receiveLoop(task)
             case .failure(let e):
-                Task { await self.dropped(e) }
+                Task { await self.dropped(e, task) }
             }
         }
     }
 
-    private func dropped(_ e: Error) {
+    private func dropped(_ e: Error, _ task: URLSessionWebSocketTask) {
+        // Only the current socket counts: replacing a connection cancels the old one, and its last
+        // "socket is not connected" must not kill the new connection or the request waiting on it.
+        guard task === ws else { return }
         ready = false
         ws = nil
         failConnack(e)
