@@ -19,7 +19,9 @@ final class Store: ObservableObject {
     @Published var relay = RelayConfig.stored
     @Published var viaRelay = false
     @Published var lastError: String?
-    @Published var forgotten = false   // the bridge was reset and no longer knows this phone
+    @Published var forgotten = false
+    @Published var scenes = KScene.stored
+    @Published var runningScene: UUID?   // the bridge was reset and no longer knows this phone
 
     private var pollTask: Task<Void, Never>?
     private var displayTask: Task<Void, Never>?
@@ -188,6 +190,7 @@ final class Store: ObservableObject {
         // Don't fight the sliders while someone is moving them.
         if let d = i.display, Date().timeIntervalSince(displayEditedAt) > 4 { display = d }
         Snapshot.stored = Snapshot(info: i, at: .now)
+        if (i.lights ?? []).count > 0 { seedScenes(i) }
         if changedForWidget { WidgetCenter.shared.reloadAllTimelines() }
     }
 
@@ -213,6 +216,39 @@ final class Store: ObservableObject {
     func identify() async {
         do { try await BridgeAPI.post("/api/identify", [:], link); show("Look at the bridge: its screen says hello for 8 s.") }
         catch { show(error.localizedDescription) }
+    }
+
+    // MARK: Scenes
+
+    func runScene(_ s: KScene) async {
+        runningScene = s.id
+        let failed = await KScene.run(s, link: link)
+        runningScene = nil
+        show(failed.isEmpty ? "\(s.name) is set." : "Couldn't do: \(failed.joined(separator: ", "))")
+        await refresh()
+    }
+
+    func saveScene(_ s: KScene) {
+        if let i = scenes.firstIndex(where: { $0.id == s.id }) { scenes[i] = s } else { scenes.append(s) }
+        KScene.stored = scenes
+        KeystoneShortcuts.updateAppShortcutParameters()
+    }
+
+    func deleteScene(_ s: KScene) {
+        scenes.removeAll { $0.id == s.id }
+        KScene.stored = scenes
+        KeystoneShortcuts.updateAppShortcutParameters()
+    }
+
+    /// The first time the bridge is seen: a few scenes to start from.
+    private func seedScenes(_ i: BridgeInfo) {
+        guard scenes.isEmpty, !UserDefaults.standard.bool(forKey: "scenesSeeded") else { return }
+        let st = KScene.starters(i)
+        guard !st.isEmpty else { return }
+        UserDefaults.standard.set(true, forKey: "scenesSeeded")
+        scenes = st
+        KScene.stored = st
+        KeystoneShortcuts.updateAppShortcutParameters()
     }
 
     // MARK: Control (LAN or relay)

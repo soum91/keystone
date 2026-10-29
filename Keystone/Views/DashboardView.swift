@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var store: Store
+    @State private var editing: KScene?
 
     var body: some View {
         NavigationStack {
@@ -12,6 +13,7 @@ struct DashboardView: View {
                         problems
                         if let i = store.info {
                             header(i)
+                            scenesCard(i)
                             if let c = i.countdown { countdownCard(c) }
                             HStack(alignment: .top, spacing: 14) {
                                 roomCard(i)
@@ -34,6 +36,7 @@ struct DashboardView: View {
                 .refreshable { await store.refresh() }
             }
             .navigationTitle(store.info?.displayName ?? "Bridge")
+            .sheet(item: $editing) { sc in SceneEditor(scene: sc) }
         }
     }
 
@@ -79,6 +82,50 @@ struct DashboardView: View {
                     Text(i.ssid ?? "").font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Text("v\(i.version ?? "?")\(i.build.map { " · build \($0)" } ?? "")").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .card()
+    }
+
+    private func scenesCard(_ i: BridgeInfo) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                CardTitle(text: "Scenes", icon: "sparkles")
+                Spacer()
+                Button {
+                    editing = KScene(name: "", icon: "sparkles", actions: KScene.capture(i))
+                } label: { Image(systemName: "plus.circle.fill").font(.title3) }
+                .accessibilityLabel("New scene from how things are now")
+            }
+            if store.scenes.isEmpty {
+                Text("Set things the way you like, then tap + to save it as a scene.").font(.caption).foregroundStyle(.secondary)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(store.scenes) { sc in
+                        Button { Task { await store.runScene(sc) } } label: {
+                            VStack(spacing: 6) {
+                                if store.runningScene == sc.id { ProgressView().frame(height: 22) }
+                                else { Image(systemName: sc.icon).font(.title3).frame(height: 22) }
+                                Text(sc.name).font(.caption.weight(.medium)).lineLimit(1)
+                            }
+                            .frame(width: 84, height: 64)
+                            .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 14))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(store.runningScene != nil)
+                        .contextMenu {
+                            Button { editing = sc } label: { Label("Edit", systemImage: "pencil") }
+                            Button { var u = sc; u.actions = KScene.capture(i); editing = u } label: {
+                                Label("Replace with how things are now", systemImage: "camera")
+                            }
+                            Button(role: .destructive) { store.deleteScene(sc) } label: { Label("Delete", systemImage: "trash") }
+                        }
+                    }
+                }
+            }
+            if !store.scenes.isEmpty {
+                Text("Hold a scene to edit it. Siri: \"Run Movie in Keystone\".").font(.caption2).foregroundStyle(.secondary)
             }
         }
         .card()
@@ -407,5 +454,58 @@ struct LightRow: View {
         }
         .onAppear { bri = Double(light.bri ?? 100) }
         .onChange(of: light.bri) { _, v in if !dragging, let v { bri = Double(v) } }
+    }
+}
+
+/// Name a scene and choose which of the captured device states it sets.
+struct SceneEditor: View {
+    @EnvironmentObject var store: Store
+    @Environment(\.dismiss) private var dismiss
+    @State var scene: KScene
+    @State private var off: Set<UUID> = []
+
+    private let icons = ["sparkles", "power", "film", "moon.stars", "sun.max", "sofa", "bed.double", "gamecontroller", "book", "figure.walk", "house", "snowflake"]
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Name") {
+                    TextField("e.g. Movie night", text: $scene.name)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(icons, id: \.self) { ic in
+                                Image(systemName: ic)
+                                    .frame(width: 36, height: 36)
+                                    .background(scene.icon == ic ? Theme.yellow.opacity(0.3) : .clear, in: Circle())
+                                    .onTapGesture { scene.icon = ic }
+                            }
+                        }
+                    }
+                }
+                Section {
+                    ForEach(scene.actions) { a in
+                        Toggle(a.label, isOn: Binding(get: { !off.contains(a.id) },
+                                                     set: { v in if v { off.remove(a.id) } else { off.insert(a.id) } }))
+                    }
+                } header: { Text("What it sets") } footer: {
+                    Text("Taken from how things are right now. Untick anything the scene should leave alone. To change a value, set the device on the dashboard, then hold the scene › Replace with how things are now.")
+                }
+            }
+            .navigationTitle(scene.name.isEmpty ? "New scene" : scene.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        var s = scene
+                        s.name = s.name.trimmingCharacters(in: .whitespaces)
+                        s.actions.removeAll { off.contains($0.id) }
+                        store.saveScene(s)
+                        dismiss()
+                    }
+                    .disabled(scene.name.trimmingCharacters(in: .whitespaces).isEmpty || scene.actions.count == off.count)
+                }
+            }
+        }
     }
 }
