@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.28",
+          "buildVersion": "28",
+          "date": "2026-10-30T19:30:08Z",
+          "localizedDescription": "- Router lights follow the room lights (bridge 1.9.12) (9e1b851)\n- Bridge network watchdog: fix the build (a316de5)\n- Bridge: restart itself when the network is gone (8defad7)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-28/Keystone-1.0.0-build-28.ipa",
+          "size": 1361091,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.27",
           "buildVersion": "27",
           "date": "2026-10-30T19:12:37Z",
@@ -236,11 +245,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.27",
-      "versionDate": "2026-10-30T19:12:37Z",
-      "versionDescription": "- Router tab: clearer timeout errors (4656340)\n- Bridge relay: refuse non-status/control requests instead of hanging 9 s (c46c97e)\n- Bridge: router deny-list instead of allow-list, no ArduinoJson std::stream support (0ccb674)\n- Bridge: trim flash (shared relay auth loop, shorter router errors, status bar on the 6x10 font) (16dd6ac)\n- Bridge CI: list the largest symbols in the build log (a58e5fd)\n- Bridge: fit in flash again (router module without ArduinoJson, TV page uses helvB12) (92240ad)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-27/Keystone-1.0.0-build-27.ipa",
-      "size": 1358330,
+      "version": "1.0.0.28",
+      "versionDate": "2026-10-30T19:30:08Z",
+      "versionDescription": "- Router lights follow the room lights (bridge 1.9.12) (9e1b851)\n- Bridge network watchdog: fix the build (a316de5)\n- Bridge: restart itself when the network is gone (8defad7)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-28/Keystone-1.0.0-build-28.ipa",
+      "size": 1361091,
       "appPermissions": {}
     }
   ],
