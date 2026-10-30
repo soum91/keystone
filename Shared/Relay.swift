@@ -269,6 +269,16 @@ actor RelayClient {
 }
 
 /// LAN first; the relay when the bridge isn't reachable directly (away from home, VPN on).
+/// What happened on each try, newest last. Shown in Bridge › Diagnostics and shareable.
+enum NetLog {
+    private static let lock = NSLock()
+    private(set) static var lines: [String] = []
+    static func add(_ s: String) {
+        let t = Date().formatted(date: .omitted, time: .standard)
+        lock.lock(); lines.append("\(t) \(s)"); if lines.count > 200 { lines.removeFirst(lines.count - 200) }; lock.unlock()
+    }
+}
+
 enum Transport {
     private static var preferRelayUntil = Date.distantPast
     private static let lock = NSLock()
@@ -277,21 +287,29 @@ enum Transport {
     static func send(_ link: BridgeLink, method: String, path: String, headers: [String: String] = [:],
                      body: Data? = nil, timeout: Double = 6) async throws -> (Int, Data) {
         let relayReady = RelayConfig.stored?.on == true
-        lock.lock(); let skipLAN = relayReady && preferRelayUntil > Date(); lock.unlock()
+        lock.lock(); let skipLAN = relayReady && preferRelayUntil > Date() && Date().timeIntervalSince(preferRelayUntil) > -15; lock.unlock()
         if !skipLAN {
             do {
-                let r = try await lan(link, method, path, headers, body, relayReady ? min(timeout, 2.5) : timeout)
+                let r = try await lan(link, method, path, headers, body, relayReady ? min(timeout, 4) : timeout)
                 lastWasRelay = false
+                if path.hasPrefix("/api/info") == false { NetLog.add("LAN \(method) \(path) → \(r.0)") }
                 return r
             } catch let e as URLError where relayReady && e.code != .cancelled {
+                NetLog.add("LAN \(link.host) \(path) failed: \(e.code.rawValue) \(e.localizedDescription)")
                 // Any network failure on the LAN path (cellular, VPN, other Wi-Fi): go through the relay.
                 lock.lock(); preferRelayUntil = Date().addingTimeInterval(45); lock.unlock()
             }
         }
-        let r = try await RelayClient.shared.request(method, path, headers: headers,
-                                                     body: body.map { String(decoding: $0, as: UTF8.self) }, timeout: max(timeout, 10))
-        lastWasRelay = true
-        return r
+        do {
+            let r = try await RelayClient.shared.request(method, path, headers: headers,
+                                                         body: body.map { String(decoding: $0, as: UTF8.self) }, timeout: max(timeout, 10))
+            lastWasRelay = true
+            NetLog.add("Relay \(method) \(path) → \(r.0)")
+            return r
+        } catch {
+            NetLog.add("Relay \(path) failed: \(error.localizedDescription)")
+            throw error
+        }
     }
 
     private static func lan(_ link: BridgeLink, _ method: String, _ path: String, _ headers: [String: String],

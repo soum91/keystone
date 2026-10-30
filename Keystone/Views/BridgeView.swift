@@ -155,6 +155,12 @@ struct BridgeView: View {
                 }
 
                 Section {
+                    let log = NetLog.lines.suffix(40).joined(separator: "\n")
+                    Text(log.isEmpty ? "Nothing yet." : log).font(.caption2.monospaced()).textSelection(.enabled)
+                    ShareLink("Share diagnostics", item: "Keystone \(AppGroup.version)\nLink \(store.link.host):\(store.link.port)\nRelay \(store.relay?.id ?? "none") on=\(store.relay?.on ?? false)\n\n" + NetLog.lines.joined(separator: "\n"))
+                } header: { Text("Diagnostics (what Keystone tried)") }
+
+                Section {
                     LabeledContent("Keystone talks to", value: "\(store.link.host):\(store.link.port)")
                     Button("Forget this bridge in Keystone", role: .destructive) { confirm = .forget }
                 }
