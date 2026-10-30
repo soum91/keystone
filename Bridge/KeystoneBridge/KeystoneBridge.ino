@@ -48,34 +48,7 @@ static volatile bool acNetBusy = false;
 static volatile bool relayHolding = false;
 static void (*relayLetGo)() = nullptr;
 static volatile uint32_t webBeat = 0;
-// Network watchdog: restart when Wi-Fi has been gone 3 min, or Wi-Fi is up but the internet has been
-// unreachable for 10 min. After an internet restart the wait grows (10, 30, 60 min) so a long outage
-// doesn't mean constant restarts.
-static void netWatch() {
-  static uint32_t wifiLostAt = 0, netLostAt = 0, lastCheck = 0;
-  uint32_t now = millis();
-  if (otaActive || setupOnly) return;
-  if (WiFi.status() != WL_CONNECTED) {
-    if (!wifiLostAt) wifiLostAt = now;
-    if (now - wifiLostAt > 180000UL) { prefs.putString("lastRestart", "no Wi-Fi for 3 min"); delay(100); ESP.restart(); }
-    return;
-  }
-  wifiLostAt = 0;
-  if (now - lastCheck < 60000UL) return;
-  lastCheck = now;
-  IPAddress ip;
-  bool ok = WiFi.hostByName("pool.ntp.org", ip) == 1 || WiFi.hostByName("broker.emqx.io", ip) == 1;
-  if (ok) { netLostAt = 0; if (prefs.getUChar("netStrikes", 0)) prefs.putUChar("netStrikes", 0); return; }
-  if (!netLostAt) netLostAt = now;
-  uint8_t strikes = prefs.getUChar("netStrikes", 0);
-  uint32_t wait = strikes == 0 ? 600000UL : strikes == 1 ? 1800000UL : 3600000UL;
-  if (now - netLostAt > wait) {
-    prefs.putUChar("netStrikes", strikes < 3 ? strikes + 1 : 3);
-    prefs.putString("lastRestart", "no internet");
-    delay(100);
-    ESP.restart();
-  }
-}
+
 static bool acEnabled = true, camEnabled = true;   // switched in Keystone: off = no cloud calls, more free memory   // set by Relay.h: drop the relay and its buffer right now
 #define API_PORT 8080
 #define POLL_MS 15000UL          // per light when reachable
@@ -1216,6 +1189,35 @@ static void startNetworkServices() {
 
 // Watchdog for the worker: if it stops looping (a stuck socket, a hung request) the web API and the
 // automations stop too, so the bridge restarts itself. Firmware uploads are allowed to take longer.
+// Network watchdog: restart when Wi-Fi has been gone 3 min, or Wi-Fi is up but the internet has been
+// unreachable for 10 min. After an internet restart the wait grows (10, 30, 60 min) so a long outage
+// doesn't mean constant restarts.
+static void netWatch() {
+  static uint32_t wifiLostAt = 0, netLostAt = 0, lastCheck = 0;
+  uint32_t now = millis();
+  if (otaActive || setupOnly) return;
+  if (WiFi.status() != WL_CONNECTED) {
+    if (!wifiLostAt) wifiLostAt = now;
+    if (now - wifiLostAt > 180000UL) { prefs.putString("lastRestart", "no Wi-Fi for 3 min"); delay(100); ESP.restart(); }
+    return;
+  }
+  wifiLostAt = 0;
+  if (now - lastCheck < 60000UL) return;
+  lastCheck = now;
+  IPAddress ip;
+  bool ok = WiFi.hostByName("pool.ntp.org", ip) == 1 || WiFi.hostByName("broker.emqx.io", ip) == 1;
+  if (ok) { netLostAt = 0; if (prefs.getUChar("netStrikes", 0)) prefs.putUChar("netStrikes", 0); return; }
+  if (!netLostAt) netLostAt = now;
+  uint8_t strikes = prefs.getUChar("netStrikes", 0);
+  uint32_t wait = strikes == 0 ? 600000UL : strikes == 1 ? 1800000UL : 3600000UL;
+  if (now - netLostAt > wait) {
+    prefs.putUChar("netStrikes", strikes < 3 ? strikes + 1 : 3);
+    prefs.putString("lastRestart", "no internet");
+    delay(100);
+    ESP.restart();
+  }
+}
+
 static void worker(void *) {
   size_t next = 0;
   uint32_t lastNet = 0, lastDraw = 0;
