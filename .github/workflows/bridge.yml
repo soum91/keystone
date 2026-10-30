@@ -49,15 +49,17 @@ jobs:
           for chip in esp32; do   # the ideaspark WROOM-32 board; add esp32s3/esp32c3 here for other boards
             echo "=== $chip ===" | tee -a build.log
             arduino-cli compile \
-              --fqbn "esp32:esp32:${chip}:PartitionScheme=min_spiffs" \
+              --fqbn "esp32:esp32:${chip}:PartitionScheme=min_spiffs,FlashSize=8M" \
               --build-property "compiler.cpp.extra_flags=-DFW_BUILD=$BUILD $NIMBLE_FLAGS" \
               --build-property "compiler.c.extra_flags=$NIMBLE_FLAGS" \
-              --build-property "upload.maximum_size=2031616" \
+              --build-property "upload.maximum_size=4063232" \
               --build-path "build/${chip}-tmp" \
               --export-binaries --output-dir "build/${chip}" \
               Bridge/KeystoneBridge 2>&1 | tee -a build.log
             cp "build/${chip}/KeystoneBridge.ino.merged.bin" "dist/KeystoneBridge-${chip}-full.bin"
             cp "build/${chip}/KeystoneBridge.ino.bin" "dist/KeystoneBridge-${chip}-app.bin"
+            cp "build/${chip}/KeystoneBridge.ino.bootloader.bin" "dist/boot-${chip}.bin"
+            cp "build/${chip}/KeystoneBridge.ino.partitions.bin" "dist/parts-${chip}.bin"
           done
           ls -lh dist
 
@@ -134,17 +136,18 @@ jobs:
           FW=$(grep -oP '#define FW_VERSION "\K[^"]+' Bridge/KeystoneBridge/KeystoneBridge.ino)
           rm -rf site && mkdir -p site/fw
           cp Bridge/web/index.html site/
-          cp dist/*-full.bin dist/*-app.bin site/fw/
+          cp dist/*-full.bin dist/*-app.bin dist/boot-*.bin dist/parts-*.bin site/fw/
           for c in esp32; do mv "site/fw/KeystoneBridge-$c-build-$BUILD-app.bin" "site/fw/KeystoneBridge-$c-app.bin" 2>/dev/null || true; done
           head -c 8192 /dev/zero | tr '\0' '\377' > site/fw/otadata-blank.bin
-          # Repair: blank boot selector + app only. Wi-Fi, Apple Home and app pairings (NVS, 0x9000) are untouched.
+          # Repair: bootloader, partition table, blank boot selector and app. NVS (0x9000: Wi-Fi, Apple Home and
+          # app pairings) is never written, so it survives, including the switch to the 8 MB layout.
           cat > site/manifest-keep.json <<JSON
           {
             "name": "Keystone Bridge (keep settings)",
             "version": "$FW (build $BUILD)",
             "new_install_prompt_erase": false,
             "builds": [
-              { "chipFamily": "ESP32",    "parts": [{ "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32-app.bin",   "offset": 65536 }] }
+              { "chipFamily": "ESP32",    "parts": [{ "path": "fw/boot-esp32.bin", "offset": 4096 }, { "path": "fw/parts-esp32.bin", "offset": 32768 }, { "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32-app.bin",   "offset": 65536 }] }
             ]
           }
           JSON
