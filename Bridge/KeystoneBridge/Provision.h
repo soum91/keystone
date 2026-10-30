@@ -73,8 +73,7 @@ static String page() {
   h += F("<option value=''>Other (type below)…</option></select><label>…or type the name</label><input name=o autocapitalize=off autocorrect=off>"
          "<label>Password</label><input name=p type=password autocapitalize=off autocorrect=off>"
          "<label>Apple Home setup code (8 digits, optional)</label><input name=c inputmode=numeric placeholder='466-37-726'>"
-         "<button>Connect</button></form><p class=m>After you tap Connect, watch the bridge's screen. It says Connected and restarts, "
-         "or shows what went wrong: then rejoin Keystone-Setup and try again.</p><p><a href=/rescan>Scan again</a></p>");
+         "<button>Connect</button></form><p class=m>Then watch the bridge's screen.</p><p><a href=/rescan>Scan again</a></p>");
   if (status.length()) h += "<p class=s>" + esc(status) + "</p>";
   h += F("</body></html>");
   return h;
