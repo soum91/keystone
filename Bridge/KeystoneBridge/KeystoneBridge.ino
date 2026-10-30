@@ -1007,7 +1007,7 @@ static void handleInfo() {
   screen::info(d);
   ac::info(d);
   cam::info(d);
-  d["boot"]["reason"] = prefs.getString("lastRestart", "").length() && String(bootReason) == "restart" ? prefs.getString("lastRestart", "").c_str() : bootReason;
+  d["boot"]["reason"] = bootReason;
   d["boot"]["crashes"] = crashCount;
   d["boot"]["safeMode"] = safeMode;
   d["boot"]["minHeap"] = ESP.getMinFreeHeap();
@@ -1198,21 +1198,20 @@ static void netWatch() {
   if (otaActive || setupOnly) return;
   if (WiFi.status() != WL_CONNECTED) {
     if (!wifiLostAt) wifiLostAt = now;
-    if (now - wifiLostAt > 180000UL) { prefs.putString("lastRestart", "no Wi-Fi for 3 min"); delay(100); ESP.restart(); }
+    if (now - wifiLostAt > 180000UL) { delay(100); ESP.restart(); }
     return;
   }
   wifiLostAt = 0;
   if (now - lastCheck < 60000UL) return;
   lastCheck = now;
   IPAddress ip;
-  bool ok = WiFi.hostByName("pool.ntp.org", ip) == 1 || WiFi.hostByName("broker.emqx.io", ip) == 1;
+  bool ok = WiFi.hostByName("pool.ntp.org", ip) == 1;
   if (ok) { netLostAt = 0; if (prefs.getUChar("netStrikes", 0)) prefs.putUChar("netStrikes", 0); return; }
   if (!netLostAt) netLostAt = now;
   uint8_t strikes = prefs.getUChar("netStrikes", 0);
   uint32_t wait = strikes == 0 ? 600000UL : strikes == 1 ? 1800000UL : 3600000UL;
   if (now - netLostAt > wait) {
     prefs.putUChar("netStrikes", strikes < 3 ? strikes + 1 : 3);
-    prefs.putString("lastRestart", "no internet");
     delay(100);
     ESP.restart();
   }
@@ -1229,7 +1228,7 @@ static void worker(void *) {
     relay::poll();
     router::follow();
     netWatch();
-    if (WiFi.status() != WL_CONNECTED) { netWatch(); vTaskDelay(pdMS_TO_TICKS(200)); continue; }
+    if (WiFi.status() != WL_CONNECTED) { vTaskDelay(pdMS_TO_TICKS(200)); continue; }
 
     // Commands first, they're what a person is waiting on.
     Cmd c{-1, "", false, false, false};
