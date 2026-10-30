@@ -22,6 +22,7 @@
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <Preferences.h>
+#define ARDUINOJSON_ENABLE_STD_STREAM 0   // no iostreams: keeps the C++ locale code out of flash
 #include <ArduinoJson.h>
 #include <time.h>
 #include <vector>

@@ -21,13 +21,8 @@ static void begin() {
   pass = prefs.getString("rt_pass", "");
 }
 
-// Only these go through; "setup" and "allow" need the root password and stay on the phone.
-static bool allowed(const String &m) {
-  static const char *ok[] = {"version", "status", "clients", "kick", "block", "adblock", "domains", "domain", "warp", "leds",
-                             "ledsched", "netwatch", "logs", "diag", "wifi", "wifi_set", "guest", "scan", "sys", "upgrades", "reboot"};
-  for (auto *x : ok) if (m == x) return true;
-  return false;
-}
+// "setup" and "allow" need the root password and stay on the phone.
+static bool allowed(const String &m) { return m.length() && m != "setup" && m != "allow"; }
 
 static int post(const String &body, String &out, int timeoutMs) {
   WiFiClient c;
