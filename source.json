@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.26",
+          "buildVersion": "26",
+          "date": "2026-10-30T18:02:13Z",
+          "localizedDescription": "- Router tab: run the OpenWrt ASUS from Keystone through the bridge (bridge 1.9.11) (f2fd6bf)\n- Bridge 1.10: web server back on the worker, with a watchdog (fa3386b)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-26/Keystone-1.0.0-build-26.ipa",
+          "size": 1356981,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.25",
           "buildVersion": "25",
           "date": "2026-10-30T07:50:11Z",
@@ -218,11 +227,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.25",
-      "versionDate": "2026-10-30T07:50:11Z",
-      "versionDescription": "- Copy diagnostics button (3cb0823)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-25/Keystone-1.0.0-build-25.ipa",
-      "size": 950966,
+      "version": "1.0.0.26",
+      "versionDate": "2026-10-30T18:02:13Z",
+      "versionDescription": "- Router tab: run the OpenWrt ASUS from Keystone through the bridge (bridge 1.9.11) (f2fd6bf)\n- Bridge 1.10: web server back on the worker, with a watchdog (fa3386b)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-26/Keystone-1.0.0-build-26.ipa",
+      "size": 1356981,
       "appPermissions": {}
     }
   ],
