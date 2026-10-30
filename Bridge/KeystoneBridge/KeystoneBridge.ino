@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.11"
+#define FW_VERSION "1.9.12"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -48,6 +48,34 @@ static volatile bool acNetBusy = false;
 static volatile bool relayHolding = false;
 static void (*relayLetGo)() = nullptr;
 static volatile uint32_t webBeat = 0;
+// Network watchdog: restart when Wi-Fi has been gone 3 min, or Wi-Fi is up but the internet has been
+// unreachable for 10 min. After an internet restart the wait grows (10, 30, 60 min) so a long outage
+// doesn't mean constant restarts.
+static void netWatch() {
+  static uint32_t wifiLostAt = 0, netLostAt = 0, lastCheck = 0;
+  uint32_t now = millis();
+  if (otaActive || setupOnly) return;
+  if (WiFi.status() != WL_CONNECTED) {
+    if (!wifiLostAt) wifiLostAt = now;
+    if (now - wifiLostAt > 180000UL) { prefs.putString("lastRestart", "no Wi-Fi for 3 min"); delay(100); ESP.restart(); }
+    return;
+  }
+  wifiLostAt = 0;
+  if (now - lastCheck < 60000UL) return;
+  lastCheck = now;
+  IPAddress ip;
+  bool ok = WiFi.hostByName("pool.ntp.org", ip) == 1 || WiFi.hostByName("broker.emqx.io", ip) == 1;
+  if (ok) { netLostAt = 0; if (prefs.getUChar("netStrikes", 0)) prefs.putUChar("netStrikes", 0); return; }
+  if (!netLostAt) netLostAt = now;
+  uint8_t strikes = prefs.getUChar("netStrikes", 0);
+  uint32_t wait = strikes == 0 ? 600000UL : strikes == 1 ? 1800000UL : 3600000UL;
+  if (now - netLostAt > wait) {
+    prefs.putUChar("netStrikes", strikes < 3 ? strikes + 1 : 3);
+    prefs.putString("lastRestart", "no internet");
+    delay(100);
+    ESP.restart();
+  }
+}
 static bool acEnabled = true, camEnabled = true;   // switched in Keystone: off = no cloud calls, more free memory   // set by Relay.h: drop the relay and its buffer right now
 #define API_PORT 8080
 #define POLL_MS 15000UL          // per light when reachable
@@ -1006,7 +1034,7 @@ static void handleInfo() {
   screen::info(d);
   ac::info(d);
   cam::info(d);
-  d["boot"]["reason"] = bootReason;
+  d["boot"]["reason"] = prefs.getString("lastRestart", "").length() && String(bootReason) == "restart" ? prefs.getString("lastRestart", "").c_str() : bootReason;
   d["boot"]["crashes"] = crashCount;
   d["boot"]["safeMode"] = safeMode;
   d["boot"]["minHeap"] = ESP.getMinFreeHeap();
@@ -1197,7 +1225,8 @@ static void worker(void *) {
     if (millis() - lastNet > 3000) { lastNet = millis(); startNetworkServices(); }
     if (serverUp) { server.handleClient(); webBeat = millis(); }
     relay::poll();
-    if (WiFi.status() != WL_CONNECTED) { vTaskDelay(pdMS_TO_TICKS(200)); continue; }
+    netWatch();
+    if (WiFi.status() != WL_CONNECTED) { netWatch(); vTaskDelay(pdMS_TO_TICKS(200)); continue; }
 
     // Commands first, they're what a person is waiting on.
     Cmd c{-1, "", false, false, false};
