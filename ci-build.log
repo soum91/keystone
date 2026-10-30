@@ -1,0 +1,124 @@
+=== esp32 ===
+Sketch uses 2030963 bytes (49%) of program storage space. Maximum is 4063232 bytes.
+Global variables use 75868 bytes (23%) of dynamic memory, leaving 251812 bytes for local variables. Maximum is 327680 bytes.
+=== largest symbols ===
+401a8268 0000057d T mbedtls_camellia_setkey_enc
+40195dfc 00000581 T mbedtls_ssl_write_client_hello
+4023aea8 0000058a T sta_input
+400ea4b0 00000592 t parseIR(String const&, IRCfg&)
+400ebfb0 0000059d t screen::handleAdmin()
+4011d3dc 0000059e T start_ssl_client(sslclient_context*, IPAddress const&, unsigned long, char const*, int, char const*, bool, char const*, char const*, char const*, char const*, bool, char const**)
+40143d18 000005a1 t dns_recv
+3ffc6558 000005b4 b ArduinoOTAClass::_runUpdate()::buf
+3ffcae8e 000005b4 b packet$6
+40150a24 000005c8 T ip6_input
+40165af4 000005d8 t sswu
+3f425efb 000005e5 D u8g2_font_helvB12_tr
+4008ce50 000005e6 T r_lld_evt_schedule
+400e9188 000005e9 t parsePurifier(String const&, PurCfg&)
+4010c7a4 000005f0 T ArduinoOTAClass::_onRx()
+4010311c 000005f0 T Span::configureNetwork()
+4015a8e0 000005fd t ipcp_nakci
+4020b2a8 00000606 T r_ld_acl_start
+4019c848 00000617 t ecp_mod_p384
+4018d388 00000631 t handle_dhcp
+400936c0 00000638 T strptime_l
+400f828c 0000063d t pollTV()
+4017af0c 00000657 t diag_log_add
+401427b8 00000669 T lwip_setsockopt
+401cc8b8 00000673 T sta_recv_assoc
+4017cc20 00000679 t fe25519_sq
+401841ec 00000679 t fe25519_sq
+401724c4 0000067a t esp_core_dump_do_write_elf_pass
+401e11ac 00000687 T std::locale::_Impl::_Impl(unsigned int)
+401e11ac 00000687 T std::locale::_Impl::_Impl(unsigned int)
+4010abf4 00000689 T Network_HS::apConfigure()
+40109718 00000695 T Span::pollTask()
+400eb8e4 000006a4 t handleConfig()
+4012d8d8 000006a8 T uartSetPins
+4012b404 000006be T i2cSlaveInit
+400eaa44 000006c1 t handleDevConfig()
+400e8360 000006e5 t cam::parseCfg(String const&, cam::Cfg&)
+4008f93c 000006e5 T r_rwbt_isr
+40156b6c 000006e6 T vj_compress_tcp
+40100390 000006ed T HAPClient::postPairVerifyURL(unsigned char*, unsigned int)
+4017d29c 000006f2 t fe25519_sq2
+400ee0d8 00000708 t startNetworkServices()
+400e9bb4 00000735 t parseBarConfig(String const&)
+400e8a48 0000073d t parseConfig(String const&, std::vector<Light, std::allocator<Light> >&, bool)
+3f428194 00000748 d esp_err_msg_table
+401711e0 0000074b T esp_eth_ioctl
+401b89a0 0000078c T scan_profile_check
+4011bbe8 0000079c T HTTPClient::setCookie(String, String)
+401b5890 0000079c T hostap_input
+3f4359bc 000007a0 d ciphersuite_definitions
+4008ef94 000007ac T r_rwble_isr
+4010a364 000007b9 T Network_HS::processRequest(char*, char*)
+40184998 000007d7 t crypto_scalarmult_curve25519_ref10$part$0
+3ffcfba8 00000800 B vflash_mem
+401a4e30 0000080b t mbedtls_sha256_software_process
+4018f74c 0000085f T mbedtls_ssl_read_record
+4020ed28 00000886 T r_lld_con_start
+401ab298 00000889 t mbedtls_x509_crt_parse_der_internal
+40211c34 00000890 T r_llm_le_adv_report_ind
+40137f7c 000008a9 t uart_rx_intr_handler_default
+401bb8ac 000008b2 T ieee80211_parse_rsn
+400f1f40 000008e0 t ac::step()
+3ffbdc34 00000924 D hapChars
+400f2c28 00000931 t cam::call(char const*, ArduinoJson::V743PB22::JsonDocument&, ArduinoJson::V743PB22::JsonDocument&, ArduinoJson::V743PB22::JsonDocument&)
+40205e2c 00000940 t lmp_not_accepted_handler
+4016a728 0000098c T wpa_sm_rx_eapol
+4019dc9c 0000099d T mbedtls_high_level_strerr
+400ff9f0 000009a0 T HAPClient::postPairSetupURL(unsigned char*, unsigned int)
+4008d544 00000a1f T r_lld_evt_restart
+401c223c 00000a4a T wifi_softap_set_config
+401cd15c 00000a6b T sta_recv_mgmt
+401e5328 00000a8d W std::time_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t> > >::_M_extract_via_format(std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t> >, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t> >, std::ios_base&, std::_Ios_Iostate&, tm*, wchar_t const*, std::__time_get_state&) const
+401e5328 00000a8d t _ZNKSt8time_getIwSt19istreambuf_iteratorIwSt11char_traitsIwEEE21_M_extract_via_formatES3_S3_RSt8ios_baseRSt12_Ios_IostateP2tmPKwRSt16__time_get_state$localalias
+401d8500 00000aaa T __ieee754_pow
+401dd324 00000abd W std::time_get<char, std::istreambuf_iterator<char, std::char_traits<char> > >::_M_extract_via_format(std::istreambuf_iterator<char, std::char_traits<char> >, std::istreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, std::_Ios_Iostate&, tm*, char const*, std::__time_get_state&) const
+401dd324 00000abd t _ZNKSt8time_getIcSt19istreambuf_iteratorIcSt11char_traitsIcEEE21_M_extract_via_formatES3_S3_RSt8ios_baseRSt12_Ios_IostateP2tmPKcRSt16__time_get_state$localalias
+40092828 00000b0d t __strftime$isra$0
+40116a1c 00000b41 T WebServer::_parseRequest(NetworkClient&)
+401f52f8 00000b41 W std::__cxx11::time_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t> > >::_M_extract_via_format(std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t> >, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t> >, std::ios_base&, std::_Ios_Iostate&, tm*, wchar_t const*, std::__time_get_state&) const
+401f52f8 00000b41 t _ZNKSt7__cxx118time_getIwSt19istreambuf_iteratorIwSt11char_traitsIwEEE21_M_extract_via_formatES4_S4_RSt8ios_baseRSt12_Ios_IostateP2tmPKwRSt16__time_get_state$localalias
+401a59e4 00000b45 t mbedtls_sha512_software_process
+40115ec4 00000b57 T WebServer::_parseForm(NetworkClient&, String const&, unsigned long)
+401f0448 00000b71 W std::__cxx11::time_get<char, std::istreambuf_iterator<char, std::char_traits<char> > >::_M_extract_via_format(std::istreambuf_iterator<char, std::char_traits<char> >, std::istreambuf_iterator<char, std::char_traits<char> >, std::ios_base&, std::_Ios_Iostate&, tm*, char const*, std::__time_get_state&) const
+401f0448 00000b71 t _ZNKSt7__cxx118time_getIcSt19istreambuf_iteratorIcSt11char_traitsIcEEE21_M_extract_via_formatES4_S4_RSt8ios_baseRSt12_Ios_IostateP2tmPKcRSt16__time_get_state$localalias
+4017c0a0 00000b80 t fe25519_mul
+4018366c 00000b80 t fe25519_mul
+4021af64 00000b92 t __strftime$isra$0
+401bebf0 00000bb6 T wifi_nvs_cfg_init
+40101324 00000c0a T HAPClient::getStatusURL(HAPClient*, void (*)(char const*, void*), void*, int)
+40229ab4 00000cd9 T _dtoa_r
+402187dc 00000cd9 T _strtod_l
+400f3908 00000d25 t cam::pollEvents()
+401b9c04 00000d30 T scan_parse_beacon
+401cb770 00000d54 T ieee80211_sta_new_state
+40148220 00000e21 t tcp_receive
+40149044 00000ed1 T tcp_input
+3ffcc8f8 00000f28 B g_cnxMgr
+401932a4 00001017 T mbedtls_ssl_handshake_client_step
+3ffc0730 00001060 D port_IntStack
+400f4630 000010d7 t cam::runAlerts()
+40154534 000010eb T nd6_input
+401b4780 000010ee T hostap_recv_mgmt
+401a39d0 00001196 t esp_internal_sha1_parallel_engine_process$isra$0
+40179a04 000014c2 T mdns_priv_receive_action
+40194624 00001631 T mbedtls_ssl_handshake_server_step
+40181810 00001729 T sc25519_reduce
+400f670c 000018c0 t control::handle()
+4021d5d8 00001d64 T _svfiprintf_r
+400fc864 00001d9e T setup()
+4021f484 00001db0 T __ssvfiscanf_r
+400ef660 000021bd t ac::gateway(bool, String const&, String&, String&, bool)
+40224324 00002288 T __ssvfscanf_r
+400e525c 000023e0 t handleInfo()
+400f9af0 00002864 t worker(void*)
+401066a8 0000287d T Span::processSerialCommand(char const*)
+4022aec0 00002b78 T _svfwprintf_r
+402216f8 00002c29 T _svfprintf_r
+4017eb48 00002cc6 T sc25519_muladd
+40226a70 00002d00 T _vfprintf_r
+3f42d4f0 00007800 d base$3
