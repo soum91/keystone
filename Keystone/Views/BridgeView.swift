@@ -1,3 +1,4 @@
+import UIKit
 import SwiftUI
 
 struct BridgeView: View {
@@ -157,6 +158,10 @@ struct BridgeView: View {
                 Section {
                     let log = NetLog.lines.suffix(40).joined(separator: "\n")
                     Text(log.isEmpty ? "Nothing yet." : log).font(.caption2.monospaced()).textSelection(.enabled)
+                    Button("Copy diagnostics") {
+                        UIPasteboard.general.string = "Keystone \(AppGroup.version)\nLink \(store.link.host):\(store.link.port)\nRelay \(store.relay?.id ?? "none") on=\(store.relay?.on ?? false)\n\n" + NetLog.lines.joined(separator: "\n")
+                        store.show("Copied. Paste it in the chat.")
+                    }
                     ShareLink("Share diagnostics", item: "Keystone \(AppGroup.version)\nLink \(store.link.host):\(store.link.port)\nRelay \(store.relay?.id ?? "none") on=\(store.relay?.on ?? false)\n\n" + NetLog.lines.joined(separator: "\n"))
                 } header: { Text("Diagnostics (what Keystone tried)") }
 
