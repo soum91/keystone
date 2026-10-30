@@ -4,6 +4,7 @@ enum Theme {
     /// The OLED's two colours: yellow status strip, blue body.
     static let yellow = Color(red: 1.0, green: 0.84, blue: 0.04)
     static let blue = Color(red: 0.31, green: 0.76, blue: 0.97)
+    static let accent = yellow
     static let bgTop = Color(red: 0.06, green: 0.07, blue: 0.09)
     static let bgBottom = Color(red: 0.02, green: 0.02, blue: 0.03)
     static let card = Color.white.opacity(0.06)

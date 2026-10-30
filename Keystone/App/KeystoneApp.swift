@@ -31,6 +31,7 @@ struct RootView: View {
                 TabView {
                     DashboardView().tabItem { Label("Home", systemImage: "square.grid.2x2.fill") }
                     DisplayView().tabItem { Label("Display", systemImage: "rectangle.inset.filled") }
+                    RouterTab().tabItem { Label("Router", systemImage: "wifi.router") }
                     BridgeView().tabItem { Label("Bridge", systemImage: "cpu") }
                 }
             } else {
