@@ -240,7 +240,7 @@ static void pageLights() {
 
 static void pageTV() {
   statusBar("TV  " + timeText());
-  G().setFont(u8g2_font_helvB18_tr);
+  G().setFont(u8g2_font_helvB12_tr);   // helvB18 was only used here; dropping it saves ~4 KB of flash
   const char *s = tvState == TV_ON ? "On" : tvState == TV_OFF ? "Off" : "...";
   G().drawStr(0, 46, s);
   G().setFont(u8g2_font_6x10_tr);

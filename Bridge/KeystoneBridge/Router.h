@@ -73,26 +73,18 @@ static int unwrap(const String &resp, String &obj) {
 }
 
 static bool login() {
-  JsonDocument d;
-  d["jsonrpc"] = "2.0";
-  d["id"] = 1;
-  d["method"] = "call";
-  JsonArray p = d["params"].to<JsonArray>();
-  p.add("00000000000000000000000000000000");
-  p.add("session");
-  p.add("login");
-  JsonObject a = p.add<JsonObject>();
-  a["username"] = user;
-  a["password"] = pass;
-  a["timeout"] = 3600;
-  String body, resp, obj;
-  serializeJson(d, body);
+  // user is "switchyard" and pass is hex from the router, so no JSON escaping is needed.
+  String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"call\",\"params\":[\"00000000000000000000000000000000\",\"session\",\"login\",{\"username\":\"" +
+                user + "\",\"password\":\"" + pass + "\",\"timeout\":3600}]}";
+  String resp, obj;
   if (post(body, resp, 6000) != 200) return false;
   int st = unwrap(resp, obj);
   if (st != 0) { lastError = st == 6 ? "the router turned down the bridge's login (set the router up again in Keystone)" : "router login failed (" + String(st) + ")"; return false; }
-  JsonDocument o;
-  if (deserializeJson(o, obj)) { lastError = "odd login answer"; return false; }
-  sid = o["ubus_rpc_session"] | "";
+  int k = obj.indexOf("\"ubus_rpc_session\"");
+  int q1 = k < 0 ? -1 : obj.indexOf('"', obj.indexOf(':', k) + 1);
+  int q2 = q1 < 0 ? -1 : obj.indexOf('"', q1 + 1);
+  sid = q2 > q1 ? obj.substring(q1 + 1, q2) : String();
+  if (!sid.length()) lastError = "odd login answer";
   return sid.length() > 0;
 }
 
@@ -115,9 +107,10 @@ static int call(const String &method, const String &args, String &out, int timeo
     lastError = st == 3 || st == 4 || st == -32000 ? "the Switchyard plugin isn't on the router" : "router call failed (" + String(st) + ")";
     break;
   }
-  JsonDocument e;
-  e["error"] = lastError.length() ? lastError : String("router call failed");
-  serializeJson(e, out);
+  String msg = lastError.length() ? lastError : String("router call failed");
+  msg.replace("\\", "/");
+  msg.replace("\"", "'");
+  out = "{\"error\":\"" + msg + "\"}";
   return 502;
 }
 
