@@ -35,14 +35,13 @@ static int post(const String &body, String &out, int timeoutMs) {
   h.setTimeout(timeoutMs);
   h.setReuse(false);
   workerBeat = millis();   // runs on the worker; a slow router isn't a hang
-  if (!h.begin(c, "http://" + host + "/ubus")) { lastError = "bad router address"; return -1; }
+  if (!h.begin(c, "http://" + host + "/ubus")) return -1;
   h.addHeader("Content-Type", "application/json");
   int code = h.POST(body);
   out = code > 0 ? h.getString() : String();
   h.end();
   workerBeat = millis();
-  if (code <= 0) lastError = "router unreachable (" + String(code) + ")";
-  else if (code != 200) lastError = "router said HTTP " + String(code);
+  if (code != 200) lastError = "router HTTP " + String(code);
   return code;
 }
 
@@ -78,12 +77,11 @@ static bool login() {
   String resp, obj;
   if (post(body, resp, 6000) != 200) return false;
   int st = unwrap(resp, obj);
-  if (st != 0) { lastError = st == 6 ? "router refused login: set it up again" : "router login failed (" + String(st) + ")"; return false; }
+  if (st != 0) { lastError = "router login " + String(st); return false; }
   int k = obj.indexOf("\"ubus_rpc_session\"");
   int q1 = k < 0 ? -1 : obj.indexOf('"', obj.indexOf(':', k) + 1);
   int q2 = q1 < 0 ? -1 : obj.indexOf('"', q1 + 1);
   sid = q2 > q1 ? obj.substring(q1 + 1, q2) : String();
-  if (!sid.length()) lastError = "odd login answer";
   return sid.length() > 0;
 }
 
@@ -103,21 +101,21 @@ static int call(const String &method, const String &args, String &out, int timeo
       return 200;
     }
     if (st == -32002 || st == 6) { sid = ""; continue; }   // session ran out: log in again once
-    lastError = st == 3 || st == 4 || st == -32000 ? "plugin isn't on the router" : "router call failed (" + String(st) + ")";
+    lastError = st == 3 || st == 4 || st == -32000 ? "plugin isn't on the router" : "router " + String(st);
     break;
   }
-  String msg = lastError.length() ? lastError : String("router call failed");
-  msg.replace("\\", "/");
-  msg.replace("\"", "'");
-  out = "{\"error\":\"" + msg + "\"}";
+  if (!lastError.length()) lastError = "router unreachable";
+  out = "{\"error\":\"" + lastError + "\"}";
   return 502;
 }
+
+static void save() { prefs.putString("rt_host", host); prefs.putString("rt_user", user); prefs.putString("rt_pass", pass); }
 
 static void control(JsonDocument &d) {
   String out;
   if (d["forget"] | false) {
     host = user = pass = sid = "";
-    prefs.remove("rt_host"); prefs.remove("rt_user"); prefs.remove("rt_pass");
+    save();
     return respond(200, "{\"ok\":true}");
   }
   if (!d["follow"].isNull()) {
@@ -132,7 +130,7 @@ static void control(JsonDocument &d) {
     pass = d["setup"]["pass"] | "";
     host.trim();
     sid = "";
-    prefs.putString("rt_host", host); prefs.putString("rt_user", user); prefs.putString("rt_pass", pass);
+    save();
     int code = call("version", "{}", out, 6000);
     return respond(code, out);
   }
@@ -152,7 +150,6 @@ static void info(JsonDocument &d) {
   if (!configured()) return;
   o["host"] = host;
   o["ok"] = lastOk > 0 && lastError.length() == 0;
-  if (lastOk) o["ago"] = (int)((millis() - lastOk) / 1000);
   if (lastError.length()) o["error"] = lastError;
 }
 
