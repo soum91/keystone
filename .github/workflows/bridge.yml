@@ -53,6 +53,7 @@ jobs:
               --build-property "compiler.cpp.extra_flags=-DFW_BUILD=$BUILD $NIMBLE_FLAGS" \
               --build-property "compiler.c.extra_flags=$NIMBLE_FLAGS" \
               --build-property "upload.maximum_size=2031616" \
+              --build-path "build/${chip}-tmp" \
               --export-binaries --output-dir "build/${chip}" \
               Bridge/KeystoneBridge 2>&1 | tee -a build.log
             cp "build/${chip}/KeystoneBridge.ino.merged.bin" "dist/KeystoneBridge-${chip}-full.bin"
@@ -67,6 +68,13 @@ jobs:
           git config user.email "ci@users.noreply.github.com"
           git checkout -B ci-logs-bridge
           tail -n 400 build.log > ci-build.log 2>/dev/null || echo "no build.log produced" > ci-build.log
+          # Biggest symbols, so it's clear what to trim when the app slot gets tight.
+          NM=$(find ~/.arduino15 -name "xtensa-esp*-elf-nm" -type f | head -1)
+          ELF=$(ls build/esp32-tmp/*.elf 2>/dev/null | head -1)
+          if [ -n "$NM" ] && [ -n "$ELF" ]; then
+            echo "=== largest symbols ===" >> ci-build.log
+            "$NM" -S --size-sort -C "$ELF" | tail -n 120 >> ci-build.log
+          fi
           git add -f ci-build.log
           git commit -m "Bridge CI log for ${GITHUB_SHA}" || true
           git push -f origin ci-logs-bridge
