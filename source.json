@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.24",
+          "buildVersion": "24",
+          "date": "2026-10-30T04:13:21Z",
+          "localizedDescription": "- Diagnostics log, and stop skipping Wi-Fi at home (4f42500)\n- Remote access: answer status and controls in place (36495aa)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-24/Keystone-1.0.0-build-24.ipa",
+          "size": 950137,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.23",
           "buildVersion": "23",
           "date": "2026-10-29T21:07:54Z",
@@ -200,11 +209,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.23",
-      "versionDate": "2026-10-29T21:07:54Z",
-      "versionDescription": "- Switch the AC and camera on the bridge on or off (e9c2dcc)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-23/Keystone-1.0.0-build-23.ipa",
-      "size": 939793,
+      "version": "1.0.0.24",
+      "versionDate": "2026-10-30T04:13:21Z",
+      "versionDescription": "- Diagnostics log, and stop skipping Wi-Fi at home (4f42500)\n- Remote access: answer status and controls in place (36495aa)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-24/Keystone-1.0.0-build-24.ipa",
+      "size": 950137,
       "appPermissions": {}
     }
   ],
