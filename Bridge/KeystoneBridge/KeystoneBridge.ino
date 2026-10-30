@@ -29,7 +29,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.9"
+#define FW_VERSION "1.9.10"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -46,6 +46,7 @@ static volatile uint32_t workerBeat = 0;   // the worker's heartbeat (see worker
 static volatile bool acNetBusy = false;
 static volatile bool relayHolding = false;
 static void (*relayLetGo)() = nullptr;
+static volatile uint32_t webBeat = 0;
 static bool acEnabled = true, camEnabled = true;   // switched in Keystone: off = no cloud calls, more free memory   // set by Relay.h: drop the relay and its buffer right now
 #define API_PORT 8080
 #define POLL_MS 15000UL          // per light when reachable
@@ -1191,7 +1192,8 @@ static void worker(void *) {
     workerBeat = millis();
     if (millis() - lastDraw > 500) { lastDraw = millis(); screen::draw(); }
     if (millis() - lastNet > 3000) { lastNet = millis(); startNetworkServices(); }
-    relay::poll();   // the web server runs in loop() now, so slow cloud calls here can't freeze it
+    if (serverUp) { server.handleClient(); webBeat = millis(); }
+    relay::poll();
     if (WiFi.status() != WL_CONNECTED) { vTaskDelay(pdMS_TO_TICKS(200)); continue; }
 
     // Commands first, they're what a person is waiting on.
@@ -1371,13 +1373,19 @@ void setup() {
 void loop() {
   homeSpan.poll();
   uint32_t beat = workerBeat;
+  uint32_t wb = webBeat;
+  if (!otaActive && serverUp && wb && millis() - wb > 60000UL) {
+    Serial.println("[keystone] web server stuck for 60 s, restarting");
+    delay(100);
+    ESP.restart();
+  }
   if (beat && millis() - beat > (otaActive ? 300000UL : 90000UL)) {
     Serial.println("[afterglow] worker stuck, restarting");
     delay(100);
     ESP.restart();
   }
   screen::runPending();
-  if (serverUp) server.handleClient();
+
   static bool stable = false;
   if (!stable && millis() > 180000UL) { stable = true; if (crashCount) prefs.putInt("crashes", 0); }
 }
