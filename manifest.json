@@ -1,0 +1,8 @@
+{
+  "name": "Keystone Bridge",
+  "version": "1.9.12 (build 126)",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32",    "parts": [{ "path": "fw/KeystoneBridge-esp32-full.bin",   "offset": 0 }] }
+  ]
+}

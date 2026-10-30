@@ -1,0 +1,8 @@
+{
+  "name": "Keystone Bridge (keep settings)",
+  "version": "1.9.12 (build 126)",
+  "new_install_prompt_erase": false,
+  "builds": [
+    { "chipFamily": "ESP32",    "parts": [{ "path": "fw/boot-esp32.bin", "offset": 4096 }, { "path": "fw/parts-esp32.bin", "offset": 32768 }, { "path": "fw/otadata-blank.bin", "offset": 57344 }, { "path": "fw/KeystoneBridge-esp32-app.bin",   "offset": 65536 }] }
+  ]
+}
