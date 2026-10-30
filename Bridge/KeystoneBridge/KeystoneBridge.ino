@@ -1192,29 +1192,17 @@ static void startNetworkServices() {
 // Network watchdog: restart when Wi-Fi has been gone 3 min, or Wi-Fi is up but the internet has been
 // unreachable for 10 min. After an internet restart the wait grows (10, 30, 60 min) so a long outage
 // doesn't mean constant restarts.
+RTC_NOINIT_ATTR static uint32_t netStrikes;   // survives a restart, so a long outage backs off
 static void netWatch() {
-  static uint32_t wifiLostAt = 0, netLostAt = 0, lastCheck = 0;
+  static uint32_t lost = 0, last = 0;
   uint32_t now = millis();
-  if (otaActive || setupOnly) return;
-  if (WiFi.status() != WL_CONNECTED) {
-    if (!wifiLostAt) wifiLostAt = now;
-    if (now - wifiLostAt > 180000UL) { delay(100); ESP.restart(); }
-    return;
-  }
-  wifiLostAt = 0;
-  if (now - lastCheck < 60000UL) return;
-  lastCheck = now;
+  if (otaActive || setupOnly || now - last < 60000UL) return;
+  last = now;
   IPAddress ip;
-  bool ok = WiFi.hostByName("pool.ntp.org", ip) == 1;
-  if (ok) { netLostAt = 0; if (prefs.getUChar("netStrikes", 0)) prefs.putUChar("netStrikes", 0); return; }
-  if (!netLostAt) netLostAt = now;
-  uint8_t strikes = prefs.getUChar("netStrikes", 0);
-  uint32_t wait = strikes == 0 ? 600000UL : strikes == 1 ? 1800000UL : 3600000UL;
-  if (now - netLostAt > wait) {
-    prefs.putUChar("netStrikes", strikes < 3 ? strikes + 1 : 3);
-    delay(100);
-    ESP.restart();
-  }
+  if (WiFi.status() == WL_CONNECTED && WiFi.hostByName("pool.ntp.org", ip) == 1) { lost = 0; netStrikes = 0; return; }
+  if (!lost) lost = now;
+  if (netStrikes > 3) netStrikes = 0;
+  if (now - lost > (WiFi.status() != WL_CONNECTED ? 180000UL : 600000UL << netStrikes)) { netStrikes++; ESP.restart(); }
 }
 
 static void worker(void *) {
