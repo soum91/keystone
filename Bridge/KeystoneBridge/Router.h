@@ -42,7 +42,7 @@ static int post(const String &body, String &out, int timeoutMs) {
   out = code > 0 ? h.getString() : String();
   h.end();
   workerBeat = millis();
-  if (code <= 0) lastError = "can't reach the router at " + host + " (" + HTTPClient::errorToString(code) + ")";
+  if (code <= 0) lastError = "router unreachable (" + String(code) + ")";
   else if (code != 200) lastError = "router said HTTP " + String(code);
   return code;
 }
@@ -79,7 +79,7 @@ static bool login() {
   String resp, obj;
   if (post(body, resp, 6000) != 200) return false;
   int st = unwrap(resp, obj);
-  if (st != 0) { lastError = st == 6 ? "the router turned down the bridge's login (set the router up again in Keystone)" : "router login failed (" + String(st) + ")"; return false; }
+  if (st != 0) { lastError = st == 6 ? "router refused login: set it up again" : "router login failed (" + String(st) + ")"; return false; }
   int k = obj.indexOf("\"ubus_rpc_session\"");
   int q1 = k < 0 ? -1 : obj.indexOf('"', obj.indexOf(':', k) + 1);
   int q2 = q1 < 0 ? -1 : obj.indexOf('"', q1 + 1);
@@ -90,7 +90,7 @@ static bool login() {
 
 // Runs switchyard.<method>. Returns the HTTP code to hand back and fills out with the JSON body.
 static int call(const String &method, const String &args, String &out, int timeoutMs) {
-  if (!configured()) { out = "{\"error\":\"The router isn't set up on the bridge yet.\"}"; return 400; }
+  if (!configured()) { out = "{\"error\":\"router not set up\"}"; return 400; }
   for (int attempt = 0; attempt < 2; attempt++) {
     if (!sid.length() && !login()) break;
     String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"call\",\"params\":[\"" + sid + "\",\"switchyard\",\"" + method + "\"," + args + "]}";
@@ -104,7 +104,7 @@ static int call(const String &method, const String &args, String &out, int timeo
       return 200;
     }
     if (st == -32002 || st == 6) { sid = ""; continue; }   // session ran out: log in again once
-    lastError = st == 3 || st == 4 || st == -32000 ? "the Switchyard plugin isn't on the router" : "router call failed (" + String(st) + ")";
+    lastError = st == 3 || st == 4 || st == -32000 ? "plugin isn't on the router" : "router call failed (" + String(st) + ")";
     break;
   }
   String msg = lastError.length() ? lastError : String("router call failed");

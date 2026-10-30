@@ -123,8 +123,8 @@ static String dateText() {
 }
 
 static void statusBar(const String &title) {
-  G().setFont(u8g2_font_helvB08_tr);
-  G().drawStr(0, 10, title.c_str());
+  G().setFont(u8g2_font_6x10_tr);   // was helvB08 (its only use); same height, saves flash
+  G().drawStr(0, 9, title.c_str());
   int x = 128 - 13;
   wifiBars(x, 11);
   if (tvState == TV_ON) { x -= 15; tvIcon(x, 2); }
