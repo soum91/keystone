@@ -1227,6 +1227,7 @@ static void worker(void *) {
     if (millis() - lastNet > 3000) { lastNet = millis(); startNetworkServices(); }
     if (serverUp) { server.handleClient(); webBeat = millis(); }
     relay::poll();
+    router::follow();
     netWatch();
     if (WiFi.status() != WL_CONNECTED) { netWatch(); vTaskDelay(pdMS_TO_TICKS(200)); continue; }
 

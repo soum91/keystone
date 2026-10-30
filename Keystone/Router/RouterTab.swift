@@ -19,6 +19,7 @@ struct RouterTab: View {
     @EnvironmentObject var store: Store
     @StateObject private var model = RouterModel(link: BridgeRouterLink())
     @State private var setup = false
+    @State private var followBusy = false
 
     private var routerInfo: BridgeInfo.RouterLinkInfo? { store.info?.router }
 
@@ -26,12 +27,12 @@ struct RouterTab: View {
         NavigationStack {
             Group {
                 if routerInfo?.configured == true {
-                    RouterDashboard(model: model, title: "Router") {
+                    RouterDashboard(model: model, title: "Router", onForget: {
                         Task {
                             _ = try? await BridgeAPI.post("/api/control", ["device": "router", "forget": true])
                             await store.refresh()
                         }
-                    }
+                    }, extra: AnyView(followCard))
                     .toolbar {
                         ToolbarItem(placement: .topBarLeading) {
                             Button { setup = true } label: { Image(systemName: "gearshape") }
@@ -47,6 +48,26 @@ struct RouterTab: View {
                 RouterSetupSheet { await store.refresh() }
             }
         }
+    }
+
+    private var followCard: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            SwitchRow(icon: "lightbulb.2.fill", title: "Follow the room lights",
+                      detail: "All bridge lights off turns the router lights off. Any light on brings them back.",
+                      isOn: routerInfo?.follow == true, busy: followBusy) { on in
+                Task {
+                    followBusy = true
+                    defer { followBusy = false }
+                    do {
+                        _ = try await BridgeAPI.post("/api/control", ["device": "router", "follow": on])
+                        await store.refresh()
+                    } catch {
+                        model.say(error.localizedDescription)
+                    }
+                }
+            }
+        }
+        .card()
     }
 
     private var intro: some View {

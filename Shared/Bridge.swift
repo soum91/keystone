@@ -76,7 +76,7 @@ struct BridgeInfo: Codable, Equatable {
     struct Remote: Codable, Equatable { var on: Bool?; var connected: Bool?; var served: Int?; var error: String?; var id: String?
         var heard: Int?; var badKey: Int?; var stale: Int?; var tooBig: Int? }
     var router: RouterLinkInfo?
-    struct RouterLinkInfo: Codable, Equatable { var configured: Bool?; var host: String?; var ok: Bool?; var ago: Int?; var error: String? }
+    struct RouterLinkInfo: Codable, Equatable { var configured: Bool?; var follow: Bool?; var host: String?; var ok: Bool?; var ago: Int?; var error: String? }
     var auth: Bool?
     var features: Features?
     struct Features: Codable, Equatable { var ac: Bool?; var cam: Bool? }

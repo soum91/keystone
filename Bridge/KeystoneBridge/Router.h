@@ -11,6 +11,9 @@ namespace router {
 
 static String host, user, pass, sid;
 static String lastError;
+static bool followOn = false;      // router lights follow the bridge lights
+static int8_t lastAny = -1;
+static uint32_t nextFollow = 0;
 static uint32_t lastOk = 0;
 
 static bool configured() { return host.length() && user.length() && pass.length(); }
@@ -19,6 +22,7 @@ static void begin() {
   host = prefs.getString("rt_host", "");
   user = prefs.getString("rt_user", "");
   pass = prefs.getString("rt_pass", "");
+  followOn = prefs.getBool("rt_follow", false);
 }
 
 // "setup" and "allow" need the root password and stay on the phone.
@@ -116,6 +120,12 @@ static void control(JsonDocument &d) {
     prefs.remove("rt_host"); prefs.remove("rt_user"); prefs.remove("rt_pass");
     return respond(200, "{\"ok\":true}");
   }
+  if (!d["follow"].isNull()) {
+    followOn = d["follow"];
+    prefs.putBool("rt_follow", followOn);
+    lastAny = -1;
+    return respond(200, "{\"ok\":true}");
+  }
   if (d["setup"].is<JsonObject>()) {
     host = d["setup"]["host"] | "";
     user = d["setup"]["user"] | "";
@@ -138,11 +148,28 @@ static void control(JsonDocument &d) {
 static void info(JsonDocument &d) {
   JsonObject o = d["router"].to<JsonObject>();
   o["configured"] = configured();
+  o["follow"] = followOn;
   if (!configured()) return;
   o["host"] = host;
   o["ok"] = lastOk > 0 && lastError.length() == 0;
   if (lastOk) o["ago"] = (int)((millis() - lastOk) / 1000);
   if (lastError.length()) o["error"] = lastError;
+}
+
+// Every bridge light off -> router lights off; any on -> on. Checked every 2 s from the worker.
+static void follow() {
+  if (!followOn || !configured() || (int32_t)(millis() - nextFollow) < 0) return;
+  nextFollow = millis() + 2000;
+  int any = 0, known = 0;
+  xSemaphoreTake(stateLock, portMAX_DELAY);
+  for (auto &L : lights) if (L.known) { known++; if (L.on) any = 1; }
+  xSemaphoreGive(stateLock);
+  if (!known || any == lastAny) return;
+  if (lastAny >= 0) {
+    String out;
+    if (call("leds", any ? "{\"on\":true}" : "{\"on\":false}", out, 6000) != 200) { nextFollow = millis() + 60000; return; }
+  }
+  lastAny = any;
 }
 
 }  // namespace router
