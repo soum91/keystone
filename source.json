@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.27",
+          "buildVersion": "27",
+          "date": "2026-10-30T19:12:37Z",
+          "localizedDescription": "- Router tab: clearer timeout errors (4656340)\n- Bridge relay: refuse non-status/control requests instead of hanging 9 s (c46c97e)\n- Bridge: router deny-list instead of allow-list, no ArduinoJson std::stream support (0ccb674)\n- Bridge: trim flash (shared relay auth loop, shorter router errors, status bar on the 6x10 font) (16dd6ac)\n- Bridge CI: list the largest symbols in the build log (a58e5fd)\n- Bridge: fit in flash again (router module without ArduinoJson, TV page uses helvB12) (92240ad)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-27/Keystone-1.0.0-build-27.ipa",
+          "size": 1358330,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.26",
           "buildVersion": "26",
           "date": "2026-10-30T18:02:13Z",
@@ -227,11 +236,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.26",
-      "versionDate": "2026-10-30T18:02:13Z",
-      "versionDescription": "- Router tab: run the OpenWrt ASUS from Keystone through the bridge (bridge 1.9.11) (f2fd6bf)\n- Bridge 1.10: web server back on the worker, with a watchdog (fa3386b)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-26/Keystone-1.0.0-build-26.ipa",
-      "size": 1356981,
+      "version": "1.0.0.27",
+      "versionDate": "2026-10-30T19:12:37Z",
+      "versionDescription": "- Router tab: clearer timeout errors (4656340)\n- Bridge relay: refuse non-status/control requests instead of hanging 9 s (c46c97e)\n- Bridge: router deny-list instead of allow-list, no ArduinoJson std::stream support (0ccb674)\n- Bridge: trim flash (shared relay auth loop, shorter router errors, status bar on the 6x10 font) (16dd6ac)\n- Bridge CI: list the largest symbols in the build log (a58e5fd)\n- Bridge: fit in flash again (router module without ArduinoJson, TV page uses helvB12) (92240ad)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-27/Keystone-1.0.0-build-27.ipa",
+      "size": 1358330,
       "appPermissions": {}
     }
   ],
