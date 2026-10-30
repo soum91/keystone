@@ -132,22 +132,9 @@ static void handle(const String &sealed) {
     r["c"] = relayCode; r["b"] = relayOut;
     relayOut = ""; relayBody = "";
   } else {
-    WiFiClient c;
-    HTTPClient h;
-    h.setConnectTimeout(3000);
-    h.setTimeout(9000);
-    int code = -1;
-    if (path.startsWith("/api/info")) path += path.indexOf('?') < 0 ? "?lite=1" : "&lite=1";   // no logs over the relay
-    if (h.begin(c, "http://" + WiFi.localIP().toString() + ":" + String(API_PORT) + path)) {
-      for (JsonPair kv : d["h"].as<JsonObject>()) h.addHeader(kv.key().c_str(), kv.value().as<String>());
-      if (method == "POST") { h.addHeader("Content-Type", "application/json"); code = h.POST(body); }
-      else code = h.GET();
-      r["c"] = code;
-      r["b"] = code > 0 ? h.getString() : String("{\"error\":\"bridge busy\"}");
-      h.end();
-    } else {
-      r["c"] = -1; r["b"] = "{\"error\":\"local call failed\"}";
-    }
+    // Everything else would have to loop back through the web server, which runs on this same task
+    // (worker), so it could never answer. Refuse straight away instead of hanging for 9 s.
+    r["c"] = 403; r["b"] = "{\"error\":\"only status and controls work away from home\"}";
   }
   String out;
   serializeJson(r, out);
