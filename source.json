@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.29",
+          "buildVersion": "29",
+          "date": "2026-11-05T13:45:27Z",
+          "localizedDescription": "- Editable home: reorder and hide cards, rename/reorder/hide lights, and add or update lights from here (2735ec5)\n- Bridge 1.9.13: purifier display (and keep-display-off) through /api/control, so Exhale can set it away from home (4c3ae96)\n- Bridge: use the board's full 8 MB flash (de9ac9c)\n- Bridge router module: shorter errors and one prefs helper, to fit flash with the network watchdog (be5b659)\n- Bridge: restart itself when Wi-Fi or the internet is gone (e69b530)\n- Bridge network watchdog: smaller (f18a8e5)\n- Bridge network watchdog: trim to fit flash (4146125)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-29/Keystone-1.0.0-build-29.ipa",
+          "size": 1429759,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.28",
           "buildVersion": "28",
           "date": "2026-10-30T19:30:08Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-4/Keystone-1.0.0-build-4.ipa",
           "size": 554664,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.3",
-          "buildVersion": "3",
-          "date": "2026-10-28T03:26:18Z",
-          "localizedDescription": "- README: what Keystone does (4e8f0a4)\n- Keystone: control panel for the home bridge (7203e29)\n- Initial commit (867b9c2)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-3/Keystone-1.0.0-build-3.ipa",
-          "size": 545821,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.28",
-      "versionDate": "2026-10-30T19:30:08Z",
-      "versionDescription": "- Router lights follow the room lights (bridge 1.9.12) (9e1b851)\n- Bridge network watchdog: fix the build (a316de5)\n- Bridge: restart itself when the network is gone (8defad7)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-28/Keystone-1.0.0-build-28.ipa",
-      "size": 1361091,
+      "version": "1.0.0.29",
+      "versionDate": "2026-11-05T13:45:27Z",
+      "versionDescription": "- Editable home: reorder and hide cards, rename/reorder/hide lights, and add or update lights from here (2735ec5)\n- Bridge 1.9.13: purifier display (and keep-display-off) through /api/control, so Exhale can set it away from home (4c3ae96)\n- Bridge: use the board's full 8 MB flash (de9ac9c)\n- Bridge router module: shorter errors and one prefs helper, to fit flash with the network watchdog (be5b659)\n- Bridge: restart itself when Wi-Fi or the internet is gone (e69b530)\n- Bridge network watchdog: smaller (f18a8e5)\n- Bridge network watchdog: trim to fit flash (4146125)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-29/Keystone-1.0.0-build-29.ipa",
+      "size": 1429759,
       "appPermissions": {}
     }
   ],
