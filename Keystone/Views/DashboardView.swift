@@ -3,6 +3,9 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var store: Store
     @State private var editing: KScene?
+    @State private var editingHome = false
+    @StateObject private var layout = HomeLayout.shared
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NavigationStack {
@@ -13,20 +16,8 @@ struct DashboardView: View {
                         problems
                         if let i = store.info {
                             header(i)
-                            scenesCard(i)
                             if let c = i.countdown { countdownCard(c) }
-                            HStack(alignment: .top, spacing: 14) {
-                                roomCard(i)
-                                airCard(i)
-                            }
-                            if i.ac?.configured == true { acCard(i) }
-                            if let c = i.camera, c.configured == true { cameraCard(c, i) }
-                            if let p = i.purifier, p.configured == true { purifierCard(p) }
-                            tvCard(i)
-                            lightsCard(i)
-                            if i.bar?.configured == true { barCard(i) }
-                            if let r = i.ir?.remotes, !r.isEmpty { irCard(r) }
-                            eventsCard(i)
+                            ForEach(layout.visible(available(i)), id: \.self) { id in card(id, i) }
                         } else if store.lastError == nil {
                             ProgressView().padding(.top, 80)
                         }
@@ -36,11 +27,51 @@ struct DashboardView: View {
                 .refreshable { await store.refresh() }
             }
             .navigationTitle(store.info?.displayName ?? "Bridge")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Edit") { editingHome = true }.disabled(store.info == nil)
+                }
+            }
             .sheet(item: $editing) { sc in SceneEditor(scene: sc) }
+            .sheet(isPresented: $editingHome) {
+                if let i = store.info {
+                    HomeEditor(available: available(i), lights: i.lights ?? []).environmentObject(store)
+                }
+            }
         }
     }
 
     private var tempF: Bool { store.display.tempF }
+
+    /// Cards that have something to show on this bridge.
+    private func available(_ i: BridgeInfo) -> [HomeCard] {
+        HomeCard.allCases.filter { c in
+            switch c {
+            case .ac: return i.ac?.configured == true
+            case .camera: return i.camera?.configured == true
+            case .purifier: return i.purifier?.configured == true
+            case .bar: return i.bar?.configured == true
+            case .ir: return !(i.ir?.remotes ?? []).isEmpty
+            default: return true
+            }
+        }
+    }
+
+    @ViewBuilder private func card(_ c: HomeCard, _ i: BridgeInfo) -> some View {
+        switch c {
+        case .scenes: scenesCard(i)
+        case .climate:
+            HStack(alignment: .top, spacing: 14) { roomCard(i); airCard(i) }
+        case .ac: acCard(i)
+        case .camera: if let x = i.camera { cameraCard(x, i) }
+        case .purifier: if let p = i.purifier { purifierCard(p) }
+        case .tv: tvCard(i)
+        case .lights: lightsCard(i)
+        case .bar: barCard(i)
+        case .ir: if let r = i.ir?.remotes { irCard(r) }
+        case .activity: eventsCard(i)
+        }
+    }
 
     // MARK: Cards
 
@@ -322,14 +353,22 @@ struct DashboardView: View {
             if (i.lights ?? []).isEmpty {
                 Text("No lights yet. Send them from Afterglow.").font(.caption).foregroundStyle(.secondary)
             }
-            ForEach(Array((i.lights ?? []).enumerated()), id: \.element.id) { n, l in
-                LightRow(light: l) { body in
+            // idx is the bridge's own position for each light, so it stays right whatever order we show.
+            ForEach(layout.orderedLights(i.lights ?? []), id: \.light.id) { item in
+                LightRow(light: item.light, title: layout.name(for: item.light)) { body in
                     var b = body
                     b["device"] = "light"
-                    b["idx"] = n
+                    b["idx"] = item.idx
                     Task { await store.control(b) }
                 }
             }
+            Button {
+                if let u = URL(string: "afterglow://sync") { openURL(u) }
+            } label: {
+                Label("Add or update lights (opens Afterglow)", systemImage: "arrow.triangle.2.circlepath")
+                    .font(.caption)
+            }
+            .buttonStyle(.plain).foregroundStyle(Theme.yellow)
         }
         .card()
     }
@@ -435,6 +474,7 @@ struct DashboardView: View {
 /// One light: tap to switch, slide to dim (sent when you let go).
 struct LightRow: View {
     let light: BridgeInfo.Light
+    var title: String? = nil
     let send: ([String: Any]) -> Void
     @State private var bri: Double = 100
     @State private var dragging = false
@@ -445,7 +485,7 @@ struct LightRow: View {
                 Image(systemName: light.on == true ? "lightbulb.fill" : "lightbulb")
                     .foregroundStyle(light.ok == false ? Theme.bad : light.on == true ? Theme.yellow : .secondary)
                     .frame(width: 22)
-                Text(light.name)
+                Text(title ?? light.name)
                 Spacer()
                 if light.ok == false { Text("not answering").font(.caption).foregroundStyle(.secondary) }
                 Toggle("", isOn: Binding(get: { light.on == true }, set: { v in send(["on": v]) })).labelsHidden()
