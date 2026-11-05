@@ -6,7 +6,7 @@
 //   light     {"idx":0, "on":true, "bri":1-100}
 //   tv        {"on":true} | {"input":0} | {"vol":"up"|"down"}
 //   bar       {"on":true}
-//   purifier  {"on":true, "auto":true, "speed":1-n}
+//   purifier  {"on":true, "auto":true, "speed":1-n, "display":true, "keepDisplayOff":false}
 //   ir        {"remote":0, "button":-1 (power) | 0-7}
 //   router    {"call":"status","args":{}} (see Router.h)
 //   ac        {"on":true, "mode":"cool"|"heat"|"fan"|"dry"|"smart", "target":23.5 (°C), "fan":"low"|"med"|"high"|"auto"}
@@ -89,8 +89,16 @@ static void purifier(JsonDocument &d) {
     add(pur.fan, pur.fanVals[idx]);
     ps.fanIdx = idx;
   }
+  // Turning the display on by hand also stops "keep display off" knocking it straight back off.
+  if (!d["keepDisplayOff"].isNull()) pur.keepDisplayOff = d["keepDisplayOff"];
+  if (!d["display"].isNull() && pur.display.length()) {
+    bool v = d["display"];
+    if (v) pur.keepDisplayOff = false;
+    add(pur.display, (v != pur.displayInverted) ? "true" : "false");
+    ps.displayOn = v;
+  }
   s += "}";
-  if (s.length() <= 2) return reply(400, "nothing to do");
+  if (s.length() <= 2) return reply(!d["keepDisplayOff"].isNull() ? 200 : 400, !d["keepDisplayOff"].isNull() ? "" : "nothing to do");
   ps.lastSent = millis();
   xenqueue(XCmd{0, s});
   reply(200);
