@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.37",
+          "buildVersion": "37",
+          "date": "2026-11-06T21:23:01Z",
+          "localizedDescription": "- Internet sources: always show Add a source, and say which radio is taken by what (7c403d5)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-37/Keystone-1.0.0-build-37.ipa",
+          "size": 1551768,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.36",
           "buildVersion": "36",
           "date": "2026-11-06T20:58:47Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-12/Keystone-1.0.0-build-12.ipa",
           "size": 805916,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.11",
-          "buildVersion": "11",
-          "date": "2026-10-28T20:26:32Z",
-          "localizedDescription": "- Camera card from the bridge (Nightjar's Vicohome camera) (77dc6ce)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-11/Keystone-1.0.0-build-11.ipa",
-          "size": 805844,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.36",
-      "versionDate": "2026-11-06T20:58:47Z",
-      "versionDescription": "- Enforce visible installed version/build across app releases (36674d2)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-36/Keystone-1.0.0-build-36.ipa",
-      "size": 1549887,
+      "version": "1.0.0.37",
+      "versionDate": "2026-11-06T21:23:01Z",
+      "versionDescription": "- Internet sources: always show Add a source, and say which radio is taken by what (7c403d5)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-37/Keystone-1.0.0-build-37.ipa",
+      "size": 1551768,
       "appPermissions": {}
     }
   ],
