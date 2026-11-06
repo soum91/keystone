@@ -26,6 +26,7 @@ struct Cfg {
   // Smart Auto, in °C
   bool autoOn = false;
   float setpoint = 21, band = 3;
+  bool roomAC = false;   // Smart Auto reads the AC's own sensor instead of the Govee
 };
 static Cfg cfg;
 static bool inHome = false;
@@ -47,6 +48,7 @@ static bool parseCfg(const String &json, Cfg &out) {
     c.setpoint = o["auto"]["setpoint"] | 21.0f;
     c.band = o["auto"]["band"] | 3.0f;
     c.band = constrain(c.band, 0.5f, 8.0f);
+    c.roomAC = strcmp(o["auto"]["room"] | "govee", "ac") == 0;
     c.configured = c.user.length() && c.pass.length() && c.puid.length();
   }
   out = c;
@@ -61,6 +63,7 @@ static void saveAuto() {
   d["ac"]["auto"]["enabled"] = cfg.autoOn;
   d["ac"]["auto"]["setpoint"] = cfg.setpoint;
   d["ac"]["auto"]["band"] = cfg.band;
+  d["ac"]["auto"]["room"] = cfg.roomAC ? "ac" : "govee";
   String out;
   serializeJson(d, out);
   writeFile("/equinox.json", out);
@@ -353,7 +356,7 @@ static bool send(const std::vector<std::pair<String, int>> &kv) {
 
 static float roomC() {
 #ifdef HAS_GOVEE
-  if (govee::locked && !govee::stale()) return govee::temp;
+  if (!cfg.roomAC && govee::locked && !govee::stale()) return govee::temp;
 #endif
   return st.indoorC;
 }
@@ -642,7 +645,7 @@ static void info(JsonDocument &d) {
   float r = roomC();
   if (!isnan(r)) a["room"] = r;
   JsonObject s = a["auto"].to<JsonObject>();
-  s["enabled"] = cfg.autoOn; s["setpoint"] = cfg.setpoint; s["band"] = cfg.band;
+  s["enabled"] = cfg.autoOn; s["setpoint"] = cfg.setpoint; s["band"] = cfg.band; s["source"] = cfg.roomAC ? "ac" : "govee";
   if (st.lastSwitch) s["lastSwitchAgo"] = (int)((millis() - st.lastSwitch) / 1000);
 }
 

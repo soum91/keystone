@@ -176,6 +176,15 @@ struct DashboardView: View {
         .card()
     }
 
+    /// Why the bridge hasn't heard the Govee, from what its radio did.
+    private func roomWhy(_ g: BridgeInfo.Govee?) -> String {
+        guard let g, let b = g.bursts else { return "Is the Govee within a room of the bridge?" }
+        let low = g.lowMem ?? 0
+        if b == 0 && low > 0 { return "The bridge is too low on memory to turn Bluetooth on (\(low) tries). Turn the AC or camera off under Bridge." }
+        if (g.burstsHeard ?? 0) == 0 { return "Listened \(b)× and heard nothing. Close the Govee app (it can hold the sensor's connection) and keep the sensor near the bridge." }
+        return "Heard it in \(g.burstsHeard ?? 0) of \(b) listens. It retries every 20 s after a miss."
+    }
+
     private func roomCard(_ i: BridgeInfo) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             CardTitle(text: "Room", icon: "thermometer.medium")
@@ -188,7 +197,7 @@ struct DashboardView: View {
                 .font(.caption).foregroundStyle(.secondary)
             } else if i.govee?.locked == true {
                 Text("Not heard lately").foregroundStyle(.secondary)
-                Text("Is the Govee within a room of the bridge?").font(.caption).foregroundStyle(.secondary)
+                Text(roomWhy(i.govee)).font(.caption).foregroundStyle(.secondary)
             } else if i.govee != nil {
                 Text("Listening…").foregroundStyle(.secondary)
                 Text("Picks the closest Govee sensor").font(.caption).foregroundStyle(.secondary)

@@ -149,12 +149,15 @@ static void airco(JsonDocument &d) {
   }
   float band = d["band"] | NAN;   // Auto: how far past the target before it switches between cooling and heating
   if (!isnan(band)) { cfg.band = constrain(band, 0.5f, 6.0f); saveAuto(); }
+  const char *rs = d["room"] | "";   // which sensor Smart Auto reads: "govee" or "ac"
+  bool roomSet = rs[0] != 0;
+  if (roomSet) { cfg.roomAC = strcmp(rs, "ac") == 0; saveAuto(); }
   String fan = d["fan"] | "";
   if (fan.length()) add("t_fan_speed", fan == "low" ? 2 : fan == "med" ? 3 : fan == "high" ? 4 : 0);
   homeSetAt = 0;   // let the tile pick the new state up from the next poll
   if (p.length()) enqueueProps(p);
   if (smart) enqueueAutoNow();
-  if (!p.length() && !smart && isnan(band)) return reply(400, "nothing to do");
+  if (!p.length() && !smart && isnan(band) && !roomSet) return reply(400, "nothing to do");
   reply(200);
 }
 

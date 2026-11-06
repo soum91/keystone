@@ -8,7 +8,7 @@
 #include <NimBLEDevice.h>
 
 #define GOVEE_PICK_MS 30000UL
-#define GOVEE_STALE_MS (10UL * 60UL * 1000UL)
+#define GOVEE_STALE_MS (15UL * 60UL * 1000UL)
 #define GOVEE_PUSH_MS 15000UL
 
 namespace govee {
@@ -148,7 +148,8 @@ struct Battery : Service::BatteryService {
 // Bluetooth costs ~50 KB of RAM while on. Once the sensor is picked, listen in 25 s bursts every
 // 2.5 minutes and switch the radio off in between, so Wi-Fi, HomeKit and the AC's TLS have room.
 static volatile bool radioOn = false;
-static uint32_t scanUntil = 0, nextScan = 0;
+static uint32_t scanUntil = 0, nextScan = 0, seqAtStart = 0;
+static uint16_t bursts = 0, burstsHeard = 0, skippedLowMem = 0;
 
 static void radioStart() {
   NimBLEDevice::init("");
@@ -200,10 +201,22 @@ static void tick() {
   if (otaActive) { radioStop(); return; }
   if (locked) {
     if (radioOn) {
-      if ((int32_t)(millis() - scanUntil) >= 0) { radioStop(); nextScan = millis() + 150000UL; }
-    } else if (millis() > 45000UL && (int32_t)(millis() - nextScan) >= 0 && ESP.getMaxAllocHeap() > 30000) {
-      radioStart();
-      scanUntil = millis() + 25000UL;
+      if ((int32_t)(millis() - scanUntil) >= 0) {
+        radioStop();
+        bool heard = seq != seqAtStart;
+        if (heard) burstsHeard++;
+        nextScan = millis() + (heard ? 90000UL : 20000UL);   // missed it: try again soon, not in 2.5 minutes
+      }
+    } else if (millis() > 45000UL && (int32_t)(millis() - nextScan) >= 0) {
+      if (ESP.getMaxAllocHeap() > 30000) {
+        seqAtStart = seq;
+        radioStart();
+        scanUntil = millis() + 20000UL;
+        bursts++;
+      } else {
+        skippedLowMem++;
+        nextScan = millis() + 10000UL;
+      }
     }
     return;
   }
@@ -233,6 +246,7 @@ static void info(JsonDocument &d) {
     g["name"] = lockedName;
     if (!stale()) { g["temp"] = (float)temp; g["humidity"] = (float)hum; g["battery"] = (int)batt; }
     g["heardAgo"] = lastHeard ? (int)((millis() - lastHeard) / 1000) : -1;
+    g["bursts"] = bursts; g["burstsHeard"] = burstsHeard; g["lowMem"] = skippedLowMem;
   }
 }
 
