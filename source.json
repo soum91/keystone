@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.34",
+          "buildVersion": "34",
+          "date": "2026-11-06T20:27:18Z",
+          "localizedDescription": "- Show actual installed app version and build in UI (26f61c7)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-34/Keystone-1.0.0-build-34.ipa",
+          "size": 1549928,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.35",
           "buildVersion": "35",
           "date": "2026-11-06T20:21:40Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-10/Keystone-1.0.0-build-10.ipa",
           "size": 763907,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.9",
-          "buildVersion": "9",
-          "date": "2026-10-28T18:54:28Z",
-          "localizedDescription": "- Health section for the bridge (7272d78)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-9/Keystone-1.0.0-build-9.ipa",
-          "size": 712345,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.35",
-      "versionDate": "2026-11-06T20:21:40Z",
-      "versionDescription": "- Internet sources: 'Automatic weight' wording (e6dc8e3)\n- Show actual installed app version and build in UI (26f61c7)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-35/Keystone-1.0.0-build-35.ipa",
-      "size": 1549893,
+      "version": "1.0.0.34",
+      "versionDate": "2026-11-06T20:27:18Z",
+      "versionDescription": "- Show actual installed app version and build in UI (26f61c7)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-34/Keystone-1.0.0-build-34.ipa",
+      "size": 1549928,
       "appPermissions": {}
     }
   ],
