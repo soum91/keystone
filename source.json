@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.32",
+          "buildVersion": "32",
+          "date": "2026-11-06T18:58:02Z",
+          "localizedDescription": "- Bridge 1.9.18: Govee retries 20 s after a missed listen, listen diagnostics, AC/Govee room source for Smart; Keystone says why the Govee isn't heard (ddac97f)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-32/Keystone-1.0.0-build-32.ipa",
+          "size": 1546104,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.31",
           "buildVersion": "31",
           "date": "2026-11-06T18:37:34Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-7/Keystone-1.0.0-build-7.ipa",
           "size": 592661,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.6",
-          "buildVersion": "6",
-          "date": "2026-10-28T05:05:12Z",
-          "localizedDescription": "- Firmware updates: no polling during the upload, own connection, auto-retry, survive screen lock (8ac056b)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-6/Keystone-1.0.0-build-6.ipa",
-          "size": 589086,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.31",
-      "versionDate": "2026-11-06T18:37:34Z",
-      "versionDescription": "- Router tab: Internet sources page (Junction), traffic over every upstream (87523f0)\n- Keep Smart Turbo cleanup separate from native Auto fan controls (2ee6911)\n- Bridge Smart Auto: Turbo startup and Auto fan recovery at target (9418262)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-31/Keystone-1.0.0-build-31.ipa",
-      "size": 1540908,
+      "version": "1.0.0.32",
+      "versionDate": "2026-11-06T18:58:02Z",
+      "versionDescription": "- Bridge 1.9.18: Govee retries 20 s after a missed listen, listen diagnostics, AC/Govee room source for Smart; Keystone says why the Govee isn't heard (ddac97f)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-32/Keystone-1.0.0-build-32.ipa",
+      "size": 1546104,
       "appPermissions": {}
     }
   ],
