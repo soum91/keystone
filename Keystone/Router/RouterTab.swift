@@ -32,7 +32,7 @@ struct RouterTab: View {
                             _ = try? await BridgeAPI.post("/api/control", ["device": "router", "forget": true])
                             await store.refresh()
                         }
-                    }, extra: AnyView(followCard))
+                    }, extra: AnyView(followCard), onSignIn: { setup = true })
                     .toolbar {
                         ToolbarItem(placement: .topBarLeading) {
                             Button { setup = true } label: { Image(systemName: "gearshape") }
@@ -156,7 +156,7 @@ struct RouterSetupSheet: View {
         defer { working = nil }
         do {
             working = "Router"
-            let c = try await RouterSetup.provision(host: host, rootPassword: password)
+            let c = try await RouterSetup.provision(host: host, rootPassword: password, name: "keystone")
             working = "Bridge"
             do {
                 try await bridgeSetup(c, host: host)
