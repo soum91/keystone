@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.13"
+#define FW_VERSION "1.9.14"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -870,6 +870,7 @@ static void runBarTimers() {
 
 namespace ac { static bool applyConfig(const String &body); }
 namespace cam { static bool applyConfig(const String &body); }
+namespace sceneauto { static void loadEquinox(const String &json); }
 static void stopBluetoothForOta();
 #include "Extras.h"
 #include "Govee.h"
@@ -877,6 +878,7 @@ static void stopBluetoothForOta() {
   govee::radioStop();
 }
 #include "AC.h"
+#include "Automation.h"
 #include "Camera.h"
 namespace provision { static String status; }   // Wi-Fi setup progress, drawn by Screen.h, set by Provision.h
 #include "Screen.h"
@@ -903,6 +905,7 @@ static void handleEcho(int idx, const String &dps) {
 }
 
 static bool sendCmd(const Cmd &c) {
+  if (c.manual) sceneauto::cancelFade(c.idx);
   Light &L = lights[c.idx];
   tuya::Conn conn;
   bool ok = false;
@@ -1085,6 +1088,7 @@ static void handleConfig() {
     xSemaphoreGive(stateLock);
     std::vector<Light> scratch;
     parseConfig(body, scratch, true);
+    sceneauto::loadAfterglow(body);
     logEvent("Config updated");
   } else {
     logEvent("Lights changed, restarting");
@@ -1102,7 +1106,16 @@ static void handleRun() {
   if (deserializeJson(d, server.arg("plain"))) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
   Rule r;
   parseRule(d.as<JsonObject>(), r);
-  runActions(r, "App");
+  int fade = constrain(d["fade"] | 0, 0, 1800);
+  if (fade >= 10) {
+    sceneauto::RuleEntry scene;
+    scene.name = d["name"] | "Scene";
+    scene.fade = fade;
+    scene.lightAction = r;
+    sceneauto::runLights(scene);
+  } else {
+    runActions(r, "App");
+  }
   server.send(200, "application/json", "{\"ok\":true}");
 }
 
@@ -1236,6 +1249,7 @@ static void worker(void *) {
     if (runExtras()) continue;
     pollTV();
     runTimers();
+    sceneauto::tick();
     runBarTimers();
     pollBar();
     if (!lights.empty()) {
@@ -1292,6 +1306,7 @@ void setup() {
     parseConfig(cfg, lights, false);
     std::vector<Light> scratch;
     parseConfig(cfg, scratch, true);
+    sceneauto::loadAfterglow(cfg);
   }
   loadExtras(cfg);
   {
@@ -1313,6 +1328,7 @@ void setup() {
   }
   acEnabled = prefs.getBool("en_ac", true); camEnabled = prefs.getBool("en_cam", true);
   ac::load();
+  sceneauto::loadEquinox(readFile("/equinox.json"));
   cam::load();
   relay::begin();
   router::begin();

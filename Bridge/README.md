@@ -45,6 +45,29 @@ Afterglow › Settings › Apple Home bridge. It finds the bridge on the network
 
 Home app › + › Add Accessory › More options › **Keystone Bridge** › Add Anyway › setup code.
 
+## Scene automations
+
+In Equinox or Afterglow, long-press a scene to configure an additional trigger. Keystone executes
+fixed-time, sunset, civil-dusk ("last light"), room-temperature, outdoor-temperature, and cloudy-weather
+triggers even while the iPhone app is closed. Each scene can require a time window, a cloud-cover
+threshold, and one additional temperature condition. Location arrival/departure triggers remain on
+the iPhone, where Core Location detects crossing a selected geofence.
+
+- Solar and outdoor conditions use the Home coordinate saved in the app. Weather is provided by
+  [Open-Meteo](https://open-meteo.com/) and refreshed approximately every 15 minutes; if the data is
+  stale, weather-dependent conditions do not run. Last light means civil dusk (solar center 6° below
+  the horizon).
+- Room-temperature rules use the fresh Govee bridge sensor when available, otherwise the AC reading.
+  Temperature thresholds are in Celsius, with a small re-arm hysteresis and a 30-minute cooldown.
+- Dimmable Tuya lights can fade over 10 seconds to 30 minutes. Keystone handles bridge schedules and
+  app handoffs independently of the phone; manual light control cancels an active ramp.
+- Time and weather rules require a paired Keystone with the latest firmware and network access.
+  Only lights configured for local control can be run by the bridge. Background geofences require
+  Always Location permission; iOS controls when a location event is delivered.
+
+The solar schedule uses the UTC offset last sent by an app. Reopen Afterglow or Equinox after a daylight
+saving time change to synchronize the offset.
+
 ## TV automations
 
 Set in Afterglow › Settings › TV & automations, run on the bridge:

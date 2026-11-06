@@ -551,6 +551,7 @@ static bool applyConfig(const String &body) {
   writeFile("/equinox.json", body);
   bool restart = signature(c) != homeSig;
   cfg = c;
+  sceneauto::loadEquinox(body);
   if (credsChanged) { accessToken = ""; refreshToken = ""; prefs.remove("ac_rt"); }
   wantPoll = true;
   if (cfg.autoOn) enqueueAutoNow();
