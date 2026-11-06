@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.35",
+          "buildVersion": "35",
+          "date": "2026-11-06T20:21:40Z",
+          "localizedDescription": "- Internet sources: 'Automatic weight' wording (e6dc8e3)\n- Show actual installed app version and build in UI (26f61c7)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-35/Keystone-1.0.0-build-35.ipa",
+          "size": 1549893,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.33",
           "buildVersion": "33",
           "date": "2026-11-06T19:17:07Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-9/Keystone-1.0.0-build-9.ipa",
           "size": 712345,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.8",
-          "buildVersion": "8",
-          "date": "2026-10-28T15:23:41Z",
-          "localizedDescription": "- Remote access through the bridge's encrypted relay (c0925f3)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-8/Keystone-1.0.0-build-8.ipa",
-          "size": 700085,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.33",
-      "versionDate": "2026-11-06T19:17:07Z",
-      "versionDescription": "- Internet sources: note that links that can't connect are switched off (ca6518b)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-33/Keystone-1.0.0-build-33.ipa",
-      "size": 1546088,
+      "version": "1.0.0.35",
+      "versionDate": "2026-11-06T20:21:40Z",
+      "versionDescription": "- Internet sources: 'Automatic weight' wording (e6dc8e3)\n- Show actual installed app version and build in UI (26f61c7)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-35/Keystone-1.0.0-build-35.ipa",
+      "size": 1549893,
       "appPermissions": {}
     }
   ],
