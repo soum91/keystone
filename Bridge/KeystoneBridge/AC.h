@@ -75,6 +75,10 @@ struct State {
   int target = 22;       // in the unit's scale
   float indoorC = NAN;
   int fan = 0;
+  bool turboSupported = false;
+  bool turboActive = false, turboArmed = false;
+  bool turboSeenOn = false;
+  int turboMode = -1;
   uint32_t polledAt = 0;
   String error;
   // Smart Auto bookkeeping
@@ -300,6 +304,7 @@ static bool poll() {
     JsonObject s = dev["statusList"];
     auto num = [&](const char *k, int def) { return s[k].isNull() ? def : (int)String(s[k].as<String>()).toFloat(); };
     xSemaphoreTake(lock, portMAX_DELAY);
+    bool wasKnown = st.known, wasOn = st.on;
     st.online = String(dev["offlineState"] | "1") == "1";
     st.on = num("t_power", 0) == 1;
     st.mode = num("t_work_mode", 2);
@@ -308,6 +313,18 @@ static bool poll() {
     int in = num("f_temp_in", -999);
     st.indoorC = in == -999 ? NAN : toC(in, st.fahrenheit);
     st.fan = num("t_fan_speed", 0);
+    st.turboSupported = !s["t_super"].isNull();
+    if (st.turboActive && st.turboSupported) {
+      if (num("t_super", 0) == 1) st.turboSeenOn = true;
+      else if (st.turboSeenOn) {
+        // A user switched Turbo off outside the bridge. Respect that override.
+        st.turboActive = false;
+        st.turboArmed = false;
+        st.turboMode = -1;
+      }
+    }
+    if (wasKnown && !wasOn && st.on && cfg.autoOn) st.turboArmed = true;
+    if (!st.on) { st.turboArmed = false; st.turboActive = false; st.turboSeenOn = false; st.turboMode = -1; }
     st.known = true;
     st.polledAt = millis();
     st.error = "";
@@ -372,14 +389,46 @@ static void runAuto(bool userAction) {
   }
   if (newMode >= 0) props.push_back({"t_work_mode", newMode});
   int finalMode = newMode >= 0 ? newMode : st.mode;
+  // Turbo is ConnectLife's t_super switch, not a fan speed. Arm it only on a
+  // fresh Auto activation or power-on, and never restart it on subsequent polls.
+  bool tryStartup = st.turboArmed && isfinite(room);
+  bool startTurbo = tryStartup && st.turboSupported &&
+      ((finalMode == 2 && room - cfg.setpoint >= 5.0f) ||
+       (finalMode == 1 && cfg.setpoint - room >= 5.0f));
+  bool stopTurbo = st.turboActive && isfinite(room) &&
+      ((st.turboMode == 2 && room <= cfg.setpoint) ||
+       (st.turboMode == 1 && room >= cfg.setpoint) ||
+       (st.turboMode >= 0 && finalMode != st.turboMode));
+  if (startTurbo) props.push_back({"t_super", 1});
+  if (stopTurbo) {
+    props.push_back({"t_super", 0});
+    props.push_back({"t_fan_speed", 0});
+  }
   if ((finalMode == 1 || finalMode == 2) && st.target != set) {
     if (newMode >= 0 || userAction || st.lastSentTarget != set) props.push_back({"t_temp", set});
   }
   if (!userAction && newMode < 0 && st.lastSentTarget == set) {
     props.erase(std::remove_if(props.begin(), props.end(), [](const std::pair<String, int> &p) { return p.first == "t_temp"; }), props.end());
   }
-  if (props.empty()) return;
+  if (props.empty()) {
+    if (tryStartup) st.turboArmed = false;
+    return;
+  }
   if (send(props)) {
+    if (tryStartup) st.turboArmed = false;
+    if (startTurbo) {
+      st.turboActive = true;
+      st.turboSeenOn = false;
+      st.turboMode = finalMode;
+      logEvent("Smart Auto: Turbo startup, room " + String(room, 1) + "C");
+    }
+    if (stopTurbo) {
+      st.turboActive = false;
+      st.turboSeenOn = false;
+      st.turboMode = -1;
+      st.fan = 0;
+      logEvent("Smart Auto: target reached, Turbo off and fan Auto");
+    }
     if (newMode >= 0) {
       st.lastSwitch = now; st.lastSentMode = newMode; st.pendingMode = -1;
       st.mode = newMode;
@@ -469,6 +518,7 @@ struct Tile : Service::HeaterCooler {
     String p;
     auto add = [&](const char *k, int v) { if (p.length()) p += ','; p += String(k) + "=" + String(v); };
     bool f = st.fahrenheit;
+    bool previouslyAuto = cfg.autoOn;
     if (active->updated()) { add("t_power", active->getNewVal() ? 1 : 0); st.on = active->getNewVal(); }
     int t = target->updated() ? target->getNewVal() : target->getVal();
     float c = cool->updated() ? cool->getNewVal<float>() : cool->getVal<float>();
@@ -485,6 +535,11 @@ struct Tile : Service::HeaterCooler {
         if (!active->updated() && !st.on) add("t_power", 1);
       } else {
         cfg.autoOn = false;
+        st.turboArmed = false;
+        if (st.turboActive) {
+          add("t_super", 0); add("t_fan_speed", 0);
+          st.turboActive = false; st.turboSeenOn = false; st.turboMode = -1;
+        }
         saveAuto();
         if (t == 2) { add("t_work_mode", 2); add("t_temp", fromC(c, f)); st.mode = 2; }
         else if (t == 1 && cfg.heatSupported) { add("t_work_mode", 1); add("t_temp", fromC(h, f)); st.mode = 1; }
@@ -494,6 +549,12 @@ struct Tile : Service::HeaterCooler {
       int s = speed->getNewVal();
       add("t_fan_speed", s <= 25 ? 2 : s <= 50 ? 3 : s <= 75 ? 4 : 0);   // low, med, high, then auto at 100
     }
+    if (speed->updated() && st.turboActive) {
+      add("t_super", 0);
+      st.turboActive = false; st.turboArmed = false; st.turboSeenOn = false; st.turboMode = -1;
+    }
+    if (cfg.autoOn && ((!previouslyAuto && modeOrTemp) ||
+                       (active->updated() && active->getNewVal()))) st.turboArmed = true;
     if (p.length()) enqueueProps(p);
     if (cfg.autoOn && (modeOrTemp || active->updated())) enqueueAutoNow();
     return true;
@@ -550,7 +611,16 @@ static bool applyConfig(const String &body) {
   bool credsChanged = c.user != cfg.user || c.pass != cfg.pass;
   writeFile("/equinox.json", body);
   bool restart = signature(c) != homeSig;
+  bool wasAuto = cfg.autoOn;
   cfg = c;
+  if (cfg.autoOn && !wasAuto) st.turboArmed = true;
+  if (!cfg.autoOn) {
+    st.turboArmed = false;
+    if (st.turboActive) enqueueProps("t_super=0,t_fan_speed=0");
+    st.turboActive = false;
+    st.turboSeenOn = false;
+    st.turboMode = -1;
+  }
   sceneauto::loadEquinox(body);
   if (credsChanged) { accessToken = ""; refreshToken = ""; prefs.remove("ac_rt"); }
   wantPoll = true;

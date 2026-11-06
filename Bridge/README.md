@@ -68,6 +68,11 @@ the iPhone, where Core Location detects crossing a selected geofence.
 The solar schedule uses the UTC offset last sent by an app. Reopen Afterglow or Equinox after a daylight
 saving time change to synchronize the offset.
 
+When Smart Auto is turned on or the AC powers on with Smart Auto enabled, Keystone also applies a one-time
+Turbo startup if the room is at least 5°C away from the setpoint in the cooling or heating direction and
+ConnectLife reports Turbo support. It turns Turbo off and restores Auto fan speed when the room reaches
+the setpoint. Changing Auto to a different operating mode cancels this temporary boost.
+
 ## TV automations
 
 Set in Afterglow › Settings › TV & automations, run on the bridge:

@@ -179,12 +179,28 @@ static String acProps(const RuleEntry &r) {
   if (deserializeJson(doc, r.acAction)) return "";
   JsonObject a = doc.as<JsonObject>();
   if (a.isNull()) return "";
-  if (!(a["power"] | true)) return "t_power=0";
+  if (!(a["power"] | true)) {
+    ac::st.turboActive = false;
+    ac::st.turboSeenOn = false;
+    ac::st.turboArmed = false;
+    ac::st.turboMode = -1;
+    return ac::st.turboSupported ? "t_power=0,t_super=0" : "t_power=0";
+  }
   String p = "t_power=1";
   if (a["mode"].is<int>()) {
     int mode = a["mode"].as<int>();
-    if (mode != 4) { ac::cfg.autoOn = false; p += ",t_work_mode=" + String(mode); }
-    else ac::cfg.autoOn = true;
+    if (mode != 4) {
+      ac::cfg.autoOn = false;
+      ac::st.turboArmed = false;
+      if (ac::st.turboActive) p += ",t_super=0,t_fan_speed=0";
+      ac::st.turboActive = false;
+      ac::st.turboSeenOn = false;
+      ac::st.turboMode = -1;
+      p += ",t_work_mode=" + String(mode);
+    } else {
+      if (!ac::cfg.autoOn) ac::st.turboArmed = true;
+      ac::cfg.autoOn = true;
+    }
   }
   if (a["tempC"].is<float>()) {
     float t = a["tempC"].as<float>();
