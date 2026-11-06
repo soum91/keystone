@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.31",
+          "buildVersion": "31",
+          "date": "2026-11-06T18:37:34Z",
+          "localizedDescription": "- Router tab: Internet sources page (Junction), traffic over every upstream (87523f0)\n- Keep Smart Turbo cleanup separate from native Auto fan controls (2ee6911)\n- Bridge Smart Auto: Turbo startup and Auto fan recovery at target (9418262)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-31/Keystone-1.0.0-build-31.ipa",
+          "size": 1540908,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.30",
           "buildVersion": "30",
           "date": "2026-11-06T06:47:14Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-6/Keystone-1.0.0-build-6.ipa",
           "size": 589086,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.5",
-          "buildVersion": "5",
-          "date": "2026-10-28T04:39:13Z",
-          "localizedDescription": "- Show the AC and Equinox pairing (c28d55f)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-5/Keystone-1.0.0-build-5.ipa",
-          "size": 582205,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.30",
-      "versionDate": "2026-11-06T06:47:14Z",
-      "versionDescription": "- Router tab: own router login for the bridge (\"keystone\"), Sign in again when it's rejected (a11eeea)\n- Clear stale outdoor coordinates when Home location changes or is removed (eaa252c)\n- Add bridge-based scene schedules, weather rules and gradual light fades (8bf300c)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-30/Keystone-1.0.0-build-30.ipa",
-      "size": 1432045,
+      "version": "1.0.0.31",
+      "versionDate": "2026-11-06T18:37:34Z",
+      "versionDescription": "- Router tab: Internet sources page (Junction), traffic over every upstream (87523f0)\n- Keep Smart Turbo cleanup separate from native Auto fan controls (2ee6911)\n- Bridge Smart Auto: Turbo startup and Auto fan recovery at target (9418262)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-31/Keystone-1.0.0-build-31.ipa",
+      "size": 1540908,
       "appPermissions": {}
     }
   ],
