@@ -537,7 +537,7 @@ struct Tile : Service::HeaterCooler {
         cfg.autoOn = false;
         st.turboArmed = false;
         if (st.turboActive) {
-          add("t_super", 0); add("t_fan_speed", 0);
+          add("t_super", 0);
           st.turboActive = false; st.turboSeenOn = false; st.turboMode = -1;
         }
         saveAuto();
@@ -616,7 +616,7 @@ static bool applyConfig(const String &body) {
   if (cfg.autoOn && !wasAuto) st.turboArmed = true;
   if (!cfg.autoOn) {
     st.turboArmed = false;
-    if (st.turboActive) enqueueProps("t_super=0,t_fan_speed=0");
+    if (st.turboActive) enqueueProps("t_super=0");
     st.turboActive = false;
     st.turboSeenOn = false;
     st.turboMode = -1;

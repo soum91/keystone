@@ -192,7 +192,7 @@ static String acProps(const RuleEntry &r) {
     if (mode != 4) {
       ac::cfg.autoOn = false;
       ac::st.turboArmed = false;
-      if (ac::st.turboActive) p += ",t_super=0,t_fan_speed=0";
+      if (ac::st.turboActive) p += ",t_super=0";
       ac::st.turboActive = false;
       ac::st.turboSeenOn = false;
       ac::st.turboMode = -1;

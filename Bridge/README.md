@@ -71,7 +71,9 @@ saving time change to synchronize the offset.
 When Smart Auto is turned on or the AC powers on with Smart Auto enabled, Keystone also applies a one-time
 Turbo startup if the room is at least 5°C away from the setpoint in the cooling or heating direction and
 ConnectLife reports Turbo support. It turns Turbo off and restores Auto fan speed when the room reaches
-the setpoint. Changing Auto to a different operating mode cancels this temporary boost.
+the setpoint. Changing Smart to a different operating mode cancels this temporary boost.
+This applies only to Equinox's Smart mode. The AC's native Auto mode never starts the boost,
+and leaving Smart does not force the next mode's fan speed.
 
 ## TV automations
 
