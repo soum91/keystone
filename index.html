@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keystone Bridge Installer</title>
+<script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
+<style>
+  :root { --bg:#120f10; --card:#1d191a; --text:#f3ece6; --muted:#a89d95; --accent:#ffad4d; --line:#2e2829; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:radial-gradient(ellipse at top, #3a2414 0%, var(--bg) 55%); background-color:var(--bg); color:var(--text);
+         font:16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height:100vh; }
+  main { max-width:640px; margin:0 auto; padding:40px 16px 60px; }
+  h1 { font-size:32px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 28px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px; margin-bottom:16px; }
+  .card h2 { font-size:17px; margin:0 0 10px; }
+  ol, ul { margin:0; padding-left:20px; } li { margin:6px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  code { background:#2a2425; padding:1px 6px; border-radius:6px; font-size:14px; }
+  esp-web-install-button button[slot="activate"] { background:var(--accent); color:#1a1006; border:0; border-radius:14px;
+         font-size:17px; font-weight:700; padding:14px 22px; cursor:pointer; width:100%; }
+  .warn { border-color:#6b3b22; background:#241815; }
+  a { color:var(--accent); }
+  #build { color:var(--muted); font-size:13px; margin-top:10px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Keystone Bridge</h1>
+  <p class="sub">Puts your Tuya lights in Apple Home and turns them off when the TV goes off.</p>
+
+  <div class="card">
+    <h2>Install</h2>
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate">Connect and install</button>
+      <span slot="unsupported"><div class="card warn" style="margin:0">This browser can't talk to USB devices. Use Chrome or Edge on a Windows, Mac, Linux or ChromeOS computer. iPhone and iPad can't do this at all.</div></span>
+      <span slot="not-allowed"><div class="card warn" style="margin:0">This page has to be opened over https.</div></span>
+    </esp-web-install-button>
+    <div id="build"></div>
+    <p class="muted" style="margin:14px 0 0">Pick the port that appears when you plug the board in (on this board it's <b>USB-SERIAL CH340</b> or <b>wchusbserial</b>). The right firmware for your chip is picked automatically. Tick <b>Erase device</b> on the first install.</p>
+  </div>
+
+  <div class="card">
+    <h2>Repair or update, keeping everything</h2>
+    <esp-web-install-button manifest="manifest-keep.json">
+      <button slot="activate">Install, keep settings</button>
+    </esp-web-install-button>
+    <p class="muted" style="margin:14px 0 0">For a bridge that's already set up but stuck or crash-looping. Rewrites only the firmware: Wi-Fi, Apple Home and app pairings stay. Do <b>not</b> tick Erase device.</p>
+  </div>
+
+  <div class="card">
+    <h2>No port shows up?</h2>
+    <ol>
+      <li><b>Cable.</b> Most micro-USB cables in drawers are charge-only. If nothing appears when you plug in, try another cable first.</li>
+      <li><b>Windows:</b> install the CH340 driver from <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html">WCH (CH341SER.EXE)</a>, unplug and replug. Device Manager should show <code>USB-SERIAL CH340 (COMx)</code>.</li>
+      <li><b>Mac:</b> recent macOS has the driver built in. If nothing shows, install <a href="https://www.wch-ic.com/downloads/CH34XSER_MAC_ZIP.html">WCH's macOS driver</a> and allow it in System Settings › Privacy &amp; Security.</li>
+      <li><b>Stuck on "Connecting"?</b> Hold the <b>BOOT</b> button (next to the USB port), tap <b>EN</b>/<b>RST</b>, let go of BOOT, then try again.</li>
+      <li>Close anything else using the port (Arduino IDE serial monitor, another flasher tab).</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>After it installs</h2>
+    <ol>
+      <li>The screen on the board says <b>Wi-Fi setup</b>. Either click <b>Connect</b> above again and choose <b>Connect to Wi-Fi</b> (over USB), or on your phone join the open network <code>Keystone-Setup</code>: the setup page pops up. Pick your 2.4 GHz Wi-Fi. The Apple Home code is <code>466-37-726</code> unless you set your own.</li>
+      <li>The board's screen shows its IP. In Keystone (or Afterglow: Settings › Apple Home bridge) it finds and pairs it.</li>
+      <li>Home app › + › Add Accessory › More options › <b>Keystone Bridge</b>.</li>
+    </ol>
+  </div>
+
+  <p class="muted">Prefer doing it by hand? Firmware files are on the <a href="https://github.com/soum91/keystone/releases/tag/firmware-latest">releases page</a>. <a href="https://github.com/soum91/keystone/tree/main/Bridge">Full guide</a>.</p>
+</main>
+<script>
+  fetch("manifest.json").then(r => r.json()).then(m => {
+    document.getElementById("build").textContent = "Firmware " + m.version;
+  }).catch(() => {});
+</script>
+</body>
+</html>
