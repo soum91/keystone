@@ -21,6 +21,10 @@ struct DashboardView: View {
                         } else if store.lastError == nil {
                             ProgressView().padding(.top, 80)
                         }
+                        Text("Installed version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown") (build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
                     }
                     .padding(16)
                 }
