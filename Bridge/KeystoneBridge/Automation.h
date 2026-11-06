@@ -17,6 +17,7 @@ struct RuleEntry {
 };
 static std::vector<RuleEntry> lightRules, acRules;
 static double lat = NAN, lon = NAN;
+static double afterglowLat = NAN, afterglowLon = NAN, equinoxLat = NAN, equinoxLon = NAN;
 static float outdoorC = NAN;
 static int cloudCover = -1;
 static uint32_t weatherFetchedMs = 0;
@@ -28,12 +29,21 @@ static void parseRules(const String &json, std::vector<RuleEntry> &out, bool ac)
   if (!doc["utcOffset"].isNull()) utcOffset = doc["utcOffset"].as<long>();
   std::vector<RuleEntry> fresh;
   JsonObject weather = doc["weather"].as<JsonObject>();
+  double newLat = NAN, newLon = NAN;
   if (!weather.isNull() && weather["lat"].is<double>() && weather["lon"].is<double>()) {
     double a = weather["lat"].as<double>(), b = weather["lon"].as<double>();
-    if (a >= -90 && a <= 90 && b >= -180 && b <= 180 && (!isfinite(lat) || !isfinite(lon) || !ac)) {
-      lat = a; lon = b;
-      weatherFetchedMs = 0;
-    }
+    if (a >= -90 && a <= 90 && b >= -180 && b <= 180) { newLat = a; newLon = b; }
+  }
+  if (ac) { equinoxLat = newLat; equinoxLon = newLon; }
+  else { afterglowLat = newLat; afterglowLon = newLon; }
+  double effectiveLat = isfinite(afterglowLat) ? afterglowLat : equinoxLat;
+  double effectiveLon = isfinite(afterglowLon) ? afterglowLon : equinoxLon;
+  if (effectiveLat != lat || effectiveLon != lon || isfinite(lat) != isfinite(effectiveLat)) {
+    lat = effectiveLat; lon = effectiveLon;
+    weatherFetchedMs = 0;
+    weatherObservedAt = 0; // no readings from the previously configured place
+    outdoorC = NAN;
+    cloudCover = -1;
   }
   for (JsonObject item : doc["sceneRules"].as<JsonArray>()) {
     RuleEntry r;
