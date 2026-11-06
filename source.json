@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.30",
+          "buildVersion": "30",
+          "date": "2026-11-06T06:47:14Z",
+          "localizedDescription": "- Router tab: own router login for the bridge (\"keystone\"), Sign in again when it's rejected (a11eeea)\n- Clear stale outdoor coordinates when Home location changes or is removed (eaa252c)\n- Add bridge-based scene schedules, weather rules and gradual light fades (8bf300c)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-30/Keystone-1.0.0-build-30.ipa",
+          "size": 1432045,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.29",
           "buildVersion": "29",
           "date": "2026-11-05T13:45:27Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-5/Keystone-1.0.0-build-5.ipa",
           "size": 582205,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.4",
-          "buildVersion": "4",
-          "date": "2026-10-28T03:58:18Z",
-          "localizedDescription": "- Update an old bridge before pairing; call it Keystone Bridge (acb69c0)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-4/Keystone-1.0.0-build-4.ipa",
-          "size": 554664,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.29",
-      "versionDate": "2026-11-05T13:45:27Z",
-      "versionDescription": "- Editable home: reorder and hide cards, rename/reorder/hide lights, and add or update lights from here (2735ec5)\n- Bridge 1.9.13: purifier display (and keep-display-off) through /api/control, so Exhale can set it away from home (4c3ae96)\n- Bridge: use the board's full 8 MB flash (de9ac9c)\n- Bridge router module: shorter errors and one prefs helper, to fit flash with the network watchdog (be5b659)\n- Bridge: restart itself when Wi-Fi or the internet is gone (e69b530)\n- Bridge network watchdog: smaller (f18a8e5)\n- Bridge network watchdog: trim to fit flash (4146125)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-29/Keystone-1.0.0-build-29.ipa",
-      "size": 1429759,
+      "version": "1.0.0.30",
+      "versionDate": "2026-11-06T06:47:14Z",
+      "versionDescription": "- Router tab: own router login for the bridge (\"keystone\"), Sign in again when it's rejected (a11eeea)\n- Clear stale outdoor coordinates when Home location changes or is removed (eaa252c)\n- Add bridge-based scene schedules, weather rules and gradual light fades (8bf300c)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-30/Keystone-1.0.0-build-30.ipa",
+      "size": 1432045,
       "appPermissions": {}
     }
   ],
