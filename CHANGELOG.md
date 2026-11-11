@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-40] - 2026-11-11
+
+## Verified changes since build-39
+
+- Firmware update: wait for the bridge to restart between retries, keep the screen awake ([`125582e5`](https://github.com/soum91/keystone/commit/125582e54c967f3a7589e40eb07a4a70e937143c); `Keystone/App/Store.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-39...build-40)
+
 ## [firmware-build-134] - 2026-11-11
 
 ## Verified changes since firmware-build-133
