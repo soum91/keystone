@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.40",
+          "buildVersion": "40",
+          "date": "2026-11-11T04:24:16Z",
+          "localizedDescription": "- Firmware update: wait for the bridge to restart between retries, keep the screen awake (125582e)\n- docs: record factual changes for firmware-build-134 [skip ci] (759a566)\n- docs: record factual changes for build-39 [skip ci] (ea97dfc)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-40/Keystone-1.0.0-build-40.ipa",
+          "size": 1740830,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.39",
           "buildVersion": "39",
           "date": "2026-11-11T03:57:34Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-16/Keystone-1.0.0-build-16.ipa",
           "size": 920711,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.15",
-          "buildVersion": "15",
-          "date": "2026-10-29T05:08:44Z",
-          "localizedDescription": "- Scenes: fix the Siri reply build error (5c1ee8e)\n- Scenes (9e6f0bd)\n- Bridge 1.9.2: the bridge itself in Apple Home (423a5e8)\n- Bridge 1.9.1: let phones notice a reset (c05f53c)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-15/Keystone-1.0.0-build-15.ipa",
-          "size": 911895,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.39",
-      "versionDate": "2026-11-11T03:57:34Z",
-      "versionDescription": "- Power strip: set up from Smart Life, bridge finds the strip's IP itself (da7e4f0)\n- docs: record factual changes for firmware-build-133 [skip ci] (5757230)\n- docs: record factual changes for build-38 [skip ci] (034fe76)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-39/Keystone-1.0.0-build-39.ipa",
-      "size": 1739051,
+      "version": "1.0.0.40",
+      "versionDate": "2026-11-11T04:24:16Z",
+      "versionDescription": "- Firmware update: wait for the bridge to restart between retries, keep the screen awake (125582e)\n- docs: record factual changes for firmware-build-134 [skip ci] (759a566)\n- docs: record factual changes for build-39 [skip ci] (ea97dfc)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-40/Keystone-1.0.0-build-40.ipa",
+      "size": 1740830,
       "appPermissions": {}
     }
   ],
