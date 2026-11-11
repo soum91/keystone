@@ -25,6 +25,11 @@ struct BridgeInfo: Codable, Equatable {
     struct IR: Codable, Equatable { struct R: Codable, Equatable { var name: String; var buttons: Int?; var power: Bool?; var names: [String]? }; var paired: Bool?; var remotes: [R]? }
     struct Govee: Codable, Equatable { var locked: Bool?; var name: String?; var temp: Double?; var humidity: Double?; var battery: Int?; var heardAgo: Int?
         var bursts: Int?; var burstsHeard: Int?; var lowMem: Int? }
+    struct Strip: Codable, Equatable {
+        struct Outlet: Codable, Equatable { var name: String; var dp: String; var on: Bool? }
+        var configured: Bool?; var name: String?; var id: String?; var ip: String?; var ver: Double?
+        var ok: Bool?; var known: Bool?; var error: String?; var outlets: [Outlet]?
+    }
     struct TVTile: Codable, Equatable { var inHome: Bool?; var inputs: [String]? }
     struct Bar: Codable, Equatable { var claimed: Bool?; var configured: Bool?; var state: String?; var follow: Bool?; var events: [String]? }
     struct Paired: Codable, Equatable { var afterglow: Bool?; var subwave: Bool?; var exhale: Bool?; var redshift: Bool?; var equinox: Bool?; var nightjar: Bool? }
@@ -63,6 +68,7 @@ struct BridgeInfo: Codable, Equatable {
     var ir: IR?
     var govee: Govee?
     var tvTile: TVTile?
+    var strip: Strip?
     var bar: Bar?
     var display: DisplaySettings?
     var paired: Paired?

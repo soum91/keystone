@@ -9,6 +9,7 @@
 //   purifier  {"on":true, "auto":true, "speed":1-n, "display":true, "keepDisplayOff":false}
 //   ir        {"remote":0, "button":-1 (power) | 0-7}
 //   router    {"call":"status","args":{}} (see Router.h)
+//   strip     {"outlet":0, "on":true} | {"all":false}
 //   ac        {"on":true, "mode":"cool"|"heat"|"fan"|"dry"|"smart", "target":23.5 (°C), "fan":"low"|"med"|"high"|"auto"}
 #pragma once
 
@@ -177,6 +178,7 @@ static void handle() {
   if (dev == "purifier") return purifier(d);
   if (dev == "ir") return irPress(d);
   if (dev == "ac") return airco(d);
+  if (dev == "strip") return strip::control(d, reply);
   if (dev == "router") {
     if (!screen::adminOK()) return reply(401, "unauthorized");   // Keystone only
     return router::control(d);

@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.9.18"
+#define FW_VERSION "1.10.0"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -882,6 +882,7 @@ static void stopBluetoothForOta() {
 #include "Camera.h"
 namespace provision { static String status; }   // Wi-Fi setup progress, drawn by Screen.h, set by Provision.h
 #include "Screen.h"
+#include "Strip.h"
 static void handleInfo();
 namespace control { static void handle(); }
 #include "Relay.h"
@@ -1009,6 +1010,7 @@ static void handleInfo() {
   extrasInfo(d);
   screen::info(d);
   ac::info(d);
+  strip::info(d);
   cam::info(d);
   d["boot"]["reason"] = bootReason;
   d["boot"]["crashes"] = crashCount;
@@ -1178,6 +1180,7 @@ static void startNetworkServices() {
     server.on("/api/bar/power", HTTP_POST, handleBarPower);
     registerExtraRoutes();
     screen::registerRoutes();
+    strip::registerRoutes();
     server.on("/api/remote", HTTP_GET, relay::handleApi);
     server.on("/api/remote", HTTP_POST, relay::handleApi);
     server.on("/api/control", HTTP_POST, control::handle);
@@ -1246,6 +1249,7 @@ static void worker(void *) {
 #endif
     ac::step();
     cam::step();
+    if (strip::step()) continue;
     if (runExtras()) continue;
     pollTV();
     runTimers();
@@ -1328,6 +1332,7 @@ void setup() {
   }
   acEnabled = prefs.getBool("en_ac", true); camEnabled = prefs.getBool("en_cam", true);
   ac::load();
+  strip::load();
   sceneauto::loadEquinox(readFile("/equinox.json"));
   cam::load();
   relay::begin();
@@ -1391,6 +1396,7 @@ void setup() {
 
   addExtraAccessories(used);
   ac::addAccessory(used);
+  strip::addAccessory(used);
   // The bridge itself in Home: its screen as a switch.
   new SpanAccessory(65020);
     new Service::AccessoryInformation();

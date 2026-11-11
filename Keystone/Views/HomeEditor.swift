@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum HomeCard: String, CaseIterable, Codable, Identifiable {
-    case scenes, climate, ac, camera, purifier, tv, lights, bar, ir, activity
+    case scenes, climate, ac, camera, purifier, strip, tv, lights, bar, ir, activity
     var id: String { rawValue }
 
     var title: String {
@@ -11,6 +11,7 @@ enum HomeCard: String, CaseIterable, Codable, Identifiable {
         case .ac: return "AC"
         case .camera: return "Camera"
         case .purifier: return "Purifier"
+        case .strip: return "Power strip"
         case .tv: return "TV"
         case .lights: return "Lights"
         case .bar: return "Sound bar"
@@ -26,6 +27,7 @@ enum HomeCard: String, CaseIterable, Codable, Identifiable {
         case .ac: return "air.conditioner.horizontal"
         case .camera: return "video"
         case .purifier: return "wind"
+        case .strip: return "poweroutlet.strip"
         case .tv: return "tv"
         case .lights: return "lightbulb"
         case .bar: return "hifispeaker"

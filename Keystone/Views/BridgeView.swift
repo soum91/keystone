@@ -81,6 +81,20 @@ struct BridgeView: View {
                         Text("Away from home, Keystone talks to the bridge through a public MQTT relay. Everything is encrypted end to end with a key that never leaves your home Wi-Fi, so the relay only sees noise. Firmware updates still need home Wi-Fi.")
                     }
 
+                    Section {
+                        NavigationLink {
+                            StripSetupView().environmentObject(store)
+                        } label: {
+                            LabeledContent {
+                                Text(i.strip?.configured == true ? "\(i.strip?.outlets?.count ?? 0) outlets" : "Not set up")
+                            } label: {
+                                Label(i.strip?.configured == true ? (i.strip?.name ?? "Power strip") : "Add a power strip", systemImage: "poweroutlet.strip")
+                            }
+                        }
+                    } header: { Text("Power strip") } footer: {
+                        Text("A Tuya / Smart Life Wi-Fi strip: each outlet in Apple Home and on Keystone's home screen, local control, no cloud.")
+                    }
+
                     if let f = i.features {
                         Section {
                             Toggle("AC (ConnectLife cloud)", isOn: Binding(get: { f.ac ?? true },

@@ -54,6 +54,7 @@ struct DashboardView: View {
             case .ac: return i.ac?.configured == true
             case .camera: return i.camera?.configured == true
             case .purifier: return i.purifier?.configured == true
+            case .strip: return i.strip?.configured == true
             case .bar: return i.bar?.configured == true
             case .ir: return !(i.ir?.remotes ?? []).isEmpty
             default: return true
@@ -69,6 +70,7 @@ struct DashboardView: View {
         case .ac: acCard(i)
         case .camera: if let x = i.camera { cameraCard(x, i) }
         case .purifier: if let p = i.purifier { purifierCard(p) }
+        case .strip: if let s = i.strip { stripCard(s) }
         case .tv: tvCard(i)
         case .lights: lightsCard(i)
         case .bar: barCard(i)
@@ -312,6 +314,29 @@ struct DashboardView: View {
                 }
             }
             .buttonStyle(.plain).foregroundStyle(Theme.yellow)
+        }
+        .card()
+    }
+
+    private func stripCard(_ s: BridgeInfo.Strip) -> some View {
+        let outlets = s.outlets ?? []
+        let anyOn = outlets.contains { $0.on == true }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                CardTitle(text: s.name ?? "Power strip", icon: "poweroutlet.strip")
+                Spacer()
+                if s.ok == false { Text(s.error ?? "Not answering").font(.caption).foregroundStyle(Theme.bad).lineLimit(1) }
+                Button(anyOn ? "All off" : "All on") { Task { await store.control(["device": "strip", "all": !anyOn]) } }
+                    .buttonStyle(.bordered).font(.caption)
+            }
+            ForEach(Array(outlets.enumerated()), id: \.offset) { idx, o in
+                Toggle(isOn: Binding(get: { o.on == true },
+                                     set: { v in Task { await store.control(["device": "strip", "outlet": idx, "on": v]) } })) {
+                    Label(o.name, systemImage: o.name.localizedCaseInsensitiveContains("usb") ? "cable.connector" : "poweroutlet.type.b")
+                }
+                .tint(Theme.yellow)
+                .disabled(o.on == nil)
+            }
         }
         .card()
     }
