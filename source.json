@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.38",
+          "buildVersion": "38",
+          "date": "2026-11-11T03:40:54Z",
+          "localizedDescription": "- Add Tuya Wi-Fi power strip: Apple Home outlets + Keystone controls (d0cfd24)\n- Enforce pseudonymous author metadata and owner privacy (a31f740)\n- docs: require verified diagnostic exports [skip ci] (94e585a)\n- docs: require verified diagnostic exports [skip ci] (8fcded3)\n- docs: require verified diagnostics Copy, Share and Files export [skip ci] (3bbb433)\n- docs: require verified diagnostics Copy, Share and Files export [skip ci] (7ce0005)\n- ci: separate release tracks when deriving factual changes [skip ci] (a215976)\n- ci: reconcile bot-created releases with factual notes [skip ci] (9aac914)\n- ci: verify and record actual release changes [skip ci] (14cbd42)\n- docs: require evidence-based release changelog [skip ci] (22b4931)\n- docs: initialize factual release changelog [skip ci] (0256cbf)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-38/Keystone-1.0.0-build-38.ipa",
+          "size": 1629321,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.37",
           "buildVersion": "37",
           "date": "2026-11-06T21:23:01Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-13/Keystone-1.0.0-build-13.ipa",
           "size": 819499,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.12",
-          "buildVersion": "12",
-          "date": "2026-10-28T22:01:52Z",
-          "localizedDescription": "- Move the Keystone Bridge firmware here from soum91/afterglow (95557ad)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-12/Keystone-1.0.0-build-12.ipa",
-          "size": 805916,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.37",
-      "versionDate": "2026-11-06T21:23:01Z",
-      "versionDescription": "- Internet sources: always show Add a source, and say which radio is taken by what (7c403d5)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-37/Keystone-1.0.0-build-37.ipa",
-      "size": 1551768,
+      "version": "1.0.0.38",
+      "versionDate": "2026-11-11T03:40:54Z",
+      "versionDescription": "- Add Tuya Wi-Fi power strip: Apple Home outlets + Keystone controls (d0cfd24)\n- Enforce pseudonymous author metadata and owner privacy (a31f740)\n- docs: require verified diagnostic exports [skip ci] (94e585a)\n- docs: require verified diagnostic exports [skip ci] (8fcded3)\n- docs: require verified diagnostics Copy, Share and Files export [skip ci] (3bbb433)\n- docs: require verified diagnostics Copy, Share and Files export [skip ci] (7ce0005)\n- ci: separate release tracks when deriving factual changes [skip ci] (a215976)\n- ci: reconcile bot-created releases with factual notes [skip ci] (9aac914)\n- ci: verify and record actual release changes [skip ci] (14cbd42)\n- docs: require evidence-based release changelog [skip ci] (22b4931)\n- docs: initialize factual release changelog [skip ci] (0256cbf)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-38/Keystone-1.0.0-build-38.ipa",
+      "size": 1629321,
       "appPermissions": {}
     }
   ],
