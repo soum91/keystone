@@ -326,6 +326,9 @@ final class Store: ObservableObject {
         var bg = UIBackgroundTaskIdentifier.invalid
         bg = UIApplication.shared.beginBackgroundTask(withName: "firmware") { UIApplication.shared.endBackgroundTask(bg) }
         defer { UIApplication.shared.endBackgroundTask(bg) }
+        // A locked screen suspends the upload mid-way. Keep the phone awake until it's done.
+        UIApplication.shared.isIdleTimerDisabled = true
+        defer { UIApplication.shared.isIdleTimerDisabled = false }
         do {
             try await Firmware.install(l, link: link) { msg in Task { @MainActor in self.updating = msg } }
             reachable = false
@@ -399,19 +402,31 @@ enum Firmware {
         defer { session.finishTasksAndInvalidate() }
         var result: (Data, URLResponse)?
         var lastError: Error?
-        for attempt in 1...3 {
-            progress(attempt == 1 ? "Sending \(bin.count / 1024) KB to the bridge… keep Keystone open (about a minute)."
-                                  : "Connection dropped. Trying again (\(attempt) of 3)…")
+        let attempts = 4
+        for attempt in 1...attempts {
+            progress(attempt == 1 ? "Sending \(bin.count / 1024) KB to the bridge… keep Keystone open with the screen on (about a minute)."
+                                  : "Trying again (\(attempt) of \(attempts))…")
             do {
                 result = try await session.upload(for: req, from: body)
                 break
-            } catch let e as URLError where [.networkConnectionLost, .timedOut, .cannotConnectToHost, .notConnectedToInternet].contains(e.code) {
+            } catch let e as URLError where [.networkConnectionLost, .timedOut, .cannotConnectToHost, .notConnectedToInternet, .cannotFindHost].contains(e.code) {
                 lastError = e
-                try? await Task.sleep(nanoseconds: 4_000_000_000)   // let the bridge drop the half-finished upload
+                if attempt == attempts { break }
+                // The bridge restarts itself when an upload is cut off (about 20 s). Retrying before it's back
+                // just fails again, so wait until it answers, then give it a moment to settle.
+                progress("Connection dropped. Waiting for the bridge to restart… (attempt \(attempt + 1) of \(attempts) next)")
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                var back = false
+                for _ in 0..<25 {   // up to ~75 s
+                    if (try? await BridgeAPI.info(host: link.host, port: link.port, timeout: 3)) != nil { back = true; break }
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                }
+                if !back { break }
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
             }
         }
         guard let (data, r) = result else {
-            throw BridgeError.message("The upload kept dropping (\(lastError?.localizedDescription ?? "unknown")). Stay close to the router and try again, or flash the full file over USB.")
+            throw BridgeError.message("The upload kept dropping (\(lastError?.localizedDescription ?? "unknown")). Keep Keystone open with the screen on, stay close to the router and try again, or flash the full file over USB.")
         }
         let code = (r as? HTTPURLResponse)?.statusCode ?? 0
         if code == 401 { throw BridgeError.message("The bridge rejected Keystone's token.") }
