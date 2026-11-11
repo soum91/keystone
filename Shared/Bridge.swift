@@ -29,6 +29,7 @@ struct BridgeInfo: Codable, Equatable {
         struct Outlet: Codable, Equatable { var name: String; var dp: String; var on: Bool? }
         var configured: Bool?; var name: String?; var id: String?; var ip: String?; var ver: Double?
         var ok: Bool?; var known: Bool?; var error: String?; var outlets: [Outlet]?
+        var scanning: Bool?; var scanDone: Int?; var scanTotal: Int?; var scan: String?
     }
     struct TVTile: Codable, Equatable { var inHome: Bool?; var inputs: [String]? }
     struct Bar: Codable, Equatable { var claimed: Bool?; var configured: Bool?; var state: String?; var follow: Bool?; var events: [String]? }

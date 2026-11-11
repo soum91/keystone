@@ -3,8 +3,9 @@
 // and can be switched from Keystone at home or away (through /api/control, so the relay carries it).
 //
 // POST /api/strip  (Keystone token, home network only, like the relay settings)
-//   {"action":"config", "name":..., "id":..., "key":... (blank = keep), "ip":..., "ver":3.3,
+//   {"action":"config", "name":..., "id":..., "key":... (blank = keep), "ip":... (blank = find it), "ver":3.3,
 //    "outlets":[{"name":"Lamp","dp":"1"}, ...]}          -> saved, restarts if Home needs new tiles
+//   {"action":"find"}                                      -> scan the Wi-Fi for the strip again (progress in /api/info)
 //   {"action":"probe", "id":..., "key":..., "ip":..., "ver":3.3}  -> {"ok":true,"dps":{...}} raw status
 //   {"action":"remove"}                                    -> forgets the strip, restarts
 // POST /api/control {"device":"strip", "outlet":0, "on":true} | {"device":"strip", "all":false}
@@ -34,6 +35,16 @@ struct State {
   String error;
 };
 static State st;
+
+// Finding the strip on the Wi-Fi: one host per worker pass so the TV rule, lights and Home keep running.
+struct Scan {
+  bool on = false;
+  int next = 1, done = 0, total = 0, found = 0;
+  uint32_t base = 0, startedAt = 0, finishedAt = 0;
+  uint32_t me = 0;
+  String last;   // "found 192.168.1.50", "not found", ...
+};
+static Scan scan;
 static SemaphoreHandle_t lock = nullptr;
 static std::vector<String> pending;   // dps JSON waiting to be sent
 
@@ -58,7 +69,7 @@ static bool parseCfg(const String &json, Cfg &out) {
     if (!x.name.length()) x.name = c.name + " " + String(c.outlets.size() + 1);
     if (x.dp.length() && c.outlets.size() < STRIP_MAX) c.outlets.push_back(x);
   }
-  c.configured = c.id.length() && c.key.length() == 16 && c.ip.length() && !c.outlets.empty();
+  c.configured = c.id.length() && c.key.length() == 16 && !c.outlets.empty();   // no IP yet = the bridge scans for it
   out = c;
   return true;
 }
@@ -72,6 +83,8 @@ static String cfgJson(const Cfg &c) {
   serializeJson(d, s);
   return s;
 }
+
+static void save() { writeFile("/strip.json", cfgJson(cfg)); }
 
 static void applyDps(const String &dps) {
   if (!dps.length() || dps == "{}") return;
@@ -124,6 +137,73 @@ struct Tile : Service::Outlet {
   }
 };
 
+
+static void startScan(const char *why) {
+  if (scan.on || !cfg.configured || WiFi.status() != WL_CONNECTED) return;
+  IPAddress ip = WiFi.localIP();
+  scan = Scan();
+  scan.on = true;
+  scan.me = ip[3];
+  scan.base = ((uint32_t)ip[0] << 16) | ((uint32_t)ip[1] << 8) | ip[2];
+  scan.total = 254;
+  scan.startedAt = millis();
+  scan.last = "scanning";
+  logEvent(String("Power strip: looking for it on Wi-Fi (") + why + ")");
+}
+
+// IPs of other things the bridge already talks to: no point knocking on them.
+static bool knownElsewhere(const String &ip) {
+  if (pur.ip == ip || ir.ip == ip) return true;
+  for (auto &L : lights) if (L.ip == ip) return true;
+  return false;
+}
+
+static void scanStep() {
+  if (!scan.on) return;
+  if (scan.next > 254) {
+    scan.on = false;
+    scan.finishedAt = millis();
+    if (!scan.found) { scan.last = "not found"; logEvent("Power strip: not found on Wi-Fi (check its Wi-Fi, key and that it is online)"); }
+    return;
+  }
+  int n = scan.next++;
+  scan.done = n;
+  if ((uint32_t)n == scan.me) return;
+  String host = String((scan.base >> 16) & 255) + "." + String((scan.base >> 8) & 255) + "." + String(scan.base & 255) + "." + String(n);
+  if (knownElsewhere(host)) return;
+  {
+    WiFiClient probe;
+    if (!probe.connect(host.c_str(), 6668, 250)) return;   // nothing listening: next host
+    probe.stop();
+  }
+  std::vector<String> known;
+  for (auto &o : cfg.outlets) known.push_back(o.dp);
+  for (float v : {3.3f, 3.4f, 3.5f}) {
+    tuya::Conn conn;
+    String dps;
+    if (conn.open(host, cfg.id, cfg.key, v, 1500)) { dps = conn.query(known); conn.close(); }
+    if (!dps.length() || dps == "{}") continue;
+    JsonDocument d;
+    if (deserializeJson(d, dps)) continue;
+    bool mine = false;
+    for (auto &o : cfg.outlets) if (d[o.dp].is<bool>()) mine = true;   // right key AND it has our outlets
+    if (!mine) continue;
+    xSemaphoreTake(lock, portMAX_DELAY);
+    cfg.ip = host;
+    cfg.ver = v;
+    xSemaphoreGive(lock);
+    save();
+    applyDps(dps);
+    st.ok = true; st.fails = 0; st.error = "";
+    scan.on = false;
+    scan.found = 1;
+    scan.finishedAt = millis();
+    scan.last = "found " + host;
+    logEvent("Power strip found at " + host + " (protocol " + String(v, 1) + ")");
+    return;
+  }
+}
+
 static bool send(const String &dps, String &err) {
   String echo;
   if (!tuyaSend(cfg.ip, cfg.id, cfg.key, cfg.ver, dps, &echo, err)) return false;
@@ -132,6 +212,7 @@ static bool send(const String &dps, String &err) {
 }
 
 static void poll() {
+  if (!cfg.ip.length()) return;
   std::vector<String> known;
   for (auto &o : cfg.outlets) known.push_back(o.dp);
   tuya::Conn conn;
@@ -150,6 +231,17 @@ static void poll() {
 // Called from the worker task. True if it did network work.
 static bool step() {
   if (!cfg.configured) return false;
+  if (scan.on) scanStep();
+  if (!cfg.ip.length()) {
+    // No address yet (or it was cleared): look for it now and every few minutes after.
+    if (!scan.on && (!scan.finishedAt || millis() - scan.finishedAt > 300000UL)) startScan("no address yet");
+    xSemaphoreTake(lock, portMAX_DELAY);
+    pending.clear();
+    xSemaphoreGive(lock);
+    return false;
+  }
+  // It stopped answering for a while: the router may have given it a new address.
+  if (st.fails >= 3 && !scan.on && (!scan.finishedAt || millis() - scan.finishedAt > 600000UL)) startScan("stopped answering");
   String next;
   xSemaphoreTake(lock, portMAX_DELAY);
   if (!pending.empty()) { next = pending.front(); pending.erase(pending.begin()); }
@@ -202,6 +294,7 @@ static void handleApi() {
     String id = d["id"] | cfg.id, key = d["key"] | "", ip = d["ip"] | cfg.ip;
     if (!key.length()) key = cfg.key;
     float ver = d["ver"] | cfg.ver;
+    if (!ip.length()) return reply(400, "{\"error\":\"no IP yet: let the bridge find the strip first\"}");
     if (key.length() != 16) return reply(400, "{\"error\":\"the local key must be 16 characters\"}");
     tuya::Conn conn;
     String dps;
@@ -209,10 +302,17 @@ static void handleApi() {
     if (!dps.length()) return reply(200, "{\"ok\":false,\"error\":\"" + (conn.lastError.length() ? conn.lastError : String("no status")) + "\"}");
     return reply(200, "{\"ok\":true,\"dps\":" + dps + "}");
   }
+  if (action == "find") {
+    if (!cfg.configured) return reply(400, "{\"error\":\"set the strip up first\"}");
+    scan.finishedAt = 0;
+    startScan("asked from Keystone");
+    return reply(200, "{\"ok\":true}");
+  }
   if (action == "remove") {
     if (fsUp) LittleFS.remove("/strip.json");
     bool restart = inHome;
     cfg = Cfg();
+    scan = Scan();
     logEvent("Power strip removed");
     reply(200, String("{\"ok\":true,\"restart\":") + (restart ? "true" : "false") + "}");
     if (restart) { delay(800); ESP.restart(); }
@@ -223,14 +323,17 @@ static void handleApi() {
   serializeJson(d, body);
   Cfg c;
   parseCfg(body, c);
-  if (!c.key.length() && c.id == cfg.id) { c.key = cfg.key; c.configured = c.id.length() && c.key.length() == 16 && c.ip.length() && !c.outlets.empty(); }
-  if (!c.configured) return reply(400, "{\"error\":\"needs device ID, 16-character local key, IP and at least one outlet\"}");
+  if (!c.key.length() && c.id == cfg.id) c.key = cfg.key;   // blank key = keep the saved one
+  if (!c.ip.length() && c.id == cfg.id) c.ip = cfg.ip;      // blank IP = keep the saved one (use "find" to look again)
+  c.configured = c.id.length() && c.key.length() == 16 && !c.outlets.empty();
+  if (!c.configured) return reply(400, "{\"error\":\"needs the device ID, the 16-character local key and at least one outlet\"}");
   writeFile("/strip.json", cfgJson(c));
   bool restart = signature(c) != homeSig;
   xSemaphoreTake(lock, portMAX_DELAY);
   cfg = c;
   pending.clear();
   st = State();
+  scan = Scan();
   xSemaphoreGive(lock);
   logEvent(restart ? "Power strip set up: restarting for Home" : "Power strip updated");
   reply(200, String("{\"ok\":true,\"restart\":") + (restart ? "true" : "false") + "}");
@@ -266,6 +369,9 @@ static void info(JsonDocument &d) {
   s["id"] = cfg.id;
   s["ip"] = cfg.ip;
   s["ver"] = cfg.ver;
+  s["scanning"] = scan.on;
+  if (scan.on) { s["scanDone"] = scan.done; s["scanTotal"] = scan.total; }
+  if (scan.last.length()) s["scan"] = scan.last;
   s["ok"] = st.ok;
   s["known"] = st.known;
   if (st.error.length()) s["error"] = st.error;

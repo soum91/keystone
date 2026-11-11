@@ -92,7 +92,7 @@ struct BridgeView: View {
                             }
                         }
                     } header: { Text("Power strip") } footer: {
-                        Text("A Tuya / Smart Life Wi-Fi strip: each outlet in Apple Home and on Keystone's home screen, local control, no cloud.")
+                        Text("A Tuya / Smart Life Wi-Fi strip: sign in to Smart Life once, tap the strip, and the bridge finds it on your Wi-Fi. Each outlet shows up in Apple Home and on Keystone's home screen, controlled locally.")
                     }
 
                     if let f = i.features {

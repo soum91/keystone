@@ -325,7 +325,7 @@ struct DashboardView: View {
             HStack {
                 CardTitle(text: s.name ?? "Power strip", icon: "poweroutlet.strip")
                 Spacer()
-                if s.ok == false { Text(s.error ?? "Not answering").font(.caption).foregroundStyle(Theme.bad).lineLimit(1) }
+                if s.ok == false { Text(s.scanning == true ? "Looking for it…" : (s.error ?? s.scan ?? "Not answering")).font(.caption).foregroundStyle(Theme.bad).lineLimit(1) }
                 Button(anyOn ? "All off" : "All on") { Task { await store.control(["device": "strip", "all": !anyOn]) } }
                     .buttonStyle(.bordered).font(.caption)
             }
