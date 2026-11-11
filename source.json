@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.39",
+          "buildVersion": "39",
+          "date": "2026-11-11T03:57:34Z",
+          "localizedDescription": "- Power strip: set up from Smart Life, bridge finds the strip's IP itself (da7e4f0)\n- docs: record factual changes for firmware-build-133 [skip ci] (5757230)\n- docs: record factual changes for build-38 [skip ci] (034fe76)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-39/Keystone-1.0.0-build-39.ipa",
+          "size": 1739051,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.38",
           "buildVersion": "38",
           "date": "2026-11-11T03:40:54Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-15/Keystone-1.0.0-build-15.ipa",
           "size": 911895,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.13",
-          "buildVersion": "13",
-          "date": "2026-10-28T23:33:27Z",
-          "localizedDescription": "- Fix remote access after a bridge reset, and say why it can't connect (d941f23)\n- Firmware CI: build only for the plain ESP32 board (882d509)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-13/Keystone-1.0.0-build-13.ipa",
-          "size": 819499,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.38",
-      "versionDate": "2026-11-11T03:40:54Z",
-      "versionDescription": "- Add Tuya Wi-Fi power strip: Apple Home outlets + Keystone controls (d0cfd24)\n- Enforce pseudonymous author metadata and owner privacy (a31f740)\n- docs: require verified diagnostic exports [skip ci] (94e585a)\n- docs: require verified diagnostic exports [skip ci] (8fcded3)\n- docs: require verified diagnostics Copy, Share and Files export [skip ci] (3bbb433)\n- docs: require verified diagnostics Copy, Share and Files export [skip ci] (7ce0005)\n- ci: separate release tracks when deriving factual changes [skip ci] (a215976)\n- ci: reconcile bot-created releases with factual notes [skip ci] (9aac914)\n- ci: verify and record actual release changes [skip ci] (14cbd42)\n- docs: require evidence-based release changelog [skip ci] (22b4931)\n- docs: initialize factual release changelog [skip ci] (0256cbf)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-38/Keystone-1.0.0-build-38.ipa",
-      "size": 1629321,
+      "version": "1.0.0.39",
+      "versionDate": "2026-11-11T03:57:34Z",
+      "versionDescription": "- Power strip: set up from Smart Life, bridge finds the strip's IP itself (da7e4f0)\n- docs: record factual changes for firmware-build-133 [skip ci] (5757230)\n- docs: record factual changes for build-38 [skip ci] (034fe76)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-39/Keystone-1.0.0-build-39.ipa",
+      "size": 1739051,
       "appPermissions": {}
     }
   ],
