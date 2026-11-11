@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-134] - 2026-11-11
+
+## Verified changes since firmware-build-133
+
+- Power strip: set up from Smart Life, bridge finds the strip's IP itself ([`da7e4f0c`](https://github.com/soum91/keystone/commit/da7e4f0c4af64f101f7bcfb24a94971433465494); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Strip.h`, `Keystone/Strip/TuyaCloud.swift`, and 5 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-133...firmware-build-134)
+
 ## [build-39] - 2026-11-11
 
 ## Verified changes since build-38
