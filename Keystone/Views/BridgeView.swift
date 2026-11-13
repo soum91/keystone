@@ -146,6 +146,30 @@ struct BridgeView: View {
                         Text("Reset one if you reinstalled that app and it can't pair again. What it already put in Home stays.")
                     }
 
+                    if let list = i.phones?["keystone"], !list.isEmpty {
+                        Section {
+                            ForEach(list, id: \.slot) { p in
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(p.name?.isEmpty == false ? p.name! : "Phone \(p.slot + 1)")
+                                        if p.me == true { Text("This phone").font(.caption).foregroundStyle(.secondary) }
+                                    }
+                                    Spacer()
+                                    if p.me != true {
+                                        Button("Forget") {
+                                            Task { await store.admin("resetPairing", ["app": "keystone", "slot": p.slot], done: "That phone was forgotten.") }
+                                        }
+                                        .buttonStyle(.bordered).font(.caption)
+                                    }
+                                }
+                            }
+                        } header: {
+                            Text("Phones using Keystone (\(list.count) of 4)")
+                        } footer: {
+                            Text("Each phone pairs on its own, so a new phone doesn't log out the others. To remove this phone, use Forget this bridge below.")
+                        }
+                    }
+
                     if i.govee != nil {
                         Section {
                             LabeledContent("Thermometer", value: i.govee?.name ?? "not picked yet")

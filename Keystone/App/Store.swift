@@ -62,7 +62,7 @@ final class Store: ObservableObject {
         defer { pairStatus = nil }
         var token: String
         do {
-            token = try await BridgeAPI.claim(host: host, port: port)
+            token = try await BridgeAPI.claim(host: host, port: port, name: Store.phoneName)
         } catch BridgeError.alreadyPaired {
             // Keystone was deleted or reinstalled, so its old key is gone but the bridge remembers the pairing.
             // If Afterglow isn't paired, borrow its slot to clear the stale Keystone pairing, then pair again.
@@ -75,7 +75,7 @@ final class Store: ObservableObject {
             }
             borrowedOwner = true
             try await BridgeAPI.resetKeystone(host: host, port: port, ownerToken: owner)
-            token = try await BridgeAPI.claim(host: host, port: port)
+            token = try await BridgeAPI.claim(host: host, port: port, name: Store.phoneName)
         }
         link = BridgeLink(host: host, port: port, token: token)
         BridgeLink.stored = link
@@ -92,7 +92,7 @@ final class Store: ObservableObject {
     /// After the bridge was reset: claim a fresh token at the same address, keeping everything else.
     func repair() async {
         do {
-            let token = try await BridgeAPI.claim(host: link.host, port: link.port)
+            let token = try await BridgeAPI.claim(host: link.host, port: link.port, name: Store.phoneName)
             link.token = token
             BridgeLink.stored = link
             forgotten = false
@@ -100,13 +100,21 @@ final class Store: ObservableObject {
             await refresh()
             show("Paired again. Remote access is set up for this phone.")
         } catch BridgeError.alreadyPaired {
-            show("Another Keystone is paired. Reset Keystone's pairing in Bridge › Apps, or hold BOOT on the bridge for 8 s, then try again.")
+            show("Keystone is already paired on 4 phones. Forget one under Bridge › Phones using Keystone (from a paired phone), or hold BOOT on the bridge for 8 s, then try again.")
         } catch {
             show("Do this at home on the bridge's Wi-Fi: \(error.localizedDescription)")
         }
     }
 
+    /// How this phone shows up in the bridge's list of paired phones.
+    static var phoneName: String {
+        let f = DateFormatter(); f.dateFormat = "MMM d"
+        return "\(UIDevice.current.name) · paired \(f.string(from: Date()))"
+    }
+
     func forget() {
+        let old = link
+        if !old.token.isEmpty { Task { await BridgeAPI.unpair(old) } }   // free this phone's slot on the bridge
         stopPolling()
         link = BridgeLink()
         BridgeLink.stored = link

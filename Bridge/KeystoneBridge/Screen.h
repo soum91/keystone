@@ -295,7 +295,7 @@ static uint32_t clearedAt = 0;
 static void clearAllPairings() {
   token = ""; prefs.remove("token");
   barToken = ""; prefs.remove("bartoken");
-  for (const char *k : {"tok_keystone", "tok_exhale", "tok_redshift", "tok_equinox", "tok_nightjar"}) prefs.remove(k);
+  for (const char *k : {"keystone", "exhale", "redshift", "equinox", "nightjar"}) devClearAll(k);
   logEvent("All app pairings cleared with the BOOT button");
   clearedAt = millis();
   if (!clearedAt) clearedAt = 1;
@@ -392,8 +392,7 @@ static void draw() {
 static volatile int pendingAction = 0;   // run on HomeSpan's core: 1 restart, 2 forget Wi-Fi
 
 static bool adminOK() {
-  String k = devToken("keystone");
-  if (k.length() && reqHeader("X-Device-Token") == k) return true;
+  if (devTokenOK("keystone", reqHeader("X-Device-Token"))) return true;
   return token.length() && reqHeader("X-Afterglow-Token") == token;
 }
 
@@ -455,7 +454,10 @@ static void handleAdmin() {
     String app = d["app"] | "";
     if (app == "afterglow") { token = ""; prefs.remove("token"); }
     else if (app == "subwave") { barToken = ""; prefs.remove("bartoken"); }
-    else if (app == "exhale" || app == "redshift" || app == "equinox" || app == "nightjar") prefs.remove(("tok_" + app).c_str());
+    else if (devAppOK(app)) {
+      int slot = d["slot"] | -1;   // one phone, or all phones for that app
+      if (slot >= 0 && slot < DEV_SLOTS) devClearSlot(app, slot); else devClearAll(app);
+    }
     else { server.send(400, "application/json", "{\"error\":\"unknown app\"}"); return; }
     logEvent(app + " pairing cleared");
   } else if (a == "follow") {
@@ -500,6 +502,10 @@ static void info(JsonDocument &d) {
   d["paired"]["redshift"] = devToken("redshift").length() > 0;
   d["paired"]["equinox"] = devToken("equinox").length() > 0;
   d["paired"]["nightjar"] = devToken("nightjar").length() > 0;
+  JsonObject ph = d["phones"].to<JsonObject>();
+  String asker = reqHeader("X-Device-Token");
+  for (const char *app : {"keystone", "exhale", "redshift", "equinox", "nightjar"})
+    if (devCount(app)) devPhones(app, ph[app].to<JsonArray>(), asker);
 }
 
 // From loop(), on HomeSpan's core.

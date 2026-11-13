@@ -74,6 +74,9 @@ struct BridgeInfo: Codable, Equatable {
     var display: DisplaySettings?
     var paired: Paired?
     var keystone: Bool?
+    /// Phones paired per app (firmware 1.10.2+, up to 4 each). "me" is the phone asking.
+    struct Phone: Codable, Equatable, Hashable { var slot: Int; var name: String?; var me: Bool? }
+    var phones: [String: [Phone]]?
     var claimed: Bool?
     var ac: AC?
     var camera: Camera?
@@ -143,7 +146,7 @@ enum BridgeError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .message(let m): return m
-        case .alreadyPaired: return "The bridge still remembers an older Keystone pairing."
+        case .alreadyPaired: return "Keystone is already paired on 4 phones. Forget one under Bridge › Phones using Keystone."
         }
     }
 }
@@ -201,8 +204,9 @@ enum BridgeAPI {
         return RelayConfig(broker: b, id: id, key: k, on: (o["on"] as? Bool) ?? true)
     }
 
-    static func claim(host: String, port: Int) async throws -> String {
-        guard let u = url(host, port, "/api/dev/claim?app=keystone") else { throw BridgeError.message("Bad address.") }
+    static func claim(host: String, port: Int, name: String = "") async throws -> String {
+        let n = name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+        guard let u = url(host, port, "/api/dev/claim?app=keystone&name=\(n)") else { throw BridgeError.message("Bad address.") }
         var req = URLRequest(url: u)
         req.httpMethod = "POST"
         req.timeoutInterval = 5
@@ -252,6 +256,12 @@ enum BridgeAPI {
         let obj = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
         guard code == 200 else { throw BridgeError.message((obj["error"] as? String) ?? "Bridge said HTTP \(code).") }
         return obj
+    }
+
+    /// This phone gives up its pairing slot (when you forget the bridge in Keystone).
+    static func unpair(_ link: BridgeLink) async {
+        _ = try? await Transport.send(link, method: "POST", path: "/api/dev/unpair?app=keystone",
+                                      headers: ["X-Device-Token": link.token], body: Data("{}".utf8), timeout: 4)
     }
 
     static func setDisplay(_ d: DisplaySettings, _ link: BridgeLink = .stored) async throws {

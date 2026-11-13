@@ -622,18 +622,59 @@ static bool runExtras() {   // true if it did something that took time
 // ---------------------------------------------------------------------------------------------
 // API for Exhale and Redshift (each pairs with its own token)
 
-static String devToken(const String &app) { return prefs.getString(("tok_" + app).c_str(), ""); }
+// Each app can be paired from up to DEV_SLOTS phones. Slot 0 keeps the old key ("tok_<app>"), so existing
+// pairings survive the update; slots 1-3 are "tok_<app>1".."tok_<app>3". "tn_<app><n>" holds the phone's name.
+#define DEV_SLOTS 4
+static String slotKey(const String &app, int i, const char *pre = "tok_") { return String(pre) + app + (i ? String(i) : String("")); }
+static String slotName(const String &app, int i) { return String("tn_") + app + String(i); }
+static String slotTok(const String &app, int i) { return prefs.getString(slotKey(app, i).c_str(), ""); }
+
+// Any token for this app ("" if none): kept for the "is it paired" checks.
+static String devToken(const String &app) {
+  for (int i = 0; i < DEV_SLOTS; i++) { String t = slotTok(app, i); if (t.length()) return t; }
+  return "";
+}
+static int devSlotOf(const String &app, const String &t) {
+  if (!t.length()) return -1;
+  for (int i = 0; i < DEV_SLOTS; i++) if (slotTok(app, i) == t) return i;
+  return -1;
+}
+static bool devTokenOK(const String &app, const String &t) { return devSlotOf(app, t) >= 0; }
+static int devCount(const String &app) {
+  int n = 0;
+  for (int i = 0; i < DEV_SLOTS; i++) if (slotTok(app, i).length()) n++;
+  return n;
+}
+static void devClearSlot(const String &app, int i) { prefs.remove(slotKey(app, i).c_str()); prefs.remove(slotName(app, i).c_str()); }
+static void devClearAll(const String &app) { for (int i = 0; i < DEV_SLOTS; i++) devClearSlot(app, i); }
+// The phones paired for one app, for Keystone's list. "me" marks the phone asking.
+static void devPhones(const String &app, JsonArray out, const String &askerTok) {
+  for (int i = 0; i < DEV_SLOTS; i++) {
+    String t = slotTok(app, i);
+    if (!t.length()) continue;
+    JsonObject o = out.add<JsonObject>();
+    o["slot"] = i;
+    o["name"] = prefs.getString(slotName(app, i).c_str(), "");
+    if (askerTok.length() && askerTok == t) o["me"] = true;
+  }
+}
 
 static bool devAppOK(const String &app) { return app == "exhale" || app == "redshift" || app == "keystone" || app == "equinox" || app == "nightjar"; }
 
 static void handleDevClaim() {
   String app = server.arg("app");
   if (!devAppOK(app)) { server.send(400, "application/json", "{\"error\":\"unknown app\"}"); return; }
-  if (devToken(app).length()) { server.send(409, "application/json", "{\"error\":\"already paired\"}"); return; }
+  int slot = -1;
+  for (int i = 0; i < DEV_SLOTS && slot < 0; i++) if (!slotTok(app, i).length()) slot = i;
+  if (slot < 0) { server.send(409, "application/json", "{\"error\":\"already paired on 4 phones, forget one in Keystone first\"}"); return; }
   char b[33];
   for (int i = 0; i < 16; i++) snprintf(b + i * 2, 3, "%02x", (unsigned)(esp_random() & 0xff));
-  prefs.putString(("tok_" + app).c_str(), String(b));
-  logEvent("Paired with " + app);
+  prefs.putString(slotKey(app, slot).c_str(), String(b));
+  String nm = server.arg("name");
+  nm.trim();
+  if (nm.length() > 40) nm = nm.substring(0, 40);
+  if (nm.length()) prefs.putString(slotName(app, slot).c_str(), nm); else prefs.remove(slotName(app, slot).c_str());
+  logEvent("Paired with " + app + (nm.length() ? " on " + nm : String("")));
   server.send(200, "application/json", String("{\"token\":\"") + b + "\"}");
 }
 
@@ -642,15 +683,24 @@ static void handleDevReset() {
   String app = server.arg("app");
   if (!token.length() || server.header("X-Afterglow-Token") != token) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
   if (!devAppOK(app)) { server.send(400, "application/json", "{\"error\":\"unknown app\"}"); return; }
-  prefs.remove(("tok_" + app).c_str());
+  devClearAll(app);
   logEvent(app + " pairing cleared");
+  server.send(200, "application/json", "{\"ok\":true}");
+}
+
+// A phone forgetting the bridge frees its own slot (its token is the proof).
+static void handleDevUnpair() {
+  String app = server.arg("app");
+  int slot = devAppOK(app) ? devSlotOf(app, server.header("X-Device-Token")) : -1;
+  if (slot < 0) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+  devClearSlot(app, slot);
+  logEvent(app + " forgot this bridge on one phone");
   server.send(200, "application/json", "{\"ok\":true}");
 }
 
 static void handleDevConfig() {
   String app = server.arg("app");
-  String tok = devToken(app);
-  if (!devAppOK(app) || !tok.length() || server.header("X-Device-Token") != tok) {
+  if (!devAppOK(app) || !devTokenOK(app, server.header("X-Device-Token"))) {
     server.send(401, "application/json", "{\"error\":\"unauthorized\"}");
     return;
   }
@@ -683,8 +733,7 @@ static void handleDevConfig() {
 
 static void handleDevTest() {
   String app = server.arg("app");
-  String tok = devToken(app);
-  if (!devAppOK(app) || !tok.length() || server.header("X-Device-Token") != tok) {
+  if (!devAppOK(app) || !devTokenOK(app, server.header("X-Device-Token"))) {
     server.send(401, "application/json", "{\"error\":\"unauthorized\"}");
     return;
   }
@@ -715,9 +764,8 @@ static void handleUpdateDone() {
 static void handleUpdateUpload() {
   HTTPUpload &up = server.upload();
   if (up.status == UPLOAD_FILE_START) {
-    String ks = devToken("keystone");
     updateAllowed = (token.length() && server.header("X-Afterglow-Token") == token) ||
-                    (ks.length() && server.header("X-Device-Token") == ks);
+                    devTokenOK("keystone", server.header("X-Device-Token"));
     updateError = "";
     if (!updateAllowed) return;
     logEvent("Firmware update started");
@@ -739,6 +787,7 @@ static void handleUpdateUpload() {
 
 static void registerExtraRoutes() {
   server.on("/api/dev/claim", HTTP_POST, handleDevClaim);
+  server.on("/api/dev/unpair", HTTP_POST, handleDevUnpair);
   server.on("/api/dev/config", HTTP_POST, handleDevConfig);
   server.on("/api/dev/test", HTTP_POST, handleDevTest);
   server.on("/api/dev/reset", HTTP_POST, handleDevReset);

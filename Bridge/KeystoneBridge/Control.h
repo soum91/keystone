@@ -18,7 +18,7 @@ namespace control {
 static bool anyAppOK() {
   if (screen::adminOK()) return true;
   String t = reqHeader("X-Device-Token");
-  for (const char *app : {"exhale", "redshift", "equinox"}) if (t.length() && devToken(app) == t) return true;
+  for (const char *app : {"exhale", "redshift", "equinox"}) if (devTokenOK(app, t)) return true;
   return barToken.length() && reqHeader("X-Subwave-Token") == barToken;
 }
 

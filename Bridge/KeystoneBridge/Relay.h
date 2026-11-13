@@ -206,7 +206,7 @@ static void begin() {
 static void handleApi() {
   bool ok = screen::adminOK() || (barToken.length() && server.header("X-Subwave-Token") == barToken);
   String t = server.header("X-Device-Token");
-  for (const char *app : {"exhale", "redshift", "equinox"}) if (!ok && t.length() && devToken(app) == t) ok = true;
+  for (const char *app : {"exhale", "redshift", "equinox"}) if (!ok && devTokenOK(app, t)) ok = true;
   if (!ok) {
     server.send(401, "application/json", "{\"error\":\"unauthorized\"}");
     return;
