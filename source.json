@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.41",
+          "buildVersion": "41",
+          "date": "2026-11-13T07:03:19Z",
+          "localizedDescription": "- Bridge 1.10.2: up to 4 phones per app; Keystone lists paired phones and can forget one (44922b1)\n- docs: record factual changes for build-40 [skip ci] (3a5eb39)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-41/Keystone-1.0.0-build-41.ipa",
+          "size": 1759906,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.40",
           "buildVersion": "40",
           "date": "2026-11-11T04:24:16Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-17/Keystone-1.0.0-build-17.ipa",
           "size": 925915,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.16",
-          "buildVersion": "16",
-          "date": "2026-10-29T09:28:41Z",
-          "localizedDescription": "- Remote access diagnostics (24f37ba)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-16/Keystone-1.0.0-build-16.ipa",
-          "size": 920711,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.40",
-      "versionDate": "2026-11-11T04:24:16Z",
-      "versionDescription": "- Firmware update: wait for the bridge to restart between retries, keep the screen awake (125582e)\n- docs: record factual changes for firmware-build-134 [skip ci] (759a566)\n- docs: record factual changes for build-39 [skip ci] (ea97dfc)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-40/Keystone-1.0.0-build-40.ipa",
-      "size": 1740830,
+      "version": "1.0.0.41",
+      "versionDate": "2026-11-13T07:03:19Z",
+      "versionDescription": "- Bridge 1.10.2: up to 4 phones per app; Keystone lists paired phones and can forget one (44922b1)\n- docs: record factual changes for build-40 [skip ci] (3a5eb39)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-41/Keystone-1.0.0-build-41.ipa",
+      "size": 1759906,
       "appPermissions": {}
     }
   ],
