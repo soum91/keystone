@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-41] - 2026-11-13
+
+## Verified changes since build-40
+
+- Bridge 1.10.2: up to 4 phones per app; Keystone lists paired phones and can forget one ([`44922b1e`](https://github.com/soum91/keystone/commit/44922b1e908673105e2abe130744b02801c96b4c); `Bridge/KeystoneBridge/Control.h`, `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, and 5 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-40...build-41)
+
 ## [build-40] - 2026-11-11
 
 ## Verified changes since build-39
