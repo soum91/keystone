@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.10.5"
+#define FW_VERSION "1.10.6"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -44,8 +44,12 @@ struct Crumb { uint32_t magic; char what[20]; uint32_t heap, block, up; };
 RTC_NOINIT_ATTR static Crumb crumbWork, crumbHome;
 #define CRUMB_MAGIC 0x4B53C0DEu
 // A macro, not a function: a function this early makes the Arduino builder put its prototypes above the structs.
-#define markAt(c, w) do { strlcpy((c).what, (w), sizeof((c).what)); (c).heap = ESP.getFreeHeap(); \
-  (c).block = ESP.getMaxAllocHeap(); (c).up = millis() / 1000; (c).magic = CRUMB_MAGIC; } while (0)
+// Cheap on purpose: a label and the free-heap counter (O(1)). getMaxAllocHeap() walks the whole heap under its
+// lock; calling that in HomeSpan's tight loop starved Wi-Fi on the other core and the bridge went unreachable.
+#define markAt(c, w) do { (c).what[0] = 0; strlcpy((c).what, (w), sizeof((c).what)); (c).heap = ESP.getFreeHeap(); \
+  (c).block = 0; (c).up = millis() / 1000; (c).magic = CRUMB_MAGIC; } while (0)
+// HomeSpan's loop only gets a label, set when it changes: no heap calls there at all.
+#define labelAt(c, w) do { if ((c).what[0] != (w)[0]) { strlcpy((c).what, (w), sizeof((c).what)); (c).up = millis() / 1000; (c).magic = CRUMB_MAGIC; } } while (0)
 #define mark(w) markAt(crumbWork, w)
 static String crashDuring;                       // from the crumbs, at boot
 static uint32_t heapAtStart = 0, heapAfterHome = 0;   // what Apple Home's accessory list costs
@@ -1341,13 +1345,15 @@ void setup() {
       auto txt = [](Crumb &c, const char *core) -> String {
         if (c.magic != CRUMB_MAGIC) return "";
         c.what[sizeof(c.what) - 1] = 0;
-        return String(core) + ": " + c.what + " (free " + String(c.heap / 1024) + " KB, block " + String(c.block / 1024) +
-               " KB, up " + String(c.up) + " s)";
+        String m = String(core) + ": " + c.what;
+        if (c.heap) m += " (free " + String(c.heap / 1024) + " KB)";
+        return m + " (up " + String(c.up) + " s)";
       };
       String w = txt(crumbWork, "worker"), h = txt(crumbHome, "home");
       crashDuring = w + (w.length() && h.length() ? "; " : "") + h;
     }
     crumbWork.magic = crumbHome.magic = 0;
+    crumbHome.heap = 0; crumbHome.what[0] = 0;   // the home crumb only ever carries a label
     crashCount = crashed ? prefs.getInt("crashes", 0) + 1 : 0;
     prefs.putInt("crashes", crashCount);
     safeMode = crashCount >= 2;
@@ -1449,9 +1455,9 @@ void setup() {
 }
 
 void loop() {
-  markAt(crumbHome, "apple home");
+  labelAt(crumbHome, "apple home");
   homeSpan.poll();
-  markAt(crumbHome, "home idle");
+  labelAt(crumbHome, "idle (home loop)");
   uint32_t beat = workerBeat;
   uint32_t wb = webBeat;
   if (!otaActive && serverUp && wb && millis() - wb > 60000UL) {
