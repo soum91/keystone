@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-42] - 2026-11-14
+
+## Verified changes since build-41
+
+- Bridge 1.10.4: crash breadcrumbs, Home memory cost, Bluetooth only with real headroom ([`1fd61433`](https://github.com/soum91/keystone/commit/1fd61433ed64c278914fd8373b2f4c1d68cb4135); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Keystone/Views/BridgeView.swift`, and 1 more)
+- Bridge 1.10.3: power strip as one Home accessory, back off when memory is low ([`bf3b2d3b`](https://github.com/soum91/keystone/commit/bf3b2d3bc8c7c72c0c68705f1508c65951aca71f); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Strip.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-41...build-42)
+
 ## [firmware-build-136] - 2026-11-14
 
 ## Verified changes since firmware-build-135
