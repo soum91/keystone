@@ -208,7 +208,8 @@ static void tick() {
         nextScan = millis() + (heard ? 90000UL : 20000UL);   // missed it: try again soon, not in 2.5 minutes
       }
     } else if (millis() > 45000UL && (int32_t)(millis() - nextScan) >= 0) {
-      if (ESP.getMaxAllocHeap() > 30000) {
+      // Bluetooth takes ~50 KB the moment it starts; starting it with less free tipped the bridge over.
+      if (ESP.getFreeHeap() > 75000 && ESP.getMaxAllocHeap() > 40000) {
         seqAtStart = seq;
         radioStart();
         scanUntil = millis() + 20000UL;

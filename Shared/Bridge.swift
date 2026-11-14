@@ -83,7 +83,7 @@ struct BridgeInfo: Codable, Equatable {
     var remote: Remote?
     var boot: Boot?
     var heapBlock: Int?
-    struct Boot: Codable, Equatable { var reason: String?; var crashes: Int?; var safeMode: Bool?; var minHeap: Int? }
+    struct Boot: Codable, Equatable { var reason: String?; var crashes: Int?; var safeMode: Bool?; var minHeap: Int?; var during: String?; var heapStart: Int?; var heapAfterHome: Int? }
     struct Remote: Codable, Equatable { var on: Bool?; var connected: Bool?; var served: Int?; var error: String?; var id: String?
         var heard: Int?; var badKey: Int?; var stale: Int?; var tooBig: Int? }
     var router: RouterLinkInfo?

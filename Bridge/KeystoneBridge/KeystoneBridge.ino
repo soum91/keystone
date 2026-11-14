@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.10.3"
+#define FW_VERSION "1.10.4"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -38,6 +38,18 @@
 static bool safeMode = false;
 static int crashCount = 0;
 static const char *bootReason = "power on";
+// Breadcrumbs that survive a crash (RTC memory isn't cleared on a panic restart): what each core was doing
+// and how much memory was free, so the next boot can say "crashed during X with Y KB free".
+struct Crumb { uint32_t magic; char what[20]; uint32_t heap, block, up; };
+RTC_NOINIT_ATTR static Crumb crumbWork, crumbHome;
+#define CRUMB_MAGIC 0x4B53C0DEu
+static inline void markAt(Crumb &c, const char *w) {
+  strlcpy(c.what, w, sizeof(c.what));
+  c.heap = ESP.getFreeHeap(); c.block = ESP.getMaxAllocHeap(); c.up = millis() / 1000; c.magic = CRUMB_MAGIC;
+}
+#define mark(w) markAt(crumbWork, w)
+static String crashDuring;                       // from the crumbs, at boot
+static uint32_t heapAtStart = 0, heapAfterHome = 0;   // what Apple Home's accessory list costs
 // No Wi-Fi saved yet: boot lean (no Bluetooth, no AC client, no relay) so the setup hotspot has the
 // radio and the memory to itself. Everything starts normally on the restart after Wi-Fi is set.
 static bool setupOnly = false;
@@ -1016,6 +1028,8 @@ static void handleInfo() {
   d["boot"]["crashes"] = crashCount;
   d["boot"]["safeMode"] = safeMode;
   d["boot"]["minHeap"] = ESP.getMinFreeHeap();
+  if (crashDuring.length()) d["boot"]["during"] = crashDuring;
+  if (heapAtStart) { d["boot"]["heapStart"] = heapAtStart; d["boot"]["heapAfterHome"] = heapAfterHome; }
 #ifdef HAS_GOVEE
   d["boot"]["bluetooth"] = (bool)govee::radioOn;
 #endif
@@ -1226,12 +1240,15 @@ static void worker(void *) {
   uint32_t lastNet = 0, lastDraw = 0;
   for (;;) {
     workerBeat = millis();
+    mark("screen");
     if (millis() - lastDraw > 500) { lastDraw = millis(); screen::draw(); }
+    mark("network start");
     if (millis() - lastNet > 3000) { lastNet = millis(); startNetworkServices(); }
+    mark("web request");
     if (serverUp) { server.handleClient(); webBeat = millis(); }
-    relay::poll();
-    router::follow();
-    netWatch();
+    mark("relay"); relay::poll();
+    mark("router"); router::follow();
+    mark("wifi watch"); netWatch();
     if (WiFi.status() != WL_CONNECTED) { vTaskDelay(pdMS_TO_TICKS(200)); continue; }
 
     // Commands first, they're what a person is waiting on.
@@ -1240,26 +1257,29 @@ static void worker(void *) {
     if (!queue.empty()) { c = queue.front(); queue.erase(queue.begin()); }
     xSemaphoreGive(stateLock);
     if (c.idx >= 0) {
+      mark("light command");
       sendCmd(c);
       continue;
     }
 
 #ifdef HAS_GOVEE
-    govee::tick();
+    mark("bluetooth"); govee::tick();
 #endif
-    ac::step();
-    cam::step();
-    if (strip::step()) continue;
-    if (runExtras()) continue;
-    pollTV();
-    runTimers();
-    sceneauto::tick();
-    runBarTimers();
-    pollBar();
+    mark("ac"); ac::step();
+    mark("camera"); cam::step();
+    mark("power strip"); if (strip::step()) continue;
+    mark("purifier/ir"); if (runExtras()) continue;
+    mark("tv poll"); pollTV();
+    mark("timers"); runTimers();
+    mark("scenes"); sceneauto::tick();
+    mark("bar timers"); runBarTimers();
+    mark("bar poll"); pollBar();
     if (!lights.empty()) {
+      mark("light poll");
       pollLight(next % lights.size());
       next++;
     }
+    mark("idle");
     vTaskDelay(pdMS_TO_TICKS(40));
   }
 }
@@ -1318,6 +1338,17 @@ void setup() {
     bool crashed = r == ESP_RST_PANIC || r == ESP_RST_INT_WDT || r == ESP_RST_TASK_WDT || r == ESP_RST_WDT;
     bootReason = r == ESP_RST_PANIC ? "crash" : r == ESP_RST_INT_WDT || r == ESP_RST_TASK_WDT || r == ESP_RST_WDT ? "watchdog"
                : r == ESP_RST_BROWNOUT ? "brownout" : r == ESP_RST_SW ? "restart" : r == ESP_RST_POWERON ? "power on" : "other";
+    if (crashed) {
+      auto txt = [](Crumb &c, const char *core) -> String {
+        if (c.magic != CRUMB_MAGIC) return "";
+        c.what[sizeof(c.what) - 1] = 0;
+        return String(core) + ": " + c.what + " (free " + String(c.heap / 1024) + " KB, block " + String(c.block / 1024) +
+               " KB, up " + String(c.up) + " s)";
+      };
+      String w = txt(crumbWork, "worker"), h = txt(crumbHome, "home");
+      crashDuring = w + (w.length() && h.length() ? "; " : "") + h;
+    }
+    crumbWork.magic = crumbHome.magic = 0;
     crashCount = crashed ? prefs.getInt("crashes", 0) + 1 : 0;
     prefs.putInt("crashes", crashCount);
     safeMode = crashCount >= 2;
@@ -1346,6 +1377,7 @@ void setup() {
   homeSpan.setSketchVersion(FW_VERSION);
   screen::bridgeName = prefs.getString("bridgeName", "Keystone Bridge");
   screen::load();
+  heapAtStart = ESP.getFreeHeap();
   homeSpan.begin(Category::Bridges, screen::bridgeName.c_str(), "afterglow");
   new SpanUserCommand('i', "- show lights, TV and learned delay", showInfo);
   new SpanUserCommand('R', "- forget the paired phone", resetPairing);
@@ -1411,12 +1443,16 @@ void setup() {
   new SpanUserCommand('G', "- forget the Govee thermometer and pick again", govee::forget);
 #endif
 
+  heapAfterHome = ESP.getFreeHeap();
+  if (crashDuring.length()) logEvent("Last crash during " + crashDuring);
   xTaskCreatePinnedToCore(worker, "afterglow", 24576, nullptr, 1, nullptr, 0);   // room for the AC's TLS
   Serial.printf("Keystone Bridge %s with %d lights\n", FW_VERSION, (int)lights.size());
 }
 
 void loop() {
+  markAt(crumbHome, "apple home");
   homeSpan.poll();
+  markAt(crumbHome, "home idle");
   uint32_t beat = workerBeat;
   uint32_t wb = webBeat;
   if (!otaActive && serverUp && wb && millis() - wb > 60000UL) {

@@ -112,6 +112,15 @@ struct BridgeView: View {
                             if let c = b.crashes, c > 0 { LabeledContent("Crashes in a row", value: "\(c)") }
                             if let h = i.heap { LabeledContent("Free memory", value: "\(h / 1024) KB") }
                             if let m = b.minHeap { LabeledContent("Lowest since start", value: "\(m / 1024) KB") }
+                            if let s = b.heapStart, let a = b.heapAfterHome, s > a {
+                                LabeledContent("Apple Home accessories use", value: "\((s - a) / 1024) KB")
+                            }
+                            if let d = b.during, !d.isEmpty {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Last crash during").font(.subheadline)
+                                    Text(d).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                                }
+                            }
                             if let blk = i.heapBlock { LabeledContent("Largest free block", value: "\(blk / 1024) KB") }
                             if b.safeMode == true {
                                 Button("Restart in normal mode") { Task { await store.admin("normal", done: "Restarting normally.") } }
