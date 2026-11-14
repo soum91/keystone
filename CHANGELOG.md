@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-136] - 2026-11-14
+
+## Verified changes since firmware-build-135
+
+- Bridge 1.10.3: power strip as one Home accessory, back off when memory is low ([`bf3b2d3b`](https://github.com/soum91/keystone/commit/bf3b2d3bc8c7c72c0c68705f1508c65951aca71f); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Strip.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-135...firmware-build-136)
+
 ## [firmware-build-135] - 2026-11-13
 
 ## Verified changes since firmware-build-134
