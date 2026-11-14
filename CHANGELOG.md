@@ -1,5 +1,14 @@
 # Changelog
 
+## [firmware-build-138] - 2026-11-14
+
+## Verified changes since firmware-build-136
+
+- Bridge 1.10.4: breadcrumb helper as a macro so Arduino prototypes stay below the structs ([`3a91aae4`](https://github.com/soum91/keystone/commit/3a91aae4dda27764c1d90e42f76e9194730d6451); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Bridge 1.10.4: crash breadcrumbs, Home memory cost, Bluetooth only with real headroom ([`1fd61433`](https://github.com/soum91/keystone/commit/1fd61433ed64c278914fd8373b2f4c1d68cb4135); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Keystone/Views/BridgeView.swift`, and 1 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-136...firmware-build-138)
+
 ## [build-42] - 2026-11-14
 
 ## Verified changes since build-41
