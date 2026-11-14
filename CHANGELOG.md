@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-141] - 2026-11-14
+
+## Verified changes since firmware-build-140
+
+- Power strip: 'When power comes back' setting (relay_status) via Smart Life detection; bridge 1.10.7 ([`7c6dc15e`](https://github.com/soum91/keystone/commit/7c6dc15e9af29dca897336813af56c6d9001df20); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Strip.h`, `Keystone/Strip/TuyaCloud.swift`, and 2 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-140...firmware-build-141)
+
 ## [build-44] - 2026-11-14
 
 ## Verified changes since build-43
