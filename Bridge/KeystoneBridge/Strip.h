@@ -32,6 +32,7 @@ struct State {
   bool on[STRIP_MAX] = {false};
   uint32_t lastPoll = 0, lastSent = 0;
   int fails = 0;
+  uint32_t lowMem = 0;
   String error;
 };
 static State st;
@@ -124,7 +125,7 @@ struct Tile : Service::Outlet {
   Tile(int i) : Service::Outlet(), idx(i) {
     on = new Characteristic::On(0);
     new Characteristic::OutletInUse(1);
-    new Characteristic::Name(cfg.outlets[i].name.c_str());
+    new Characteristic::ConfiguredName(cfg.outlets[i].name.c_str());
   }
   boolean update() override {
     setOutlets({idx}, on->getNewVal());
@@ -139,7 +140,7 @@ struct Tile : Service::Outlet {
 
 
 static void startScan(const char *why) {
-  if (scan.on || !cfg.configured || WiFi.status() != WL_CONNECTED) return;
+  if (scan.on || !cfg.configured || WiFi.status() != WL_CONNECTED || ESP.getMaxAllocHeap() < 40000) return;
   IPAddress ip = WiFi.localIP();
   scan = Scan();
   scan.on = true;
@@ -231,6 +232,8 @@ static void poll() {
 // Called from the worker task. True if it did network work.
 static bool step() {
   if (!cfg.configured) return false;
+  // A Tuya session needs ~10 KB at once. When the bridge is short, wait instead of tipping it over.
+  if (ESP.getMaxAllocHeap() < 24000 || govee::radioOn || acNetBusy) { st.lowMem++; return false; }
   if (scan.on) scanStep();
   if (!cfg.ip.length()) {
     // No address yet (or it was cleared): look for it now and every few minutes after.
@@ -271,16 +274,13 @@ static void addAccessory(std::vector<uint32_t> &used) {
   if (!cfg.configured) return;
   inHome = true;
   homeSig = signature(cfg);
-  for (size_t i = 0; i < cfg.outlets.size(); i++) {
-    new SpanAccessory(aidFor("strip:" + cfg.id + ":" + cfg.outlets[i].dp, used));
-      new Service::AccessoryInformation();
-        new Characteristic::Identify();
-        new Characteristic::Name(cfg.outlets[i].name.c_str());
-        new Characteristic::Manufacturer("Tuya");
-        new Characteristic::Model("Power strip");
-        new Characteristic::SerialNumber((cfg.id + "-" + cfg.outlets[i].dp).c_str());
-      new Tile(i);
-  }
+  // One accessory with an Outlet service per outlet: Home still shows each outlet as its own tile, but the
+  // bridge holds one set of accessory info instead of one per outlet (5 separate accessories ran it out of RAM).
+  new SpanAccessory(aidFor("strip:" + cfg.id, used));
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();
+      new Characteristic::Name(cfg.name.c_str());
+  for (size_t i = 0; i < cfg.outlets.size(); i++) new Tile(i);
 }
 
 static void reply(int code, const String &body) { server.send(code, "application/json", body); }
@@ -375,6 +375,7 @@ static void info(JsonDocument &d) {
   s["ok"] = st.ok;
   s["known"] = st.known;
   if (st.error.length()) s["error"] = st.error;
+  if (st.lowMem) s["lowMem"] = st.lowMem;
   JsonArray a = s["outlets"].to<JsonArray>();
   for (size_t i = 0; i < cfg.outlets.size(); i++) {
     JsonObject o = a.add<JsonObject>();

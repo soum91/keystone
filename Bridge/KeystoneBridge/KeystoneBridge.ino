@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.10.2"
+#define FW_VERSION "1.10.3"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
