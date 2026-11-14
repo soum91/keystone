@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-43] - 2026-11-14
+
+## Verified changes since build-42
+
+- Firmware updates on a low-memory bridge: upload from a fresh boot; bridge frees relay buffer at OTA start ([`a46b09a4`](https://github.com/soum91/keystone/commit/a46b09a4f232f02aed74f8ff4373fe25596c2082); `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Strip.h`, and 1 more)
+- Bridge 1.10.4: breadcrumb helper as a macro so Arduino prototypes stay below the structs ([`3a91aae4`](https://github.com/soum91/keystone/commit/3a91aae4dda27764c1d90e42f76e9194730d6451); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-42...build-43)
+
 ## [firmware-build-138] - 2026-11-14
 
 ## Verified changes since firmware-build-136
