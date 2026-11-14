@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.42",
+          "buildVersion": "42",
+          "date": "2026-11-14T07:55:57Z",
+          "localizedDescription": "- Bridge 1.10.4: crash breadcrumbs, Home memory cost, Bluetooth only with real headroom (1fd6143)\n- docs: record factual changes for firmware-build-136 [skip ci] (512d841)\n- Bridge 1.10.3: power strip as one Home accessory, back off when memory is low (bf3b2d3)\n- docs: record factual changes for firmware-build-135 [skip ci] (11f238f)\n- docs: record factual changes for build-41 [skip ci] (397027d)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-42/Keystone-1.0.0-build-42.ipa",
+          "size": 1768227,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.41",
           "buildVersion": "41",
           "date": "2026-11-13T07:03:19Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-18/Keystone-1.0.0-build-18.ipa",
           "size": 929375,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.17",
-          "buildVersion": "17",
-          "date": "2026-10-29T11:05:34Z",
-          "localizedDescription": "- Remote access: test it at home, show the channel (f643262)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-17/Keystone-1.0.0-build-17.ipa",
-          "size": 925915,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.41",
-      "versionDate": "2026-11-13T07:03:19Z",
-      "versionDescription": "- Bridge 1.10.2: up to 4 phones per app; Keystone lists paired phones and can forget one (44922b1)\n- docs: record factual changes for build-40 [skip ci] (3a5eb39)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-41/Keystone-1.0.0-build-41.ipa",
-      "size": 1759906,
+      "version": "1.0.0.42",
+      "versionDate": "2026-11-14T07:55:57Z",
+      "versionDescription": "- Bridge 1.10.4: crash breadcrumbs, Home memory cost, Bluetooth only with real headroom (1fd6143)\n- docs: record factual changes for firmware-build-136 [skip ci] (512d841)\n- Bridge 1.10.3: power strip as one Home accessory, back off when memory is low (bf3b2d3)\n- docs: record factual changes for firmware-build-135 [skip ci] (11f238f)\n- docs: record factual changes for build-41 [skip ci] (397027d)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-42/Keystone-1.0.0-build-42.ipa",
+      "size": 1768227,
       "appPermissions": {}
     }
   ],
