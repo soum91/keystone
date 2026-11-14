@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-142] - 2026-11-14
+
+## Verified changes since firmware-build-141
+
+- Bridge 1.10.8: plain relays and plugs get a Switch tile in Apple Home (kind=switch from Afterglow) ([`f41b0325`](https://github.com/soum91/keystone/commit/f41b032591cae25b2e7ab97bd2057403fd46f0ed); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-141...firmware-build-142)
+
 ## [firmware-build-141] - 2026-11-14
 
 ## Verified changes since firmware-build-140
