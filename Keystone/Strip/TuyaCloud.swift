@@ -200,6 +200,15 @@ actor TuyaClient {
         return outlets
     }
 
+    /// Data point of the strip's own "when power comes back" setting (code relay_status), or nil if it has none.
+    func powerOnDp(id: String) async throws -> String? {
+        let result = try await request("GET", "/v1.0/m/life/devices/\(id)/status")
+        for r in (result as? [String: Any])?["dpStatusRelationDTOS"] as? [[String: Any]] ?? [] {
+            if let code = r["statusCode"] as? String, code == "relay_status", let dp = r["dpId"] { return "\(dp)" }
+        }
+        return nil
+    }
+
     private func request(_ method: String, _ path: String, query: [String: Any]? = nil, body: [String: Any]? = nil) async throws -> Any? {
         try await refreshIfNeeded()
         return try await raw(method, path, query: query, body: body).result

@@ -7,6 +7,7 @@
 //    "outlets":[{"name":"Lamp","dp":"1"}, ...]}          -> saved, restarts if Home needs new tiles
 //   {"action":"find"}                                      -> scan the Wi-Fi for the strip again (progress in /api/info)
 //   {"action":"probe", "id":..., "key":..., "ip":..., "ver":3.3}  -> {"ok":true,"dps":{...}} raw status
+//   {"action":"power", "dp":"38" (only to remember it), "value":"memory"} -> sets what the strip does when power returns
 //   {"action":"remove"}                                    -> forgets the strip, restarts
 // POST /api/control {"device":"strip", "outlet":0, "on":true} | {"device":"strip", "all":false}
 #pragma once
@@ -20,6 +21,7 @@ struct Plug { String name, dp; };
 struct Cfg {
   bool configured = false;
   String name = "Power Strip", id, key, ip;
+  String pwDp;   // data point of the strip's own "when power comes back" setting (relay_status), if it has one
   float ver = 3.3;
   std::vector<Plug> outlets;
 };
@@ -29,6 +31,7 @@ static String homeSig;
 
 struct State {
   bool known = false, ok = false;
+  String pw;   // what the strip reports for that setting
   bool on[STRIP_MAX] = {false};
   uint32_t lastPoll = 0, lastSent = 0;
   int fails = 0;
@@ -62,7 +65,7 @@ static bool parseCfg(const String &json, Cfg &out) {
   Cfg c;
   c.name = d["name"] | "Power Strip";
   if (!c.name.length()) c.name = "Power Strip";
-  c.id = d["id"] | ""; c.key = d["key"] | ""; c.ip = d["ip"] | ""; c.ver = d["ver"] | 3.3f;
+  c.id = d["id"] | ""; c.key = d["key"] | ""; c.ip = d["ip"] | ""; c.pwDp = d["pwDp"] | ""; c.ver = d["ver"] | 3.3f;
   for (JsonObject o : d["outlets"].as<JsonArray>()) {
     Plug x;
     x.dp = o["dp"].is<int>() ? String(o["dp"].as<int>()) : String(o["dp"] | "");
@@ -78,6 +81,7 @@ static bool parseCfg(const String &json, Cfg &out) {
 static String cfgJson(const Cfg &c) {
   JsonDocument d;
   d["name"] = c.name; d["id"] = c.id; d["key"] = c.key; d["ip"] = c.ip; d["ver"] = c.ver;
+  if (c.pwDp.length()) d["pwDp"] = c.pwDp;
   JsonArray a = d["outlets"].to<JsonArray>();
   for (auto &o : c.outlets) { JsonObject x = a.add<JsonObject>(); x["name"] = o.name; x["dp"] = o.dp; }
   String s;
@@ -95,6 +99,11 @@ static void applyDps(const String &dps) {
   for (size_t i = 0; i < cfg.outlets.size(); i++) {
     JsonVariant v = d[cfg.outlets[i].dp];
     if (v.is<bool>()) st.on[i] = v.as<bool>();
+  }
+  if (cfg.pwDp.length()) {
+    JsonVariant v = d[cfg.pwDp];
+    if (v.is<const char *>()) st.pw = v.as<String>();
+    else if (v.is<int>()) st.pw = String(v.as<int>());
   }
   st.known = true;
   xSemaphoreGive(lock);
@@ -216,6 +225,7 @@ static void poll() {
   if (!cfg.ip.length()) return;
   std::vector<String> known;
   for (auto &o : cfg.outlets) known.push_back(o.dp);
+  if (cfg.pwDp.length()) known.push_back(cfg.pwDp);
   tuya::Conn conn;
   String dps;
   if (conn.open(cfg.ip, cfg.id, cfg.key, cfg.ver)) { dps = conn.query(known); conn.close(); }
@@ -308,6 +318,33 @@ static void handleApi() {
     startScan("asked from Keystone");
     return reply(200, "{\"ok\":true}");
   }
+  if (action == "power") {
+    if (!cfg.configured) return reply(400, "{\"error\":\"set the strip up first\"}");
+    String dp = d["dp"] | "", value = d["value"] | "";
+    if (dp.length() && dp != cfg.pwDp) {
+      if (dp.length() > 4) return reply(400, "{\"error\":\"bad data point\"}");
+      xSemaphoreTake(lock, portMAX_DELAY);
+      cfg.pwDp = dp;
+      st.pw = "";
+      xSemaphoreGive(lock);
+      save();
+    }
+    if (!cfg.pwDp.length()) return reply(400, "{\"error\":\"this strip has no power-on setting\"}");
+    if (value.length()) {
+      if (value.length() > 16) return reply(400, "{\"error\":\"bad value\"}");
+      JsonDocument p;
+      p[cfg.pwDp] = value;
+      String s;
+      serializeJson(p, s);
+      xSemaphoreTake(lock, portMAX_DELAY);
+      pending.push_back(s);
+      st.pw = value;
+      st.lastSent = millis();
+      xSemaphoreGive(lock);
+      logEvent("Power strip: power-on setting " + value);
+    }
+    return reply(200, "{\"ok\":true}");
+  }
   if (action == "remove") {
     if (fsUp) LittleFS.remove("/strip.json");
     bool restart = inHome;
@@ -325,6 +362,7 @@ static void handleApi() {
   parseCfg(body, c);
   if (!c.key.length() && c.id == cfg.id) c.key = cfg.key;   // blank key = keep the saved one
   if (!c.ip.length() && c.id == cfg.id) c.ip = cfg.ip;      // blank IP = keep the saved one (use "find" to look again)
+  if (!c.pwDp.length() && c.id == cfg.id) c.pwDp = cfg.pwDp;   // keep the power-on setting's data point
   c.configured = c.id.length() && c.key.length() == 16 && !c.outlets.empty();
   if (!c.configured) return reply(400, "{\"error\":\"needs the device ID, the 16-character local key and at least one outlet\"}");
   writeFile("/strip.json", cfgJson(c));
@@ -374,6 +412,7 @@ static void info(JsonDocument &d) {
   if (scan.last.length()) s["scan"] = scan.last;
   s["ok"] = st.ok;
   s["known"] = st.known;
+  if (cfg.pwDp.length()) { s["pwDp"] = cfg.pwDp; if (st.pw.length()) s["pw"] = st.pw; }
   if (st.error.length()) s["error"] = st.error;
   if (st.lowMem) s["lowMem"] = st.lowMem;
   JsonArray a = s["outlets"].to<JsonArray>();

@@ -64,6 +64,8 @@ struct StripSetupView: View {
             }
         } header: { Text("Power strip") }
 
+        powerOnSection(s)
+
         Section {
             Button("Look for it on Wi-Fi again") { Task { await findAgain() } }
                 .disabled(s.scanning == true)
@@ -221,6 +223,84 @@ struct StripSetupView: View {
         }
     }
 
+    // MARK: When power comes back
+
+    /// The strip's own setting uses one of three word sets depending on the maker. The current value tells which.
+    private static let powerWords: [(off: String, on: String, last: String)] = [
+        ("off", "on", "memory"), ("power_off", "power_on", "last"), ("0", "1", "2"),
+    ]
+
+    private func powerChoice(_ s: BridgeInfo.Strip) -> String? {
+        guard let pw = s.pw else { return nil }
+        for w in Self.powerWords {
+            if pw == w.off { return "off" }
+            if pw == w.on { return "on" }
+            if pw == w.last { return "last" }
+        }
+        return nil
+    }
+
+    @ViewBuilder private func powerOnSection(_ s: BridgeInfo.Strip) -> some View {
+        Section {
+            if s.pwDp != nil, let pw = s.pw {
+                if let current = powerChoice(s) {
+                    Picker("When power comes back", selection: Binding(get: { current }, set: { v in Task { await setPowerOn(s, v) } })) {
+                        Text("Stay off").tag("off")
+                        Text("Turn on").tag("on")
+                        Text("Go back to how it was").tag("last")
+                    }
+                } else {
+                    LabeledContent("When power comes back", value: pw)
+                }
+            } else if s.pwDp != nil {
+                Text("Waiting for the strip to report its setting.").font(.footnote).foregroundStyle(.secondary)
+            } else if token != nil {
+                Button { Task { await findPowerOn(s) } } label: {
+                    HStack { Text("Check for a power-on setting"); Spacer(); if working == "power" { ProgressView() } }
+                }
+                .disabled(working != nil)
+            }
+        } header: { Text("After a power cut") } footer: {
+            if s.pwDp != nil {
+                Text("Stored in the strip itself, so it works even when the bridge and Wi-Fi are down.")
+            } else if token != nil {
+                Text("Asks Smart Life whether this strip has the setting. Smart Life hides it on some strips.")
+            } else {
+                Text("Sign in to Smart Life below to check whether this strip has a power-on setting.")
+            }
+        }
+    }
+
+    private func setPowerOn(_ s: BridgeInfo.Strip, _ choice: String) async {
+        guard let cur = s.pw else { return }
+        guard let w = Self.powerWords.first(where: { [$0.off, $0.on, $0.last].contains(cur) }) else { return }
+        let value = choice == "off" ? w.off : choice == "on" ? w.on : w.last
+        do {
+            try await BridgeAPI.post("/api/strip", ["action": "power", "value": value], store.link, timeout: 8)
+            await store.refresh()
+        } catch {
+            message = "Couldn't change it: \(error.localizedDescription)"
+        }
+    }
+
+    private func findPowerOn(_ s: BridgeInfo.Strip) async {
+        guard let c = client(), let id = s.id else { return }
+        working = "power"
+        message = nil
+        defer { working = nil }
+        do {
+            guard let dp = try await c.powerOnDp(id: id) else {
+                message = "Smart Life doesn't list a power-on setting for this strip, so it may not have one."
+                return
+            }
+            try await BridgeAPI.post("/api/strip", ["action": "power", "dp": dp], store.link, timeout: 8)
+            store.show("Found it. The bridge reads the current setting in a few seconds.")
+            await store.refresh()
+        } catch {
+            if error is TuyaError { handle(error) } else { message = "Needs your home Wi-Fi: \(error.localizedDescription)" }
+        }
+    }
+
     private func client() -> TuyaClient? {
         guard let t = TuyaToken.stored ?? token else { return nil }
         return TuyaClient(token: t)
@@ -265,10 +345,11 @@ struct StripSetupView: View {
                 message = "Couldn't tell which of this device's data points are outlets. Use Enter details by hand."
                 return
             }
-            let body: [String: Any] = [
+            var body: [String: Any] = [
                 "action": "config", "name": d.name, "id": d.id, "key": key, "ip": "", "ver": 3.3,
                 "outlets": outlets.map { ["name": $0.name, "dp": $0.dp] },
             ]
+            if let dp = try? await c.powerOnDp(id: d.id) { body["pwDp"] = dp }
             let r = try await BridgeAPI.post("/api/strip", body, store.link, timeout: 10)
             let restart = (r["restart"] as? Bool) == true
             restarting = restart
