@@ -233,7 +233,7 @@ static void poll() {
 static bool step() {
   if (!cfg.configured) return false;
   // A Tuya session needs ~10 KB at once. When the bridge is short, wait instead of tipping it over.
-  if (ESP.getMaxAllocHeap() < 24000 || govee::radioOn || acNetBusy) { st.lowMem++; return false; }
+  if (otaActive || ESP.getMaxAllocHeap() < 24000 || govee::radioOn || acNetBusy) { st.lowMem++; return false; }
   if (scan.on) scanStep();
   if (!cfg.ip.length()) {
     // No address yet (or it was cleared): look for it now and every few minutes after.

@@ -411,25 +411,32 @@ enum Firmware {
         var result: (Data, URLResponse)?
         var lastError: Error?
         let attempts = 4
+        // Start every attempt from a fresh boot: right after a restart the bridge has the most memory free it
+        // will ever have, and the relay (20 s) and the cloud clients (30 s) haven't started yet. On a busy bridge
+        // the upload's network buffers didn't fit otherwise and it crashed mid-upload.
+        func freshBoot(_ attempt: Int) async -> Bool {
+            progress(attempt == 1 ? "Restarting the bridge so it has room for the update…"
+                                  : "Restarting the bridge for another try (\(attempt) of \(attempts))…")
+            _ = try? await BridgeAPI.admin("restart", [:], link)
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            for _ in 0..<30 {   // up to ~90 s
+                if let i = try? await BridgeAPI.info(host: link.host, port: link.port, timeout: 3), (i.uptime ?? 99) < 60 { return true }
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+            }
+            return false
+        }
         for attempt in 1...attempts {
-            progress(attempt == 1 ? "Sending \(bin.count / 1024) KB to the bridge… keep Keystone open with the screen on (about a minute)."
-                                  : "Trying again (\(attempt) of \(attempts))…")
+            guard await freshBoot(attempt) else {
+                lastError = BridgeError.message("the bridge didn't come back after restarting")
+                break
+            }
+            progress("Sending \(bin.count / 1024) KB to the bridge… keep Keystone open with the screen on.")
             do {
                 result = try await session.upload(for: req, from: body)
                 break
             } catch let e as URLError where [.networkConnectionLost, .timedOut, .cannotConnectToHost, .notConnectedToInternet, .cannotFindHost].contains(e.code) {
                 lastError = e
-                if attempt == attempts { break }
-                // The bridge restarts itself when an upload is cut off (about 20 s). Retrying before it's back
-                // just fails again, so wait until it answers, then give it a moment to settle.
-                progress("Connection dropped. Waiting for the bridge to restart… (attempt \(attempt + 1) of \(attempts) next)")
-                try? await Task.sleep(nanoseconds: 3_000_000_000)
-                var back = false
-                for _ in 0..<25 {   // up to ~75 s
-                    if (try? await BridgeAPI.info(host: link.host, port: link.port, timeout: 3)) != nil { back = true; break }
-                    try? await Task.sleep(nanoseconds: 3_000_000_000)
-                }
-                if !back { break }
+                progress("Connection dropped. Waiting for the bridge…")
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
             }
         }

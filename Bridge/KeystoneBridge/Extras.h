@@ -771,6 +771,9 @@ static void handleUpdateUpload() {
     logEvent("Firmware update started");
     otaActive = true;
     stopBluetoothForOta();   // give Wi-Fi the radio for the upload
+    // The worker is stuck inside this upload, so relay::poll() can't drop the relay on its own: do it here
+    // and hand its 5 KB buffer to the upload.
+    if (relayLetGo) relayLetGo();
     if (!Update.begin(UPDATE_SIZE_UNKNOWN)) updateError = Update.errorString();
   } else if (up.status == UPLOAD_FILE_WRITE) {
     if (!updateAllowed || updateError.length()) return;
