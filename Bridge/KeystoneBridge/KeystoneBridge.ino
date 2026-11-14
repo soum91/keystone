@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.10.7"
+#define FW_VERSION "1.10.8"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -83,6 +83,7 @@ struct Light {
   String sw, mode, bri, ct, col;
   int briMin = 10, briMax = 1000, ctMin = 0, ctMax = 1000;
   bool colV1 = false;
+  bool relay = false;       // a plain on/off relay or plug: a Switch tile in Home instead of a bulb
   // Live state (guarded by stateLock)
   bool known = false, on = false, colourMode = false, ok = false;
   int pct = 100;            // 1...100
@@ -393,6 +394,35 @@ struct AGLight : Service::LightBulb {
   }
 };
 
+// A plain relay or plug (no dimming or colour): a Switch tile, so Home and Siri treat it as a switch.
+struct AGRelay : Service::Switch {
+  int idx;
+  SpanCharacteristic *power;
+  AGRelay(int i) : Service::Switch(), idx(i) {
+    power = new Characteristic::On(0);
+    new Characteristic::Name(lights[i].name.c_str());
+  }
+  boolean update() override {
+    Light &L = lights[idx];
+    bool wantOn = power->getNewVal();
+    String body = String("{\"") + L.sw + "\":" + (wantOn ? "true" : "false") + "}";
+    xSemaphoreTake(stateLock, portMAX_DELAY);
+    L.on = wantOn;
+    L.lastSent = millis();
+    xSemaphoreGive(stateLock);
+    enqueue(Cmd{idx, body, true, !wantOn, wantOn});
+    return true;
+  }
+  void loop() override {
+    Light &L = lights[idx];
+    if (millis() - L.lastSent < ECHO_IGNORE_MS) return;
+    xSemaphoreTake(stateLock, portMAX_DELAY);
+    bool known = L.known, on = L.on;
+    xSemaphoreGive(stateLock);
+    if (known && power->getVal() != (int)on) power->setVal(on);
+  }
+};
+
 // "Lights follow TV": lets you pause the TV automation from Home or Siri.
 struct FollowSwitch : Service::Switch {
   SpanCharacteristic *on;
@@ -423,7 +453,7 @@ static uint32_t aidFor(const String &id, std::vector<uint32_t> &used) {
 
 static String lightSignature() {
   String s;
-  for (auto &L : lights) s += L.id + "|" + L.name + "|" + L.sw + L.mode + L.bri + L.ct + L.col + ";";
+  for (auto &L : lights) s += L.id + "|" + L.name + "|" + L.sw + L.mode + L.bri + L.ct + L.col + (L.relay ? "r" : "") + ";";
   return s;
 }
 
@@ -467,6 +497,7 @@ static bool parseConfig(const String &json, std::vector<Light> &out, bool rulesT
     L.ctMin = o["ctMin"] | 0;
     L.ctMax = o["ctMax"] | 1000;
     L.colV1 = o["colV1"] | false;
+    L.relay = String(o["kind"] | "") == "switch" && !L.bri.length() && !L.ct.length() && !L.col.length();
     if (L.id.length() && L.sw.length()) out.push_back(L);
   }
   if (rulesToo) {
@@ -1079,7 +1110,7 @@ static void handleConfig() {
 
   String oldSig = lightSignature();
   String newSig;
-  for (auto &L : fresh) newSig += L.id + "|" + L.name + "|" + L.sw + L.mode + L.bri + L.ct + L.col + ";";
+  for (auto &L : fresh) newSig += L.id + "|" + L.name + "|" + L.sw + L.mode + L.bri + L.ct + L.col + (L.relay ? "r" : "") + ";";
   bool restart = oldSig != newSig;
   {
     // The TV tile (name, inputs, or TV added/removed) also needs a restart for Home.
@@ -1403,9 +1434,9 @@ void setup() {
         new Characteristic::Identify();
         new Characteristic::Name(lights[i].name.c_str());
         new Characteristic::Manufacturer("Tuya");
-        new Characteristic::Model("Light");
+        new Characteristic::Model(lights[i].relay ? "Switch" : "Light");
         new Characteristic::SerialNumber(lights[i].id.c_str());
-      new AGLight(i);
+      if (lights[i].relay) new AGRelay(i); else new AGLight(i);
   }
 
   new SpanAccessory(65000);
