@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-140] - 2026-11-14
+
+## Verified changes since firmware-build-139
+
+- Bridge 1.10.6: breadcrumbs no longer walk the heap (bridge went unreachable on 1.10.4/1.10.5) ([`446e7aeb`](https://github.com/soum91/keystone/commit/446e7aeba3d4c73b10bcd2b78041c51e2642d0c8); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-139...firmware-build-140)
+
 ## [firmware-build-139] - 2026-11-14
 
 ## Verified changes since firmware-build-138
