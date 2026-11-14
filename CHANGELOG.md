@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-44] - 2026-11-14
+
+## Verified changes since build-43
+
+- Power strip: 'When power comes back' setting (relay_status) via Smart Life detection; bridge 1.10.7 ([`7c6dc15e`](https://github.com/soum91/keystone/commit/7c6dc15e9af29dca897336813af56c6d9001df20); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Strip.h`, `Keystone/Strip/TuyaCloud.swift`, and 2 more)
+- Bridge 1.10.6: breadcrumbs no longer walk the heap (bridge went unreachable on 1.10.4/1.10.5) ([`446e7aeb`](https://github.com/soum91/keystone/commit/446e7aeba3d4c73b10bcd2b78041c51e2642d0c8); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-43...build-44)
+
 ## [firmware-build-140] - 2026-11-14
 
 ## Verified changes since firmware-build-139
