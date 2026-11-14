@@ -43,10 +43,9 @@ static const char *bootReason = "power on";
 struct Crumb { uint32_t magic; char what[20]; uint32_t heap, block, up; };
 RTC_NOINIT_ATTR static Crumb crumbWork, crumbHome;
 #define CRUMB_MAGIC 0x4B53C0DEu
-static inline void markAt(Crumb &c, const char *w) {
-  strlcpy(c.what, w, sizeof(c.what));
-  c.heap = ESP.getFreeHeap(); c.block = ESP.getMaxAllocHeap(); c.up = millis() / 1000; c.magic = CRUMB_MAGIC;
-}
+// A macro, not a function: a function this early makes the Arduino builder put its prototypes above the structs.
+#define markAt(c, w) do { strlcpy((c).what, (w), sizeof((c).what)); (c).heap = ESP.getFreeHeap(); \
+  (c).block = ESP.getMaxAllocHeap(); (c).up = millis() / 1000; (c).magic = CRUMB_MAGIC; } while (0)
 #define mark(w) markAt(crumbWork, w)
 static String crashDuring;                       // from the crumbs, at boot
 static uint32_t heapAtStart = 0, heapAfterHome = 0;   // what Apple Home's accessory list costs
