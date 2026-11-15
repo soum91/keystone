@@ -867,7 +867,7 @@ static void addExtraAccessories(std::vector<uint32_t> &used) {
           new Characteristic::Manufacturer("IR");
           new Characteristic::Model(r.kind.c_str());
         if (r.power.length()) new AGIRPower(i);
-        for (size_t b = 0; b < r.buttons.size(); b++) new AGIRButton(i, b);
+        // The remote's other buttons stay in the apps. Each one was a full Home switch and the bridge is short of RAM.
     }
   }
   tvHomeSig = tvSignature(tvAddr(), tvName, tvInputs);
