@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.10.8"
+#define FW_VERSION "1.10.9"
 #include <esp_system.h>
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
@@ -610,7 +610,17 @@ static bool barHasIR() {
 }
 
 // SmartCast is HTTPS with a self-signed certificate, on your own network.
+// The TLS handshake needs about 35 KB in one piece. With less than that it doesn't fail politely, it takes the
+// whole bridge down (crash during "bar poll" at 7 KB free), so it waits for room instead.
+#define BAR_TLS_ROOM 40000
+static uint32_t barLowMemAt = 0;
 static int barHttp(const char *method, const String &path, const String &body, String &out) {
+  if (ESP.getMaxAllocHeap() < BAR_TLS_ROOM) {
+    if (!barLowMemAt || millis() - barLowMemAt > 600000UL) barEvent("not enough free memory for the sound bar's secure link (" + String(ESP.getMaxAllocHeap() / 1024) + " KB block)");
+    barLowMemAt = millis();
+    out = "";
+    return -1;
+  }
   WiFiClientSecure c;
   c.setInsecure();
   HTTPClient http;
@@ -700,6 +710,7 @@ static void pollBar() {
   if (!bar.configured || !barHasWifi()) return;
   if (millis() - lastBarPoll < BAR_POLL_MS) return;
   lastBarPoll = millis();
+  if (ESP.getMaxAllocHeap() < BAR_TLS_ROOM) return;   // keep what we knew; don't call it "not answering"
   int r = barReadPower();
   barKnown = r == 1 ? 1 : 0;
   barLabel = r == 1 ? "on" : r == 0 ? "standby" : "off (not answering)";
