@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.45",
+          "buildVersion": "45",
+          "date": "2026-11-15T07:57:56Z",
+          "localizedDescription": "- Bridge 1.10.10: release the classic-Bluetooth RAM reserve at boot, relay waits for 16 KB block; Keystone shows Free before Apple Home and Freed at boot (a55e4ea)\n- docs: record factual changes for firmware-build-143 [skip ci] (835c556)\n- Bridge 1.10.9: sound bar secure link waits for memory instead of crashing the bridge (crash during bar poll at 7 KB free) (d5922e8)\n- docs: record factual changes for firmware-build-142 [skip ci] (755d571)\n- Bridge 1.10.8: plain relays and plugs get a Switch tile in Apple Home (kind=switch from Afterglow) (f41b032)\n- docs: record factual changes for firmware-build-141 [skip ci] (2a02cc0)\n- docs: record factual changes for build-44 [skip ci] (e2b14b7)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-45/Keystone-1.0.0-build-45.ipa",
+          "size": 1784235,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.44",
           "buildVersion": "44",
           "date": "2026-11-14T21:46:21Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-21/Keystone-1.0.0-build-21.ipa",
           "size": 932563,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.20",
-          "buildVersion": "20",
-          "date": "2026-10-29T16:26:35Z",
-          "localizedDescription": "- AC: both Smart and the unit's own Auto (35b8c46)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-20/Keystone-1.0.0-build-20.ipa",
-          "size": 932866,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.44",
-      "versionDate": "2026-11-14T21:46:21Z",
-      "versionDescription": "- Power strip: 'When power comes back' setting (relay_status) via Smart Life detection; bridge 1.10.7 (7c6dc15)\n- docs: record factual changes for firmware-build-140 [skip ci] (9bcb8bd)\n- Bridge 1.10.6: breadcrumbs no longer walk the heap (bridge went unreachable on 1.10.4/1.10.5) (446e7ae)\n- docs: record factual changes for firmware-build-139 [skip ci] (caa9ffc)\n- docs: record factual changes for build-43 [skip ci] (ef3d0b4)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-44/Keystone-1.0.0-build-44.ipa",
-      "size": 1787263,
+      "version": "1.0.0.45",
+      "versionDate": "2026-11-15T07:57:56Z",
+      "versionDescription": "- Bridge 1.10.10: release the classic-Bluetooth RAM reserve at boot, relay waits for 16 KB block; Keystone shows Free before Apple Home and Freed at boot (a55e4ea)\n- docs: record factual changes for firmware-build-143 [skip ci] (835c556)\n- Bridge 1.10.9: sound bar secure link waits for memory instead of crashing the bridge (crash during bar poll at 7 KB free) (d5922e8)\n- docs: record factual changes for firmware-build-142 [skip ci] (755d571)\n- Bridge 1.10.8: plain relays and plugs get a Switch tile in Apple Home (kind=switch from Afterglow) (f41b032)\n- docs: record factual changes for firmware-build-141 [skip ci] (2a02cc0)\n- docs: record factual changes for build-44 [skip ci] (e2b14b7)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-45/Keystone-1.0.0-build-45.ipa",
+      "size": 1784235,
       "appPermissions": {}
     }
   ],
