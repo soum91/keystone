@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-144] - 2026-11-15
+
+## Verified changes since firmware-build-143
+
+- Bridge 1.10.10: release the classic-Bluetooth RAM reserve at boot, relay waits for 16 KB block; Keystone shows Free before Apple Home and Freed at boot ([`a55e4eaf`](https://github.com/soum91/keystone/commit/a55e4eafcb7ef474a32ba6c5d08adb784282feb8); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, `Keystone/Views/BridgeView.swift`, and 1 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-143...firmware-build-144)
+
 ## [build-45] - 2026-11-15
 
 ## Verified changes since build-44
