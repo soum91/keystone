@@ -1,5 +1,15 @@
 # Changelog
 
+## [build-45] - 2026-11-15
+
+## Verified changes since build-44
+
+- Bridge 1.10.10: release the classic-Bluetooth RAM reserve at boot, relay waits for 16 KB block; Keystone shows Free before Apple Home and Freed at boot ([`a55e4eaf`](https://github.com/soum91/keystone/commit/a55e4eafcb7ef474a32ba6c5d08adb784282feb8); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, `Keystone/Views/BridgeView.swift`, and 1 more)
+- Bridge 1.10.9: sound bar secure link waits for memory instead of crashing the bridge (crash during bar poll at 7 KB free) ([`d5922e87`](https://github.com/soum91/keystone/commit/d5922e875c609e1cbfb0a0e91537e8392ed79c75); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Bridge 1.10.8: plain relays and plugs get a Switch tile in Apple Home (kind=switch from Afterglow) ([`f41b0325`](https://github.com/soum91/keystone/commit/f41b032591cae25b2e7ab97bd2057403fd46f0ed); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-44...build-45)
+
 ## [firmware-build-143] - 2026-11-15
 
 ## Verified changes since firmware-build-142
