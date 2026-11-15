@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-143] - 2026-11-15
+
+## Verified changes since firmware-build-142
+
+- Bridge 1.10.9: sound bar secure link waits for memory instead of crashing the bridge (crash during bar poll at 7 KB free) ([`d5922e87`](https://github.com/soum91/keystone/commit/d5922e875c609e1cbfb0a0e91537e8392ed79c75); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-142...firmware-build-143)
+
 ## [firmware-build-142] - 2026-11-14
 
 ## Verified changes since firmware-build-141
