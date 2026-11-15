@@ -115,6 +115,8 @@ struct BridgeView: View {
                             if let s = b.heapStart, let a = b.heapAfterHome, s > a {
                                 LabeledContent("Apple Home accessories use", value: "\((s - a) / 1024) KB")
                             }
+                            if let f = b.btFreed, f > 0 { LabeledContent("Freed at boot", value: "\(f / 1024) KB") }
+                            if let s = b.heapStart { LabeledContent("Free before Apple Home", value: "\(s / 1024) KB") }
                             if let d = b.during, !d.isEmpty {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Last crash during").font(.subheadline)

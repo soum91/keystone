@@ -30,8 +30,12 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.10.9"
+#define FW_VERSION "1.10.10"
 #include <esp_system.h>
+#if __has_include("esp_bt.h")
+#include "esp_bt.h"
+#define HAVE_BT_RELEASE 1
+#endif
 #include <nvs.h>
 // Crash-loop guard: after two crash restarts in a row the bridge boots without the AC cloud client and the
 // remote relay, so lights, Home and the web API (and firmware updates) keep working.
@@ -52,7 +56,7 @@ RTC_NOINIT_ATTR static Crumb crumbWork, crumbHome;
 #define labelAt(c, w) do { if ((c).what[0] != (w)[0]) { strlcpy((c).what, (w), sizeof((c).what)); (c).up = millis() / 1000; (c).magic = CRUMB_MAGIC; } } while (0)
 #define mark(w) markAt(crumbWork, w)
 static String crashDuring;                       // from the crumbs, at boot
-static uint32_t heapAtStart = 0, heapAfterHome = 0;   // what Apple Home's accessory list costs
+static uint32_t heapAtStart = 0, heapAfterHome = 0, heapEntry = 0, btFreed = 0;   // what Apple Home's accessory list costs
 // No Wi-Fi saved yet: boot lean (no Bluetooth, no AC client, no relay) so the setup hotspot has the
 // radio and the memory to itself. Everything starts normally on the restart after Wi-Fi is set.
 static bool setupOnly = false;
@@ -1074,7 +1078,7 @@ static void handleInfo() {
   d["boot"]["safeMode"] = safeMode;
   d["boot"]["minHeap"] = ESP.getMinFreeHeap();
   if (crashDuring.length()) d["boot"]["during"] = crashDuring;
-  if (heapAtStart) { d["boot"]["heapStart"] = heapAtStart; d["boot"]["heapAfterHome"] = heapAfterHome; }
+  if (heapAtStart) { d["boot"]["heapEntry"] = heapEntry; d["boot"]["btFreed"] = btFreed; d["boot"]["heapStart"] = heapAtStart; d["boot"]["heapAfterHome"] = heapAfterHome; }
 #ifdef HAS_GOVEE
   d["boot"]["bluetooth"] = (bool)govee::radioOn;
 #endif
@@ -1359,6 +1363,13 @@ static void resetBarPairing(const char *) {
 // ---------------------------------------------------------------------------------------------
 
 void setup() {
+  // The chip keeps a block of RAM reserved for classic Bluetooth. This firmware only ever listens with
+  // Bluetooth Low Energy (Govee), so hand that block back before anything else takes the heap.
+  heapEntry = ESP.getFreeHeap();
+#ifdef HAVE_BT_RELEASE
+  esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
+#endif
+  btFreed = ESP.getFreeHeap() > heapEntry ? ESP.getFreeHeap() - heapEntry : 0;
   Serial.begin(115200);
   oled::begin();
   stateLock = xSemaphoreCreateMutex();

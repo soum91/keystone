@@ -167,7 +167,7 @@ static void poll() {
     connected = false;
     if (lastTry && millis() - lastTry < 10000UL) return;
     lastTry = millis();
-    if (ESP.getMaxAllocHeap() < 12000) { lastError = "low memory"; return; }
+    if (ESP.getMaxAllocHeap() < 16000 || ESP.getFreeHeap() < 20000) { lastError = "low memory"; return; }   // the 5 KB buffer plus the socket has to fit with room to spare
     String cid = "ks-" + id;   // fixed, so the broker keeps this bridge's session and queued requests
     if (!relayHolding) { if (!mq.setBufferSize(5120)) { lastError = "low memory"; return; } relayHolding = true; }
     if (mq.connect(cid.c_str(), nullptr, nullptr, nullptr, 0, false, nullptr, false)) {
