@@ -31,7 +31,8 @@ jobs:
           ESP_URL: https://espressif.github.io/arduino-esp32/package_esp32_index.json
         run: |
           arduino-cli core update-index --additional-urls "$ESP_URL"
-          arduino-cli core install esp32:esp32 --additional-urls "$ESP_URL"
+          # Pinned: 3.3.13 overflows IRAM by ~1.7 KB with this sketch (Nov 2026). Bump only after a test build.
+          arduino-cli core install esp32:esp32@3.3.12 --additional-urls "$ESP_URL"
           arduino-cli lib update-index
           arduino-cli lib install "HomeSpan" "ArduinoJson" "U8g2" "NimBLE-Arduino@2.5.1" "PubSubClient"
           arduino-cli core list
