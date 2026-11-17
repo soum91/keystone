@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-148] - 2026-11-17
+
+## Verified changes since firmware-build-147
+
+- Relay: second broker (HiveMQ) as fallback; bridge 1.10.13 switches brokers on failure, Keystone asks through both ([`b52bd874`](https://github.com/soum91/keystone/commit/b52bd8748b84bb9449f49a2268e37a32a33223da); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, `Keystone/Views/BridgeView.swift`, and 2 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-147...firmware-build-148)
+
 ## [firmware-build-147] - 2026-11-17
 
 ## Verified changes since firmware-build-145
