@@ -1,5 +1,14 @@
 # Changelog
 
+## [firmware-build-147] - 2026-11-17
+
+## Verified changes since firmware-build-145
+
+- CI: pin ESP32 Arduino core to 3.3.12 (3.3.13 overflows IRAM by 1664 bytes) ([`da8bf239`](https://github.com/soum91/keystone/commit/da8bf23901867902cc7e71155671a7d79263b025); `.github/workflows/bridge.yml`)
+- Bridge 1.10.12: switch off any device (lights, TV, sound bar, purifier, IR, strip, router, Govee); relay diagnostics ([`f5be0514`](https://github.com/soum91/keystone/commit/f5be051422407ec5c15cdfce13f247213fdf3ae7); `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, and 6 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-145...firmware-build-147)
+
 ## [build-46] - 2026-11-17
 
 ## Verified changes since build-45
