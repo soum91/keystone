@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.47",
+          "buildVersion": "47",
+          "date": "2026-11-17T20:43:42Z",
+          "localizedDescription": "- Relay: second broker (HiveMQ) as fallback; bridge 1.10.13 switches brokers on failure, Keystone asks through both (b52bd87)\n- docs: record factual changes for firmware-build-147 [skip ci] (d678924)\n- CI: pin ESP32 Arduino core to 3.3.12 (3.3.13 overflows IRAM by 1664 bytes) (da8bf23)\n- docs: record factual changes for build-46 [skip ci] (52e27f5)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-47/Keystone-1.0.0-build-47.ipa",
+          "size": 1816679,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.46",
           "buildVersion": "46",
           "date": "2026-11-17T19:46:41Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-23/Keystone-1.0.0-build-23.ipa",
           "size": 939793,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.22",
-          "buildVersion": "22",
-          "date": "2026-10-29T20:54:17Z",
-          "localizedDescription": "- Remote access and Wi-Fi reachability: fix the real causes (1c958c0)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-22/Keystone-1.0.0-build-22.ipa",
-          "size": 933031,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.46",
-      "versionDate": "2026-11-17T19:46:41Z",
-      "versionDescription": "- Bridge 1.10.12: switch off any device (lights, TV, sound bar, purifier, IR, strip, router, Govee); relay diagnostics (f5be051)\n- docs: record factual changes for firmware-build-145 [skip ci] (9e5bb9f)\n- Bridge 1.10.11: IR remotes show only their power switch in Apple Home (buttons stay in the apps) to save RAM (ebf4363)\n- docs: record factual changes for firmware-build-144 [skip ci] (f377db5)\n- docs: record factual changes for build-45 [skip ci] (576a4d0)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-46/Keystone-1.0.0-build-46.ipa",
-      "size": 1803460,
+      "version": "1.0.0.47",
+      "versionDate": "2026-11-17T20:43:42Z",
+      "versionDescription": "- Relay: second broker (HiveMQ) as fallback; bridge 1.10.13 switches brokers on failure, Keystone asks through both (b52bd87)\n- docs: record factual changes for firmware-build-147 [skip ci] (d678924)\n- CI: pin ESP32 Arduino core to 3.3.12 (3.3.13 overflows IRAM by 1664 bytes) (da8bf23)\n- docs: record factual changes for build-46 [skip ci] (52e27f5)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-47/Keystone-1.0.0-build-47.ipa",
+      "size": 1816679,
       "appPermissions": {}
     }
   ],
