@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-46] - 2026-11-17
+
+## Verified changes since build-45
+
+- Bridge 1.10.12: switch off any device (lights, TV, sound bar, purifier, IR, strip, router, Govee); relay diagnostics ([`f5be0514`](https://github.com/soum91/keystone/commit/f5be051422407ec5c15cdfce13f247213fdf3ae7); `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, and 6 more)
+- Bridge 1.10.11: IR remotes show only their power switch in Apple Home (buttons stay in the apps) to save RAM ([`ebf43630`](https://github.com/soum91/keystone/commit/ebf436308c1add21baa423e2aacbac3d90245fdc); `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-45...build-46)
+
 ## [firmware-build-145] - 2026-11-15
 
 ## Verified changes since firmware-build-144
