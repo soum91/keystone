@@ -37,9 +37,63 @@ enum RelayError: LocalizedError {
     }
 }
 
-/// Minimal MQTT 3.1.1 over WebSocket (QoS 0 only), enough to publish requests and receive answers.
-actor RelayClient {
+/// Two free public brokers. The bridge sits on one at a time (it switches when one fails); the phone asks
+/// through both at once and takes the first answer, so either broker being down or blocked is survivable.
+final class RelayClient: @unchecked Sendable {
     static let shared = RelayClient()
+    let links = [RelayLink(broker: "wss://broker.emqx.io:8084/mqtt", label: "EMQX"),
+                 RelayLink(broker: "wss://broker.hivemq.com:8884/mqtt", label: "HiveMQ")]
+
+    func disconnect() async { for l in links { await l.disconnect() } }
+
+    func request(_ method: String, _ path: String, headers: [String: String], body: String?, timeout: Double) async throws -> (Int, Data) {
+        let race = Race(count: links.count)
+        return try await withCheckedThrowingContinuation { cont in
+            race.start(cont)
+            for l in links {
+                Task {
+                    do { race.win(try await l.request(method, path, headers: headers, body: body, timeout: timeout)) }
+                    catch { race.lose(l.label, error) }
+                }
+            }
+        }
+    }
+
+    /// First answer wins; if every broker fails, one error naming what each one said.
+    private final class Race: @unchecked Sendable {
+        private let lock = NSLock()
+        private var cont: CheckedContinuation<(Int, Data), Error>?
+        private var left: Int
+        private var errors: [(String, Error)] = []
+        init(count: Int) { left = count }
+        func start(_ c: CheckedContinuation<(Int, Data), Error>) { lock.lock(); cont = c; lock.unlock() }
+        func win(_ v: (Int, Data)) {
+            lock.lock(); let c = cont; cont = nil; lock.unlock()
+            c?.resume(returning: v)
+        }
+        func lose(_ label: String, _ e: Error) {
+            lock.lock()
+            errors.append((label, e)); left -= 1
+            let done = left == 0 ? cont : nil
+            if done != nil { cont = nil }
+            let all = errors
+            lock.unlock()
+            NetLog.add("relay \(label): \(e.localizedDescription)")
+            guard let done else { return }
+            if all.allSatisfy({ if case RelayError.timeout = $0.1 { return true }; return false }) {
+                done.resume(throwing: RelayError.timeout)
+            } else {
+                done.resume(throwing: RelayError.broker(all.map { "\($0.0): \($0.1.localizedDescription.replacingOccurrences(of: "Relay: ", with: ""))" }.joined(separator: "; ")))
+            }
+        }
+    }
+}
+
+/// Minimal MQTT 3.1.1 over WebSocket (QoS 0 only) to one broker, enough to publish requests and receive answers.
+actor RelayLink {
+    let broker: String
+    nonisolated let label: String
+    init(broker: String, label: String) { self.broker = broker; self.label = label }
 
     private var ws: URLSessionWebSocketTask?
     private var session: URLSession?
@@ -106,7 +160,7 @@ actor RelayClient {
     private func connect(_ c: RelayConfig) async throws {
         disconnect()
         cfg = c
-        guard let url = URL(string: c.broker) else { throw RelayError.broker("bad broker address") }
+        guard let url = URL(string: broker) else { throw RelayError.broker("bad broker address") }
         let s = URLSession(configuration: .default)
         session = s
         let task = s.webSocketTask(with: url, protocols: ["mqtt"])
@@ -133,7 +187,7 @@ actor RelayClient {
                 await self.failSuback(RelayError.broker("the broker didn't confirm the answer channel"))
             }
         }
-        NetLog.add("relay: connected and listening")
+        NetLog.add("relay \(label): connected and listening")
         ready = true
         pinger = Task { [weak self] in
             while !Task.isCancelled {

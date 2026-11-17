@@ -53,7 +53,7 @@ struct BridgeView: View {
                                 get: { r.on ?? false },
                                 set: { v in Task { await store.setRemote(on: v) } }))
                                 .disabled(store.viaRelay)
-                            LabeledContent("Relay", value: r.on == true ? (r.connected == true ? "Connected" : (r.error ?? "Connecting…")) : "Off")
+                            LabeledContent("Relay", value: r.on == true ? (r.connected == true ? "Connected\(r.broker.map { " (\($0))" } ?? "")" : (r.error ?? "Connecting…")) : "Off")
                             if let h = r.heard {
                                 LabeledContent("Requests from away", value: "\(h) heard · \(r.served ?? 0) answered")
                                 if (r.badKey ?? 0) > 0 { LabeledContent("Wrong key", value: "\(r.badKey!) (tap Pair again at home)") }

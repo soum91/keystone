@@ -10,12 +10,23 @@
 
 namespace relay {
 
-static const char *BROKER = "broker.emqx.io";
+// Two free public brokers. The bridge uses one at a time and moves to the other after two failed
+// connects or a dropped connection; Keystone asks through both at once, so it finds the bridge on either.
+static const char *BROKERS[] = {"broker.emqx.io", "broker.hivemq.com"};
+static const char *BROKER_NAMES[] = {"EMQX", "HiveMQ"};
 static const int BROKER_PORT = 1883;
-static const char *BROKER_WSS = "wss://broker.emqx.io:8084/mqtt";
+static const char *BROKER_WSS = "wss://broker.emqx.io:8084/mqtt";   // what older Keystone builds use
+static int bi = 0;            // which broker
+static int fails = 0;         // connect failures on it in a row
+static bool wasUp = false;    // to notice a dropped connection
+
 
 static WiFiClient net;
 static PubSubClient mq(net);
+static void nextBroker() {
+  bi ^= 1; fails = 0;
+  mq.setServer(BROKERS[bi], BROKER_PORT);
+}
 static bool on = true;
 static String id;            // 16 hex, random per bridge
 static uint8_t key[32];
@@ -154,6 +165,7 @@ static void handle(const String &sealed) {
 // persistent session (fixed client id, clean session off, QoS 1), so a request sent while the relay is
 // reconnecting waits at the broker and arrives a moment later instead of being lost.
 static void letGo() {
+  wasUp = false;   // stepping aside on purpose is not the broker's fault
   if (mq.connected()) mq.disconnect();
   net.stop();
   if (relayHolding) { mq.setBufferSize(16); relayHolding = false; }   // hand the 5 KB buffer back
@@ -168,16 +180,18 @@ static void poll() {
   }
   if (!mq.connected()) {
     connected = false;
+    if (wasUp) { wasUp = false; lastError = String(BROKER_NAMES[bi]) + " dropped the connection (state " + String(mq.state()) + ")"; nextBroker(); }
     if (lastTry && millis() - lastTry < 10000UL) return;
     lastTry = millis();
     if (ESP.getMaxAllocHeap() < 16000 || ESP.getFreeHeap() < 20000) { lastError = "low memory"; return; }   // the 5 KB buffer plus the socket has to fit with room to spare
     String cid = "ks-" + id;   // fixed, so the broker keeps this bridge's session and queued requests
     if (!relayHolding) { if (!mq.setBufferSize(5120)) { lastError = "low memory"; return; } relayHolding = true; }
     if (mq.connect(cid.c_str(), nullptr, nullptr, nullptr, 0, false, nullptr, false)) {
-      connected = true;
+      connected = true; wasUp = true; fails = 0;
       lastError = mq.subscribe(tReq.c_str(), 1) ? "" : "couldn't subscribe to its channel";
     } else {
-      lastError = "broker state " + String(mq.state());
+      lastError = String(BROKER_NAMES[bi]) + ": broker state " + String(mq.state());
+      if (++fails >= 2) nextBroker();
     }
     return;
   }
@@ -197,7 +211,7 @@ static void begin() {
   if (id.length() != 16 || keyHex.length() != 64) makeIdentity();
   else unhex(keyHex, key, 32);
   topics();
-  mq.setServer(BROKER, BROKER_PORT);
+  mq.setServer(BROKERS[bi], BROKER_PORT);
   mq.setCallback(onMessage);
   mq.setBufferSize(16);   // the real buffer is taken when connecting
   relayLetGo = [] { letGo(); lastTry = 0; };
@@ -237,6 +251,7 @@ static void info(JsonDocument &d) {
   o["served"] = served;
   o["heard"] = heard; o["badKey"] = badKey; o["stale"] = stale; o["tooBig"] = tooBig;
   o["replyBytes"] = lastReplyBytes; o["replyMs"] = lastReplyMs;
+  o["broker"] = BROKER_NAMES[bi];
   o["id"] = id;   // not secret (the key is): lets a phone notice the bridge was reset and fetch the new key
   if (lastError.length()) o["error"] = lastError;
 }
