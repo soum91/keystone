@@ -441,6 +441,12 @@ static void handleAdmin() {
   if (a == "features") {
     if (!d["ac"].isNull()) { acEnabled = d["ac"]; prefs.putBool("en_ac", acEnabled); }
     if (!d["cam"].isNull()) { camEnabled = d["cam"]; prefs.putBool("en_cam", camEnabled); }
+    for (auto &f : features) {   // the rest only take effect on a restart (Home's accessory list is built at boot)
+      if (d[f.key].isNull()) continue;
+      bool v = d[f.key];
+      prefs.putBool((String("en_") + f.key).c_str(), v);
+      if (v != *f.flag) { logEvent(String(f.key) + (v ? " on" : " off") + ", restarting"); pendingAction = 1; }
+    }
   } else if (a == "restart" || a == "normal") {
     prefs.putInt("crashes", 0);   // a deliberate restart always comes back in normal mode
     pendingAction = 1;

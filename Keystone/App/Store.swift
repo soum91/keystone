@@ -180,14 +180,30 @@ final class Store: ObservableObject {
     func testRelay() async {
         relayTest = "Testing…"
         if !viaRelay { await fetchRelay() }
+        // At home the bridge's own counters (read over Wi-Fi) tell which leg failed.
+        let before = viaRelay ? nil : (try? await BridgeAPI.info(host: link.host, port: link.port))?.remote
         let t0 = Date()
         do {
-            let (code, data) = try await RelayClient.shared.request("GET", "/api/info", headers: ["X-Device-Token": link.token], body: nil, timeout: 12)
+            let (code, data) = try await RelayClient.shared.request("GET", "/api/info?lite=1", headers: ["X-Device-Token": link.token], body: nil, timeout: 15)
             let ok = code == 200 && (try? JSONDecoder().decode(BridgeInfo.self, from: data)) != nil
             relayTest = ok ? String(format: "Works: the bridge answered through the relay in %.1f s.", Date().timeIntervalSince(t0))
                            : "The bridge answered, but with HTTP \(code)."
         } catch {
-            relayTest = "Failed: \(error.localizedDescription)"
+            var why = "Failed: \(error.localizedDescription)"
+            if let b = before, let a = (try? await BridgeAPI.info(host: link.host, port: link.port))?.remote {
+                let heard = (a.heard ?? 0) - (b.heard ?? 0), sent = (a.served ?? 0) - (b.served ?? 0)
+                if (a.heard ?? 0) < (b.heard ?? 0) {
+                    why += " The bridge restarted during the test."
+                } else if heard <= 0 {
+                    why += " The bridge never got the request: the relay didn't pass it on (bridge relay: \(a.connected == true ? "connected" : (a.error ?? "not connected")))."
+                } else if sent <= 0 {
+                    why += " The bridge got the request but couldn't send its answer (\(a.error ?? "no reason given"))."
+                } else {
+                    why += " The bridge got it and answered (\(a.replyBytes ?? 0) bytes in \(a.replyMs ?? 0) ms), but the answer never reached this phone."
+                }
+                NetLog.add("relay test: heard +\(heard), answered +\(sent), reply \(a.replyBytes ?? 0) B / \(a.replyMs ?? 0) ms")
+            }
+            relayTest = why
         }
         await refresh()
     }

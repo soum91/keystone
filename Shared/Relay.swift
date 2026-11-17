@@ -48,6 +48,7 @@ actor RelayClient {
     private var connecting: Task<Void, Error>?
     private var waiting: [String: CheckedContinuation<(Int, Data), Error>] = [:]
     private var connack: CheckedContinuation<Void, Error>?
+    private var suback: CheckedContinuation<Void, Error>?
     private var cfg: RelayConfig?
     private var pinger: Task<Void, Never>?
 
@@ -122,7 +123,17 @@ actor RelayClient {
                 await self.failConnack(RelayError.broker("no answer from the broker"))
             }
         }
-        try await send(Self.subscribe(topic: "keystone/\(c.id)/res", packetID: 1))
+        // Wait for SUBACK: a request sent before the subscription is live can have its answer dropped.
+        let sub = Self.subscribe(topic: "keystone/\(c.id)/res", packetID: 1)
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            suback = cont
+            Task {
+                do { try await self.send(sub) } catch { await self.failSuback(error) }
+                try? await Task.sleep(nanoseconds: 6_000_000_000)
+                await self.failSuback(RelayError.broker("the broker didn't confirm the answer channel"))
+            }
+        }
+        NetLog.add("relay: connected and listening")
         ready = true
         pinger = Task { [weak self] in
             while !Task.isCancelled {
@@ -135,6 +146,11 @@ actor RelayClient {
     private func failConnack(_ e: Error) {
         connack?.resume(throwing: e)
         connack = nil
+    }
+
+    private func failSuback(_ e: Error) {
+        suback?.resume(throwing: e)
+        suback = nil
     }
 
     private func fail(_ rid: String, _ e: Error) {
@@ -172,6 +188,7 @@ actor RelayClient {
         ready = false
         ws = nil
         failConnack(e)
+        failSuback(e)
         for (k, c) in waiting { c.resume(throwing: RelayError.broker(e.localizedDescription)); waiting[k] = nil }
     }
 
@@ -186,6 +203,10 @@ actor RelayClient {
                 connack = nil
             case 3:   // PUBLISH
                 handlePublish(type, body)
+            case 9:   // SUBACK (0x80 = refused)
+                if body.count >= 3, body[body.startIndex + 2] == 0x80 { suback?.resume(throwing: RelayError.broker("the broker refused the answer channel")) }
+                else { suback?.resume() }
+                suback = nil
             default:
                 break
             }
@@ -203,10 +224,11 @@ actor RelayClient {
               let box = try? AES.GCM.SealedBox(combined: raw),
               let plain = try? AES.GCM.open(box, using: key),
               let obj = try? JSONSerialization.jsonObject(with: plain) as? [String: Any],
-              let rid = obj["i"] as? String else { return }
+              let rid = obj["i"] as? String else { NetLog.add("relay: got \(b.count) bytes I couldn't read (wrong key?)"); return }
         let code = (obj["c"] as? Int) ?? 0
         let bodyData = Data(((obj["b"] as? String) ?? "").utf8)
-        waiting.removeValue(forKey: rid)?.resume(returning: (code, bodyData))
+        if let w = waiting.removeValue(forKey: rid) { w.resume(returning: (code, bodyData)) }
+        else { NetLog.add("relay: answer \(rid.prefix(8)) arrived after the phone gave up") }
     }
 
     // MARK: MQTT packets

@@ -715,6 +715,7 @@ static void handleDevConfig() {
     PurCfg p;
     if (!parsePurifier(body, p)) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
     writeFile("/exhale.json", body);
+    if (!enPur) p.configured = false;   // switched off in Keystone: saved, not used
     restart = purSignature(p) != purHomeSig;
     pur = p;
     ps.lastPoll = 0;
@@ -723,6 +724,7 @@ static void handleDevConfig() {
     IRCfg c;
     if (!parseIR(body, c)) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
     writeFile("/redshift.json", body);
+    if (!enIR) c.remotes.clear();
     restart = irSignature(c) != irHomeSig;
     ir = c;
   }

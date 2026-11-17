@@ -366,6 +366,7 @@ static void handleApi() {
   c.configured = c.id.length() && c.key.length() == 16 && !c.outlets.empty();
   if (!c.configured) return reply(400, "{\"error\":\"needs the device ID, the 16-character local key and at least one outlet\"}");
   writeFile("/strip.json", cfgJson(c));
+  if (!enStrip) c.configured = false;   // switched off in Keystone: saved, not used
   bool restart = signature(c) != homeSig;
   xSemaphoreTake(lock, portMAX_DELAY);
   cfg = c;

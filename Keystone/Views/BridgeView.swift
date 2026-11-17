@@ -58,6 +58,9 @@ struct BridgeView: View {
                                 LabeledContent("Requests from away", value: "\(h) heard · \(r.served ?? 0) answered")
                                 if (r.badKey ?? 0) > 0 { LabeledContent("Wrong key", value: "\(r.badKey!) (tap Pair again at home)") }
                                 if (r.tooBig ?? 0) > 0 { LabeledContent("Replies too big", value: "\(r.tooBig!)") }
+                                if let b = r.replyBytes, b > 0 {
+                                    LabeledContent("Last answer", value: "\(b / 1024 > 0 ? "\(b / 1024) KB" : "\(b) bytes") in \(r.replyMs ?? 0) ms")
+                                }
                             }
                             if let bid = r.id {
                                 let pid = store.relay?.id ?? "none"
@@ -103,6 +106,21 @@ struct BridgeView: View {
                                 set: { v in Task { await store.admin("features", ["cam": v], done: v ? "Camera on." : "Camera off: its memory is free.") } }))
                         } header: { Text("Cloud devices on the bridge") } footer: {
                             Text("Each one needs about 50 KB of the bridge's memory while it talks to its cloud. Turn off what you don't need right now so the rest (and remote access) run smoothly. Their apps still work on their own.")
+                        }
+
+                        if f.lights != nil {
+                            Section {
+                                deviceToggle("Lights and switches (Afterglow)", "lights", f.lights)
+                                deviceToggle("TV (Afterglow)", "tv", f.tv)
+                                deviceToggle("Sound bar (Subwave)", "bar", f.bar)
+                                deviceToggle("Air purifier (Exhale)", "purifier", f.purifier)
+                                deviceToggle("IR remotes (Redshift)", "ir", f.ir)
+                                deviceToggle("Power strip", "strip", f.strip)
+                                deviceToggle("Router", "router", f.router)
+                                deviceToggle("Govee thermometer (Bluetooth)", "govee", f.govee)
+                            } header: { Text("Devices on the bridge") } footer: {
+                                Text("Off: the bridge stops talking to it and drops it from Apple Home, so its memory is free. Its settings are kept, and turning it back on brings it back. Each change restarts the bridge (about 20 s). Apple Home forgets the tile's room and automations while it's off. The device's own app keeps working.")
+                            }
                         }
                     }
 
@@ -242,6 +260,12 @@ struct BridgeView: View {
         case .forget: return "Forget the bridge in Keystone? The bridge itself keeps working."
         case nil: return ""
         }
+    }
+
+    private func deviceToggle(_ title: String, _ key: String, _ value: Bool?) -> some View {
+        Toggle(title, isOn: Binding(get: { value ?? true }, set: { v in
+            Task { await store.admin("features", [key: v], done: v ? "\(title) on. Restarting the bridge." : "\(title) off. Restarting the bridge.") }
+        }))
     }
 
     private func pairingRow(_ name: String, _ what: String, _ paired: Bool?, app: String) -> some View {

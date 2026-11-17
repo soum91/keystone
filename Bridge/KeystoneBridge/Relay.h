@@ -29,6 +29,7 @@ static uint32_t lastTry = 0;
 static String lastError;
 static uint32_t served = 0;
 static uint32_t heard = 0, badKey = 0, stale = 0, tooBig = 0;   // diagnostics for Keystone
+static uint32_t lastReplyBytes = 0, lastReplyMs = 0;            // the last answer: size, and time from heard to sent
 
 static String hex(const uint8_t *b, size_t n) {
   String s;
@@ -106,6 +107,7 @@ static void onMessage(char *, byte *payload, unsigned int len) {
 // Replays one request against the local web API.
 static void handle(const String &sealed) {
   String plain;
+  uint32_t t0 = millis();
   heard++;
   if (!open(sealed, plain)) { badKey++; lastError = "a request with the wrong key (phone has an old key?)"; return; }
   JsonDocument d;
@@ -141,7 +143,8 @@ static void handle(const String &sealed) {
   String sealedOut = seal(out);
   size_t need = sealedOut.length() + tRes.length() + 16;
   bool grew = need > mq.getBufferSize() && mq.setBufferSize(need + 64);   // a big status: grow just for this reply
-  if (mq.publish(tRes.c_str(), sealedOut.c_str())) { served++; if (lastError.startsWith("a reply")) lastError = ""; }
+  lastReplyBytes = sealedOut.length();
+  if (mq.publish(tRes.c_str(), sealedOut.c_str())) { served++; lastReplyMs = millis() - t0; if (lastError.startsWith("a reply")) lastError = ""; }
   else { tooBig++; lastError = "a reply too big to send (" + String(sealedOut.length()) + " bytes)"; }
   if (grew) mq.setBufferSize(5120);
 }
@@ -233,6 +236,7 @@ static void info(JsonDocument &d) {
   o["connected"] = (bool)connected;
   o["served"] = served;
   o["heard"] = heard; o["badKey"] = badKey; o["stale"] = stale; o["tooBig"] = tooBig;
+  o["replyBytes"] = lastReplyBytes; o["replyMs"] = lastReplyMs;
   o["id"] = id;   // not secret (the key is): lets a phone notice the bridge was reset and fetch the new key
   if (lastError.length()) o["error"] = lastError;
 }

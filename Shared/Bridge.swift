@@ -86,12 +86,18 @@ struct BridgeInfo: Codable, Equatable {
     var heapBlock: Int?
     struct Boot: Codable, Equatable { var reason: String?; var crashes: Int?; var safeMode: Bool?; var minHeap: Int?; var during: String?; var heapStart: Int?; var heapAfterHome: Int?; var heapEntry: Int?; var btFreed: Int? }
     struct Remote: Codable, Equatable { var on: Bool?; var connected: Bool?; var served: Int?; var error: String?; var id: String?
-        var heard: Int?; var badKey: Int?; var stale: Int?; var tooBig: Int? }
+        var heard: Int?; var badKey: Int?; var stale: Int?; var tooBig: Int?
+        var replyBytes: Int?; var replyMs: Int? }
     var router: RouterLinkInfo?
     struct RouterLinkInfo: Codable, Equatable { var configured: Bool?; var follow: Bool?; var host: String?; var ok: Bool?; var ago: Int?; var error: String? }
     var auth: Bool?
     var features: Features?
-    struct Features: Codable, Equatable { var ac: Bool?; var cam: Bool? }
+    struct Features: Codable, Equatable {
+        var ac: Bool?; var cam: Bool?
+        // Firmware 1.10.12+: any device can be switched off (restarts the bridge).
+        var lights: Bool?; var tv: Bool?; var bar: Bool?; var purifier: Bool?; var ir: Bool?
+        var strip: Bool?; var router: Bool?; var govee: Bool?
+    }
 
     var displayName: String { name ?? "Keystone Bridge" }
     var lightsOn: Int { (lights ?? []).filter { $0.on == true }.count }

@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.10.11"
+#define FW_VERSION "1.10.12"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -68,6 +68,13 @@ static volatile bool relayHolding = false;
 static void (*relayLetGo)() = nullptr;
 static volatile uint32_t webBeat = 0;
 
+// Devices switched off in Keystone (prefs "en_<key>"). Off = not in Apple Home, never polled, its memory
+// stays free. Read once at boot (turning one on or off restarts the bridge) because Home's accessory list
+// is built at boot. The AC and camera switch live, they only gate cloud calls.
+static bool enLights = true, enTV = true, enBar = true, enPur = true, enIR = true, enStrip = true, enRouter = true, enGovee = true;
+struct Feature { const char *key; bool *flag; };
+static Feature features[] = {{"lights", &enLights}, {"tv", &enTV}, {"bar", &enBar}, {"purifier", &enPur},
+                             {"ir", &enIR}, {"strip", &enStrip}, {"router", &enRouter}, {"govee", &enGovee}};
 static bool acEnabled = true, camEnabled = true;   // switched in Keystone: off = no cloud calls, more free memory   // set by Relay.h: drop the relay and its buffer right now
 #define API_PORT 8080
 #define POLL_MS 15000UL          // per light when reachable
@@ -951,6 +958,18 @@ namespace control { static void handle(); }
 #include "Router.h"
 #include "Control.h"
 
+// Drop switched-off devices from memory before Home's accessories are built (their saved settings stay).
+static void applyFeatures() {
+  for (auto &f : features) *f.flag = prefs.getBool((String("en_") + f.key).c_str(), true);
+  if (!enLights) lights.clear();
+  if (!enTV) { tvHost = ""; bar.tvIp = ""; tvInputs.clear(); }
+  if (!enBar) bar.configured = false;
+  if (!enPur) pur.configured = false;
+  if (!enIR) ir.remotes.clear();
+  if (!enStrip) strip::cfg.configured = false;
+  if (!enRouter) router::host = "";
+}
+
 // ---------------------------------------------------------------------------------------------
 // Talking to lights
 
@@ -1086,7 +1105,8 @@ static void handleInfo() {
   relay::info(d);
   router::info(d);
   d["auth"] = screen::adminOK();
-  d["features"]["ac"] = acEnabled; d["features"]["cam"] = camEnabled;   // does the bridge know the phone asking? (false after a reset)
+  d["features"]["ac"] = acEnabled; d["features"]["cam"] = camEnabled;
+  for (auto &f : features) d["features"][f.key] = *f.flag;   // does the bridge know the phone asking? (false after a reset)
 #ifdef HAS_GOVEE
   govee::info(d);
 #endif
@@ -1122,6 +1142,7 @@ static void handleConfig() {
   std::vector<Light> fresh;
   if (!parseConfig(body, fresh, false)) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
   prefs.putBytes("cfg", body.c_str(), body.length());
+  if (!enLights) fresh.clear();   // switched off in Keystone: saved for later, not used
 
   String oldSig = lightSignature();
   String newSig;
@@ -1136,7 +1157,7 @@ static void handleConfig() {
     String n;
     std::vector<TVInput> ins;
     parseTVExtras(body, n, ins);
-    if (tvSignature(host, n, ins) != tvHomeSig) restart = true;
+    if (enTV && tvSignature(host, n, ins) != tvHomeSig) restart = true;
   }
   if (!restart) {
     // Same accessories: update addresses, keys and rules in place.
@@ -1205,6 +1226,7 @@ static void handleBarConfig() {
   prefs.putBytes("barcfg", body.c_str(), body.length());
   lastBarPoll = 0;
   // Home only learns about new or renamed accessories on a restart.
+  if (!enBar) bar.configured = false;   // switched off in Keystone: saved, not used
   bool restart = bar.configured != barInHome || (barInHome && bar.name != barHomeName);
   barEvent(restart ? "set up, restarting for Home" : "config updated");
   server.send(200, "application/json", String("{\"ok\":true,\"restart\":") + (restart ? "true" : "false") + "}");
@@ -1312,7 +1334,7 @@ static void worker(void *) {
     }
 
 #ifdef HAS_GOVEE
-    mark("bluetooth"); govee::tick();
+    mark("bluetooth"); if (enGovee) govee::tick();
 #endif
     mark("ac"); ac::step();
     mark("camera"); cam::step();
@@ -1426,8 +1448,9 @@ void setup() {
   cam::load();
   relay::begin();
   router::begin();
+  applyFeatures();
 #ifdef HAS_GOVEE
-  if (!setupOnly) govee::begin();
+  if (!setupOnly && enGovee) govee::begin();
 #endif
 
   homeSpan.enableAutoStartAP();
@@ -1461,11 +1484,13 @@ void setup() {
       if (lights[i].relay) new AGRelay(i); else new AGLight(i);
   }
 
+  if (enTV && enLights) {
   new SpanAccessory(65000);
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Name("Lights Follow TV");
     new FollowSwitch();
+  }
 
   if (bar.configured) {
     barInHome = true;
@@ -1497,7 +1522,7 @@ void setup() {
     new screen::HomeSwitch();
   cam::addAccessory(used);
 #ifdef HAS_GOVEE
-  govee::addAccessory(used);
+  if (enGovee) govee::addAccessory(used);
   new SpanUserCommand('G', "- forget the Govee thermometer and pick again", govee::forget);
 #endif
 
