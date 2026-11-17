@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.46",
+          "buildVersion": "46",
+          "date": "2026-11-17T19:46:41Z",
+          "localizedDescription": "- Bridge 1.10.12: switch off any device (lights, TV, sound bar, purifier, IR, strip, router, Govee); relay diagnostics (f5be051)\n- docs: record factual changes for firmware-build-145 [skip ci] (9e5bb9f)\n- Bridge 1.10.11: IR remotes show only their power switch in Apple Home (buttons stay in the apps) to save RAM (ebf4363)\n- docs: record factual changes for firmware-build-144 [skip ci] (f377db5)\n- docs: record factual changes for build-45 [skip ci] (576a4d0)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-46/Keystone-1.0.0-build-46.ipa",
+          "size": 1803460,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.45",
           "buildVersion": "45",
           "date": "2026-11-15T07:57:56Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-22/Keystone-1.0.0-build-22.ipa",
           "size": 933031,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.21",
-          "buildVersion": "21",
-          "date": "2026-10-29T16:36:09Z",
-          "localizedDescription": "- Smart: say what the number is (2457464)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-21/Keystone-1.0.0-build-21.ipa",
-          "size": 932563,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.45",
-      "versionDate": "2026-11-15T07:57:56Z",
-      "versionDescription": "- Bridge 1.10.10: release the classic-Bluetooth RAM reserve at boot, relay waits for 16 KB block; Keystone shows Free before Apple Home and Freed at boot (a55e4ea)\n- docs: record factual changes for firmware-build-143 [skip ci] (835c556)\n- Bridge 1.10.9: sound bar secure link waits for memory instead of crashing the bridge (crash during bar poll at 7 KB free) (d5922e8)\n- docs: record factual changes for firmware-build-142 [skip ci] (755d571)\n- Bridge 1.10.8: plain relays and plugs get a Switch tile in Apple Home (kind=switch from Afterglow) (f41b032)\n- docs: record factual changes for firmware-build-141 [skip ci] (2a02cc0)\n- docs: record factual changes for build-44 [skip ci] (e2b14b7)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-45/Keystone-1.0.0-build-45.ipa",
-      "size": 1784235,
+      "version": "1.0.0.46",
+      "versionDate": "2026-11-17T19:46:41Z",
+      "versionDescription": "- Bridge 1.10.12: switch off any device (lights, TV, sound bar, purifier, IR, strip, router, Govee); relay diagnostics (f5be051)\n- docs: record factual changes for firmware-build-145 [skip ci] (9e5bb9f)\n- Bridge 1.10.11: IR remotes show only their power switch in Apple Home (buttons stay in the apps) to save RAM (ebf4363)\n- docs: record factual changes for firmware-build-144 [skip ci] (f377db5)\n- docs: record factual changes for build-45 [skip ci] (576a4d0)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-46/Keystone-1.0.0-build-46.ipa",
+      "size": 1803460,
       "appPermissions": {}
     }
   ],
