@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-47] - 2026-11-17
+
+## Verified changes since build-46
+
+- Relay: second broker (HiveMQ) as fallback; bridge 1.10.13 switches brokers on failure, Keystone asks through both ([`b52bd874`](https://github.com/soum91/keystone/commit/b52bd8748b84bb9449f49a2268e37a32a33223da); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, `Keystone/Views/BridgeView.swift`, and 2 more)
+- CI: pin ESP32 Arduino core to 3.3.12 (3.3.13 overflows IRAM by 1664 bytes) ([`da8bf239`](https://github.com/soum91/keystone/commit/da8bf23901867902cc7e71155671a7d79263b025); `.github/workflows/bridge.yml`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-46...build-47)
+
 ## [firmware-build-148] - 2026-11-17
 
 ## Verified changes since firmware-build-147
