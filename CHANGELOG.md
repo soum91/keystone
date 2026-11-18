@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-51] - 2026-11-18
+
+## Verified changes since build-50
+
+- Keystone: Put everything in Apple Home button (all Smart Life lights, switches, plugs and the purifier) ([`9be3c3d4`](https://github.com/soum91/keystone/commit/9be3c3d42f8c5d76d8485fc755b266f87091f4c7); `Keystone/Tuya/HomeDevices.swift`, `Keystone/Views/HomeDevicesView.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-50...build-51)
+
 ## [build-50] - 2026-11-18
 
 ## Verified changes since build-49
