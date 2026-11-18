@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-153] - 2026-11-18
+
+## Verified changes since firmware-build-152
+
+- Bridge 1.11.2: settings work through the relay too (screen off now sticks); Keystone checks the screen change took ([`bfd653cf`](https://github.com/soum91/keystone/commit/bfd653cfd46bd3b46336cb54e5f50346891bd609); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, `Bridge/KeystoneBridge/Screen.h`, and 3 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-152...firmware-build-153)
+
 ## [build-53] - 2026-11-18
 
 ## Verified changes since build-52
