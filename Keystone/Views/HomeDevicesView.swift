@@ -52,16 +52,25 @@ struct HomeDevicesView: View {
 
     @ViewBuilder private var deviceSections: some View {
         let lights = model.devices.filter(\.isLight)
-        let switches = model.devices.filter { !$0.isLight }
+        let switches = model.devices.filter(\.isSwitch)
+        let purifiers = model.devices.filter(\.isPurifier)
         if model.devices.isEmpty && model.busy == nil {
             Section { Text("No lights, switches or plugs on this Smart Life account.").foregroundStyle(.secondary) }
         }
         if !lights.isEmpty { Section("Lights") { ForEach(lights) { row($0) } } }
         if !switches.isEmpty { Section("Switches and plugs") { ForEach(switches) { row($0) } } }
+        if !purifiers.isEmpty {
+            Section {
+                ForEach(purifiers) { row($0) }
+            } header: { Text("Air purifier") } footer: {
+                Text("Power, auto mode, fan speed, child lock, PM2.5 and filter life, where the purifier has them. The bridge has room for one purifier; this replaces the one Exhale sent.")
+            }
+        }
     }
 
     private func row(_ d: HomeDevice) -> some View {
-        let onBridge = store.info?.lights?.contains { $0.id == d.id } == true
+        let onBridge = d.isPurifier ? (store.info?.purifier?.configured == true && store.info?.purifier?.name == d.name)
+                                    : store.info?.lights?.contains { $0.id == d.id } == true
         return VStack(alignment: .leading, spacing: 4) {
             Toggle(isOn: Binding(get: { d.inHome }, set: { v in
                 Task { working = d.id; store.show(await model.setInHome(d.id, v, link: store.link)); working = nil; await store.refresh() }
@@ -80,7 +89,7 @@ struct HomeDevicesView: View {
                 Text(onBridge ? "In Apple Home · \(d.host ?? "")" : "Sent · \(d.host ?? "") (the bridge picks it up after restarting)")
                     .font(.caption).foregroundStyle(.secondary)
             } else if onBridge {
-                Text("Already in Apple Home through Afterglow").font(.caption).foregroundStyle(.secondary)
+                Text("Already in Apple Home through \(d.isPurifier ? "Exhale" : "Afterglow")").font(.caption).foregroundStyle(.secondary)
             }
         }
     }

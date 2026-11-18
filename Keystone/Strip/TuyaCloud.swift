@@ -62,6 +62,8 @@ struct TuyaRange: Codable, Hashable {
     var min: Double?
     var max: Double?
     var isFunction = false
+    var scale: Int? = nil
+    var values: [String]? = nil   // enum choices
 }
 
 /// One outlet found from the cloud's data point names (switch_1, switch_usb1, ...).
@@ -206,7 +208,9 @@ actor TuyaClient {
                    let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] { values = obj }
                 else if let obj = item["values"] as? [String: Any] { values = obj }
                 map[code] = TuyaRange(min: (values["min"] as? NSNumber)?.doubleValue, max: (values["max"] as? NSNumber)?.doubleValue,
-                                      isFunction: key == "functions" || map[code]?.isFunction == true)
+                                      isFunction: key == "functions" || map[code]?.isFunction == true,
+                                      scale: (values["scale"] as? NSNumber)?.intValue,
+                                      values: (values["range"] as? [Any])?.map { "\($0)" })
             }
         }
         return map

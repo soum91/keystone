@@ -44,14 +44,16 @@ struct HomeDevice: Codable, Identifiable, Hashable {
     var colourCode: String? { first(["colour_data_v2", "colour_data", "colour_data_hsv"]) }
 
     var isLight: Bool {
-        Self.lightCategories.contains(category) || ["switch_led", "bright_value_v2", "bright_value", "colour_data_v2"].contains(where: has)
+        !isPurifier && (Self.lightCategories.contains(category) || ["switch_led", "bright_value_v2", "bright_value", "colour_data_v2"].contains(where: has))
     }
+    var isPurifier: Bool { category == "kj" }
     var isSwitch: Bool {
-        !isLight && category != "pc" && (Self.switchCategories.contains(category) || statusCodes.contains { $0 == "switch" || $0.hasPrefix("switch_") })
+        !isLight && !isPurifier && category != "pc" && (Self.switchCategories.contains(category) || statusCodes.contains { $0 == "switch" || $0.hasPrefix("switch_") })
     }
-    var supported: Bool { isLight || isSwitch }
+    var supported: Bool { isLight || isSwitch || isPurifier }
     var kind: String {
         if isLight { return "Light" }
+        if isPurifier { return "Air purifier" }
         switch category {
         case "cz": return "Plug"
         case "kg", "tdq", "kgq": return "Wall switch"
@@ -80,7 +82,7 @@ struct HomeDevice: Codable, Identifiable, Hashable {
 
     /// Local data point id -> cloud code: from the cloud when it told us, else the standard layouts.
     func codeMap() -> [String: String] {
-        if !dpMap.isEmpty { return dpMap }
+        if !dpMap.isEmpty || isPurifier { return dpMap }
         if isSwitch, let p = powerCode { return ["1": p] }   // plain switches put on/off on data point 1
         return brightCode == "bright_value_v2" || has("switch_led") && !has("bright_value") ? Self.v2Map : Self.v1Map
     }
@@ -88,17 +90,55 @@ struct HomeDevice: Codable, Identifiable, Hashable {
 
     var hasLocal: Bool { !(host ?? "").isEmpty && !(localKey ?? "").isEmpty }
 
+    // MARK: Air purifier (same layout Exhale sends)
+
+    private var purPower: String? { first(["switch", "switch_1", "power", "switch_power"]) }
+    private var isAC3250: Bool { productName.uppercased().contains("AC3250") }
+
+    /// The bridge's purifier entry, or nil if it can't go yet.
+    func purifierEntry() -> [String: Any]? {
+        guard isPurifier, hasLocal, let key = localKey, key.count == 16, let pc = purPower, let sw = dpID(for: pc) else { return nil }
+        var o: [String: Any] = ["id": id, "name": name, "key": key, "ip": host ?? "", "ver": version ?? 3.3, "sw": sw]
+        if let c = first(["pm25", "pm25_value", "pm2_5", "pm_25", "pm25_val"]), let dp = dpID(for: c) {
+            o["pm"] = dp
+            o["pmDiv"] = pow(10, Double(ranges[c]?.scale ?? 0))
+        }
+        if let m = first(["mode", "work_mode", "fan_mode", "manual_mode"]), let dp = dpID(for: m), let r = ranges[m]?.values,
+           let auto = r.first(where: { ["auto", "smart"].contains($0.lowercased()) }),
+           let manual = r.first(where: { $0.lowercased() == "manual" }) {
+            o["mode"] = dp; o["modeAuto"] = auto; o["modeManual"] = manual
+        }
+        if isAC3250 {
+            // GermGuardian AC3250: data point 4 is fan speed as text "1"..."10", 110 is the display (not in the cloud).
+            o["fan"] = "4"; o["fanValues"] = (1...10).map { String($0) }
+            o["display"] = "110"; o["displayInverted"] = false; o["keepDisplayOff"] = false
+        } else if let f = first(["speed", "fan_speed_enum", "fan_speed", "fan_level"]), let dp = dpID(for: f) {
+            if let vals = ranges[f]?.values, !vals.isEmpty { o["fan"] = dp; o["fanValues"] = vals }
+            else if let lo = ranges[f]?.min, let hi = ranges[f]?.max, hi > lo, hi - lo <= 20 {
+                o["fan"] = dp; o["fanValues"] = Array(Int(lo)...Int(hi))
+            }
+        }
+        if let c = first(["lock", "child_lock"]), let dp = dpID(for: c) { o["lock"] = dp }
+        if let c = first(["filter", "filter_life", "filter_days", "filter_left", "filter_life_percent"]), let dp = dpID(for: c) {
+            o["filter"] = dp; o["filterMax"] = Int(ranges[c]?.max ?? 100)
+        }
+        return o
+    }
+
     /// Why it can't go to the bridge, or nil.
     var problem: String? {
+        if isPurifier, !(localKey ?? "").isEmpty, purPower.flatMap({ dpID(for: $0) }) == nil, !dpMap.isEmpty {
+            return "Keystone can't find its power control."
+        }
         if (localKey ?? "").isEmpty { return "Tuya gives no local key for it, so only the cloud can control it (common for Matter devices: add those to Apple Home with their Matter code)." }
-        if powerCode == nil || dpID(for: powerCode!) == nil { return "Keystone can't find its on/off control." }
+        if !isPurifier, powerCode == nil || dpID(for: powerCode!) == nil { return "Keystone can't find its on/off control." }
         if (host ?? "").isEmpty { return "Not found on your Wi-Fi yet: it never answered Tuya's local protocol (port 6668). Matter-only devices don't." }
         return nil
     }
 
     /// The bridge's light entry (Afterglow's format), or nil if it can't go yet.
     func bridgeEntry() -> [String: Any]? {
-        guard hasLocal, let pc = powerCode, let sw = dpID(for: pc) else { return nil }
+        guard !isPurifier, hasLocal, let pc = powerCode, let sw = dpID(for: pc) else { return nil }
         var d: [String: Any] = ["id": id, "name": name, "key": localKey ?? "", "ip": host ?? "", "ver": version ?? 3.3, "sw": sw]
         if let c = modeCode, let dp = dpID(for: c) { d["mode"] = dp }
         if let c = brightCode, let dp = dpID(for: c) {
@@ -227,9 +267,13 @@ final class HomeDevices: ObservableObject {
     func setInHome(_ id: String, _ on: Bool, link: BridgeLink) async -> String {
         guard let i = devices.firstIndex(where: { $0.id == id }) else { return "" }
         devices[i].inHome = on
+        if on && devices[i].isPurifier {   // the bridge has room for one purifier
+            for j in devices.indices where j != i && devices[j].isPurifier { devices[j].inHome = false }
+        }
         save()
         if on && !devices[i].hasLocal { await find([id]) }
-        let r = await push(link)
+        let r: String
+        if devices[i].isPurifier { r = await pushPurifier(link) } else { r = await push(link) }
         if on, let d = devices.first(where: { $0.id == id }), let why = d.problem {
             return "\(d.name) can't go to Apple Home yet: \(why)"
         }
@@ -244,6 +288,21 @@ final class HomeDevices: ObservableObject {
             let r = try await BridgeAPI.post("/api/ks/lights", ["lights": entries], link, timeout: 10)
             if (r["restart"] as? Bool) == true { return "Sent. The bridge is restarting to update Apple Home (about 20 s)." }
             return "Sent to the bridge."
+        } catch {
+            return "Couldn't send to the bridge (it needs firmware 1.11 or newer): \(error.localizedDescription)"
+        }
+    }
+}
+
+extension HomeDevices {
+    /// Sends the chosen purifier, or removes it from Home when none is chosen (that also removes one Exhale sent).
+    @discardableResult
+    func pushPurifier(_ link: BridgeLink) async -> String {
+        var body: [String: Any] = ["utcOffset": TimeZone.current.secondsFromGMT()]
+        if let p = devices.first(where: { $0.isPurifier && $0.inHome }), let e = p.purifierEntry() { body["purifier"] = e }
+        do {
+            let r = try await BridgeAPI.post("/api/dev/config?app=exhale", body, link, timeout: 10)
+            return (r["restart"] as? Bool) == true ? "Sent. The bridge is restarting to update Apple Home (about 20 s)." : "Sent to the bridge."
         } catch {
             return "Couldn't send to the bridge (it needs firmware 1.11 or newer): \(error.localizedDescription)"
         }
