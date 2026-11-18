@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.10.13"
+#define FW_VERSION "1.11.0"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -91,6 +91,7 @@ struct Light {
   // From the app
   String id, name, key, ip;
   float ver = 3.3;
+  bool ks = false;   // added by Keystone (not Afterglow)
   String sw, mode, bri, ct, col;
   int briMin = 10, briMax = 1000, ctMin = 0, ctMax = 1000;
   bool colV1 = false;
@@ -530,6 +531,29 @@ static String loadStoredConfig() {
   std::vector<char> b(n + 1, 0);
   prefs.getBytes("cfg", b.data(), n);
   return String(b.data());
+}
+
+// Lights and switches Keystone added straight from Smart Life (prefs "kscfg", same JSON as Afterglow's
+// "lights" list). They sit alongside Afterglow's; when both have the same device, Keystone's wins.
+static String loadKsConfig() {
+  size_t n = prefs.getBytesLength("kscfg");
+  if (!n) return "";
+  std::vector<char> b(n + 1, 0);
+  prefs.getBytes("kscfg", b.data(), n);
+  return String(b.data());
+}
+
+static void mergeKsLights(std::vector<Light> &out) {
+  String ks = loadKsConfig();
+  if (!ks.length()) return;
+  std::vector<Light> mine;
+  if (!parseConfig(ks, mine, false)) return;
+  for (auto &k : mine) {
+    k.ks = true;
+    bool replaced = false;
+    for (auto &L : out) if (L.id == k.id) { L = k; replaced = true; break; }
+    if (!replaced) out.push_back(k);
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1073,6 +1097,8 @@ static void handleInfo() {
     o["name"] = L.name;
     if (L.known) { o["on"] = L.on; o["bri"] = L.pct; }
     o["ok"] = L.ok;
+    if (L.ks) o["ks"] = true;
+    if (!L.ip.length()) o["noIP"] = true;
   }
   bool lite = reqLite();
   if (!lite) {
@@ -1142,6 +1168,7 @@ static void handleConfig() {
   std::vector<Light> fresh;
   if (!parseConfig(body, fresh, false)) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
   prefs.putBytes("cfg", body.c_str(), body.length());
+  mergeKsLights(fresh);
   if (!enLights) fresh.clear();   // switched off in Keystone: saved for later, not used
 
   String oldSig = lightSignature();
@@ -1184,6 +1211,37 @@ static void handleConfig() {
     delay(800);
     ESP.restart();
   }
+}
+
+// Keystone's own list of lights and switches: {"lights":[...]} in Afterglow's format. Replaces the
+// previous Keystone list; Afterglow's lights stay. Restarts only if Home's accessory list changes.
+static void handleKsLights() {
+  if (!adminOK()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+  String body = server.arg("plain");
+  std::vector<Light> check;
+  if (!parseConfig(body, check, false)) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
+  if (check.empty()) prefs.remove("kscfg"); else prefs.putBytes("kscfg", body.c_str(), body.length());
+  std::vector<Light> fresh;
+  String cfg = loadStoredConfig();
+  if (cfg.length()) parseConfig(cfg, fresh, false);
+  mergeKsLights(fresh);
+  if (!enLights) fresh.clear();
+  String newSig;
+  for (auto &L : fresh) newSig += L.id + "|" + L.name + "|" + L.sw + L.mode + L.bri + L.ct + L.col + (L.relay ? "r" : "") + ";";
+  bool restart = lightSignature() != newSig;
+  if (!restart) {
+    xSemaphoreTake(stateLock, portMAX_DELAY);
+    for (size_t i = 0; i < lights.size() && i < fresh.size(); i++) {
+      lights[i].ip = fresh[i].ip; lights[i].key = fresh[i].key; lights[i].ver = fresh[i].ver;
+      lights[i].fails = 0;
+    }
+    xSemaphoreGive(stateLock);
+    logEvent("Keystone updated its lights");
+  } else {
+    logEvent("Keystone changed the lights, restarting");
+  }
+  server.send(200, "application/json", String("{\"ok\":true,\"restart\":") + (restart ? "true" : "false") + ",\"count\":" + String(check.size()) + "}");
+  if (restart) { delay(800); ESP.restart(); }
 }
 
 static void handleRun() {
@@ -1259,6 +1317,7 @@ static void startNetworkServices() {
     server.on("/api/info", HTTP_GET, handleInfo);
     server.on("/api/claim", HTTP_POST, handleClaim);
     server.on("/api/config", HTTP_POST, handleConfig);
+    server.on("/api/ks/lights", HTTP_POST, handleKsLights);
     server.on("/api/run", HTTP_POST, handleRun);
     server.on("/api/bar/claim", HTTP_POST, handleBarClaim);
     server.on("/api/bar/config", HTTP_POST, handleBarConfig);
@@ -1410,6 +1469,7 @@ void setup() {
     parseConfig(cfg, scratch, true);
     sceneauto::loadAfterglow(cfg);
   }
+  mergeKsLights(lights);
   loadExtras(cfg);
   {
     esp_reset_reason_t r = esp_reset_reason();

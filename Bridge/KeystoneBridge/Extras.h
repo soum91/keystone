@@ -700,7 +700,7 @@ static void handleDevUnpair() {
 
 static void handleDevConfig() {
   String app = server.arg("app");
-  if (!devAppOK(app) || !devTokenOK(app, server.header("X-Device-Token"))) {
+  if (!devAppOK(app) || !(devTokenOK(app, server.header("X-Device-Token")) || devTokenOK("keystone", server.header("X-Device-Token")))) {   // Keystone can set up any device
     server.send(401, "application/json", "{\"error\":\"unauthorized\"}");
     return;
   }
@@ -735,7 +735,7 @@ static void handleDevConfig() {
 
 static void handleDevTest() {
   String app = server.arg("app");
-  if (!devAppOK(app) || !devTokenOK(app, server.header("X-Device-Token"))) {
+  if (!devAppOK(app) || !(devTokenOK(app, server.header("X-Device-Token")) || devTokenOK("keystone", server.header("X-Device-Token")))) {   // Keystone can set up any device
     server.send(401, "application/json", "{\"error\":\"unauthorized\"}");
     return;
   }

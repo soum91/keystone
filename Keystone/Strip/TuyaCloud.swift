@@ -57,6 +57,13 @@ struct TuyaDevice: Identifiable, Equatable {
     }
 }
 
+/// Min/max of one control from the device specification.
+struct TuyaRange: Codable, Hashable {
+    var min: Double?
+    var max: Double?
+    var isFunction = false
+}
+
 /// One outlet found from the cloud's data point names (switch_1, switch_usb1, ...).
 struct StripOutletGuess: Equatable {
     var name: String
@@ -169,6 +176,48 @@ actor TuyaClient {
         for home in homes {
             let list = try await request("GET", "/v1.0/m/life/ha/home/devices", query: ["homeId": home]) as? [[String: Any]] ?? []
             for d in list.compactMap(TuyaDevice.parse) where !out.contains(where: { $0.id == d.id }) { out.append(d) }
+        }
+        return out
+    }
+
+    /// Every device with its raw status (category, local key, status codes), for the Home devices list.
+    func allDevicesRaw() async throws -> [[String: Any]] {
+        var out: [[String: Any]] = []
+        var seen = Set<String>()
+        let homes = (try await request("GET", "/v1.0/m/life/users/homes") as? [[String: Any]] ?? []).compactMap { h in h["ownerId"].map { "\($0)" } }
+        for home in homes {
+            for d in try await request("GET", "/v1.0/m/life/ha/home/devices", query: ["homeId": home]) as? [[String: Any]] ?? [] {
+                guard let id = d["id"] as? String, !seen.contains(id) else { continue }
+                seen.insert(id); out.append(d)
+            }
+        }
+        return out
+    }
+
+    /// Ranges of a device's controls (brightness, colour temperature), by cloud code.
+    func specRanges(id: String) async throws -> [String: TuyaRange] {
+        let result = try await request("GET", "/v1.1/m/life/\(id)/specifications") as? [String: Any] ?? [:]
+        var map: [String: TuyaRange] = [:]
+        for key in ["status", "functions"] {
+            for item in result[key] as? [[String: Any]] ?? [] {
+                guard let code = item["code"] as? String else { continue }
+                var values: [String: Any] = [:]
+                if let str = item["values"] as? String, let data = str.data(using: .utf8),
+                   let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] { values = obj }
+                else if let obj = item["values"] as? [String: Any] { values = obj }
+                map[code] = TuyaRange(min: (values["min"] as? NSNumber)?.doubleValue, max: (values["max"] as? NSNumber)?.doubleValue,
+                                      isFunction: key == "functions" || map[code]?.isFunction == true)
+            }
+        }
+        return map
+    }
+
+    /// Local data point id -> cloud code.
+    func dpCodes(id: String) async throws -> [String: String] {
+        let result = try await request("GET", "/v1.0/m/life/devices/\(id)/status")
+        var out: [String: String] = [:]
+        for r in (result as? [String: Any])?["dpStatusRelationDTOS"] as? [[String: Any]] ?? [] {
+            if let dp = r["dpId"], let code = r["statusCode"] as? String { out["\(dp)"] = code }
         }
         return out
     }

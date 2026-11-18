@@ -400,10 +400,10 @@ struct DashboardView: View {
                     Task { await store.control(b) }
                 }
             }
-            Button {
-                if let u = URL(string: "afterglow://sync") { openURL(u) }
+            NavigationLink {
+                HomeDevicesView().environmentObject(store)
             } label: {
-                Label("Add or update lights (opens Afterglow)", systemImage: "arrow.triangle.2.circlepath")
+                Label("Add lights, switches and plugs", systemImage: "plus.circle")
                     .font(.caption)
             }
             .buttonStyle(.plain).foregroundStyle(Theme.yellow)

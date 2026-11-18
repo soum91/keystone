@@ -179,7 +179,7 @@ struct StripSetupView: View {
         }
     }
 
-    private static func makeQR(_ text: String) -> UIImage? {
+    static func makeQR(_ text: String) -> UIImage? {
         let filter = CIFilter.qrCodeGenerator()
         filter.message = Data(text.utf8)
         filter.correctionLevel = "Q"

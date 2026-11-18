@@ -30,6 +30,16 @@ struct BridgeView: View {
                     }
 
                     Section {
+                        NavigationLink {
+                            HomeDevicesView().environmentObject(store)
+                        } label: {
+                            Label("Devices in Apple Home", systemImage: "house")
+                        }
+                    } footer: {
+                        Text("Put your Smart Life lights, switches and plugs in Apple Home from here, without Afterglow.")
+                    }
+
+                    Section {
                         LabeledContent("Firmware", value: "\(i.version ?? "?")\(i.build.map { " · build \($0)" } ?? "")")
                         if store.updateAvailable, let l = store.latest {
                             Button { Task { await store.installUpdate() } } label: {
