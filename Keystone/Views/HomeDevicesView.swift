@@ -104,7 +104,7 @@ struct HomeDevicesView: View {
                     ProgressView().controlSize(.small)
                     Text("Waiting for you to confirm in Smart Life…").font(.footnote).foregroundStyle(.secondary)
                     Spacer()
-                    Button("Start over") { pollTask?.cancel(); qr = nil; qrImage = nil }.font(.footnote)
+                    Button("Start over") { pollTask?.cancel(); qr = nil; self.qrImage = nil }.font(.footnote)
                 }
             } else {
                 TextField("Smart Life user code", text: $userCode)

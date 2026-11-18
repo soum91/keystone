@@ -1216,7 +1216,7 @@ static void handleConfig() {
 // Keystone's own list of lights and switches: {"lights":[...]} in Afterglow's format. Replaces the
 // previous Keystone list; Afterglow's lights stay. Restarts only if Home's accessory list changes.
 static void handleKsLights() {
-  if (!adminOK()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+  if (!screen::adminOK()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
   String body = server.arg("plain");
   std::vector<Light> check;
   if (!parseConfig(body, check, false)) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
