@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.51",
+          "buildVersion": "51",
+          "date": "2026-11-18T06:35:45Z",
+          "localizedDescription": "- Keystone: Put everything in Apple Home button (all Smart Life lights, switches, plugs and the purifier) (9be3c3d)\n- docs: record factual changes for build-50 [skip ci] (9fc497d)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-51/Keystone-1.0.0-build-51.ipa",
+          "size": 1993185,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.50",
           "buildVersion": "50",
           "date": "2026-11-18T06:31:14Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-26/Keystone-1.0.0-build-26.ipa",
           "size": 1356981,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.25",
-          "buildVersion": "25",
-          "date": "2026-10-30T07:50:11Z",
-          "localizedDescription": "- Copy diagnostics button (3cb0823)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-25/Keystone-1.0.0-build-25.ipa",
-          "size": 950966,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.50",
-      "versionDate": "2026-11-18T06:31:14Z",
-      "versionDescription": "- Keystone: air purifier to Apple Home from the Devices screen (ef1d8df)\n- docs: record factual changes for firmware-build-150 [skip ci] (83ea88a)\n- docs: record factual changes for build-49 [skip ci] (b2dd458)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-50/Keystone-1.0.0-build-50.ipa",
-      "size": 1985850,
+      "version": "1.0.0.51",
+      "versionDate": "2026-11-18T06:35:45Z",
+      "versionDescription": "- Keystone: Put everything in Apple Home button (all Smart Life lights, switches, plugs and the purifier) (9be3c3d)\n- docs: record factual changes for build-50 [skip ci] (9fc497d)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-51/Keystone-1.0.0-build-51.ipa",
+      "size": 1993185,
       "appPermissions": {}
     }
   ],
