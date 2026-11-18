@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-50] - 2026-11-18
+
+## Verified changes since build-49
+
+- Keystone: air purifier to Apple Home from the Devices screen ([`ef1d8df4`](https://github.com/soum91/keystone/commit/ef1d8df4352cd9a33fc4e1dc395d630f77597f5f); `Keystone/Strip/TuyaCloud.swift`, `Keystone/Tuya/HomeDevices.swift`, `Keystone/Views/HomeDevicesView.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-49...build-50)
+
 ## [firmware-build-150] - 2026-11-18
 
 ## Verified changes since firmware-build-148
