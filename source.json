@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.54",
+          "buildVersion": "54",
+          "date": "2026-11-18T17:17:29Z",
+          "localizedDescription": "- Bridge 1.11.3: listen for Tuya announcements only in short windows (fixes updates timing out and a sluggish bridge on 1.11.1) (e2b71f2)\n- docs: record factual changes for firmware-build-153 [skip ci] (1b99314)\n- docs: record factual changes for build-53 [skip ci] (cfecf64)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-54/Keystone-1.0.0-build-54.ipa",
+          "size": 1996046,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.53",
           "buildVersion": "53",
           "date": "2026-11-18T08:15:07Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-29/Keystone-1.0.0-build-29.ipa",
           "size": 1429759,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.28",
-          "buildVersion": "28",
-          "date": "2026-10-30T19:30:08Z",
-          "localizedDescription": "- Router lights follow the room lights (bridge 1.9.12) (9e1b851)\n- Bridge network watchdog: fix the build (a316de5)\n- Bridge: restart itself when the network is gone (8defad7)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-28/Keystone-1.0.0-build-28.ipa",
-          "size": 1361091,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.53",
-      "versionDate": "2026-11-18T08:15:07Z",
-      "versionDescription": "- Bridge 1.11.2: settings work through the relay too (screen off now sticks); Keystone checks the screen change took (bfd653c)\n- docs: record factual changes for firmware-build-152 [skip ci] (419f5d2)\n- Fix build: move applySeen/handleTuyaSeen into TuyaApply.h (Arduino prototype order) (cc16b40)\n- docs: record factual changes for build-52 [skip ci] (dcce675)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-53/Keystone-1.0.0-build-53.ipa",
-      "size": 1994148,
+      "version": "1.0.0.54",
+      "versionDate": "2026-11-18T17:17:29Z",
+      "versionDescription": "- Bridge 1.11.3: listen for Tuya announcements only in short windows (fixes updates timing out and a sluggish bridge on 1.11.1) (e2b71f2)\n- docs: record factual changes for firmware-build-153 [skip ci] (1b99314)\n- docs: record factual changes for build-53 [skip ci] (cfecf64)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-54/Keystone-1.0.0-build-54.ipa",
+      "size": 1996046,
       "appPermissions": {}
     }
   ],
