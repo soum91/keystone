@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-53] - 2026-11-18
+
+## Verified changes since build-52
+
+- Bridge 1.11.2: settings work through the relay too (screen off now sticks); Keystone checks the screen change took ([`bfd653cf`](https://github.com/soum91/keystone/commit/bfd653cfd46bd3b46336cb54e5f50346891bd609); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, `Bridge/KeystoneBridge/Screen.h`, and 3 more)
+- Fix build: move applySeen/handleTuyaSeen into TuyaApply.h (Arduino prototype order) ([`cc16b40c`](https://github.com/soum91/keystone/commit/cc16b40c1def495f962e0e3bce0f7f97ad4f40af); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/TuyaApply.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-52...build-53)
+
 ## [firmware-build-152] - 2026-11-18
 
 ## Verified changes since firmware-build-150
