@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-54] - 2026-11-18
+
+## Verified changes since build-53
+
+- Bridge 1.11.3: listen for Tuya announcements only in short windows (fixes updates timing out and a sluggish bridge on 1.11.1) ([`e2b71f27`](https://github.com/soum91/keystone/commit/e2b71f2751e5e33f31239c0936d267d43365fdb1); `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/TuyaApply.h`, and 2 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-53...build-54)
+
 ## [firmware-build-154] - 2026-11-18
 
 ## Verified changes since firmware-build-153
