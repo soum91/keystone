@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.50",
+          "buildVersion": "50",
+          "date": "2026-11-18T06:31:14Z",
+          "localizedDescription": "- Keystone: air purifier to Apple Home from the Devices screen (ef1d8df)\n- docs: record factual changes for firmware-build-150 [skip ci] (83ea88a)\n- docs: record factual changes for build-49 [skip ci] (b2dd458)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-50/Keystone-1.0.0-build-50.ipa",
+          "size": 1985850,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.49",
           "buildVersion": "49",
           "date": "2026-11-18T06:13:34Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-25/Keystone-1.0.0-build-25.ipa",
           "size": 950966,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.24",
-          "buildVersion": "24",
-          "date": "2026-10-30T04:13:21Z",
-          "localizedDescription": "- Diagnostics log, and stop skipping Wi-Fi at home (4f42500)\n- Remote access: answer status and controls in place (36495aa)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-24/Keystone-1.0.0-build-24.ipa",
-          "size": 950137,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.49",
-      "versionDate": "2026-11-18T06:13:34Z",
-      "versionDescription": "- Fix build: qrImage shadowing, screen::adminOK (93ec637)\n- Keystone puts Smart Life lights, switches and plugs in Apple Home itself (bridge 1.11.0) (437cfef)\n- docs: record factual changes for build-47 [skip ci] (cd46bbe)\n- docs: record factual changes for firmware-build-148 [skip ci] (6dbd9fd)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-49/Keystone-1.0.0-build-49.ipa",
-      "size": 1976381,
+      "version": "1.0.0.50",
+      "versionDate": "2026-11-18T06:31:14Z",
+      "versionDescription": "- Keystone: air purifier to Apple Home from the Devices screen (ef1d8df)\n- docs: record factual changes for firmware-build-150 [skip ci] (83ea88a)\n- docs: record factual changes for build-49 [skip ci] (b2dd458)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-50/Keystone-1.0.0-build-50.ipa",
+      "size": 1985850,
       "appPermissions": {}
     }
   ],
