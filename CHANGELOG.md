@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-49] - 2026-11-18
+
+## Verified changes since build-47
+
+- Fix build: qrImage shadowing, screen::adminOK ([`93ec637f`](https://github.com/soum91/keystone/commit/93ec637fd0645256aa9e9f7b1e783d2f508866c1); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Keystone/Views/HomeDevicesView.swift`)
+- Keystone puts Smart Life lights, switches and plugs in Apple Home itself (bridge 1.11.0) ([`437cfef9`](https://github.com/soum91/keystone/commit/437cfef94cabab0d5e33ae0ee7381f88d917d4a4); `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Keystone/Strip/TuyaCloud.swift`, and 8 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-47...build-49)
+
 ## [build-47] - 2026-11-17
 
 ## Verified changes since build-46
