@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-52] - 2026-11-18
+
+## Verified changes since build-51
+
+- Bridge 1.11.1 hears Tuya devices announce their address; Keystone uses it instead of scanning ([`330cf0c5`](https://github.com/soum91/keystone/commit/330cf0c58246ec8f7b134f39aab18569ffaf1088); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/TuyaDiscover.h`, `Keystone/Tuya/HomeDevices.swift`, and 1 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-51...build-52)
+
 ## [build-51] - 2026-11-18
 
 ## Verified changes since build-50
