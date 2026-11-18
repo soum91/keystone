@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.49",
+          "buildVersion": "49",
+          "date": "2026-11-18T06:13:34Z",
+          "localizedDescription": "- Fix build: qrImage shadowing, screen::adminOK (93ec637)\n- Keystone puts Smart Life lights, switches and plugs in Apple Home itself (bridge 1.11.0) (437cfef)\n- docs: record factual changes for build-47 [skip ci] (cd46bbe)\n- docs: record factual changes for firmware-build-148 [skip ci] (6dbd9fd)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-49/Keystone-1.0.0-build-49.ipa",
+          "size": 1976381,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.47",
           "buildVersion": "47",
           "date": "2026-11-17T20:43:42Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-24/Keystone-1.0.0-build-24.ipa",
           "size": 950137,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.23",
-          "buildVersion": "23",
-          "date": "2026-10-29T21:07:54Z",
-          "localizedDescription": "- Switch the AC and camera on the bridge on or off (e9c2dcc)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-23/Keystone-1.0.0-build-23.ipa",
-          "size": 939793,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.47",
-      "versionDate": "2026-11-17T20:43:42Z",
-      "versionDescription": "- Relay: second broker (HiveMQ) as fallback; bridge 1.10.13 switches brokers on failure, Keystone asks through both (b52bd87)\n- docs: record factual changes for firmware-build-147 [skip ci] (d678924)\n- CI: pin ESP32 Arduino core to 3.3.12 (3.3.13 overflows IRAM by 1664 bytes) (da8bf23)\n- docs: record factual changes for build-46 [skip ci] (52e27f5)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-47/Keystone-1.0.0-build-47.ipa",
-      "size": 1816679,
+      "version": "1.0.0.49",
+      "versionDate": "2026-11-18T06:13:34Z",
+      "versionDescription": "- Fix build: qrImage shadowing, screen::adminOK (93ec637)\n- Keystone puts Smart Life lights, switches and plugs in Apple Home itself (bridge 1.11.0) (437cfef)\n- docs: record factual changes for build-47 [skip ci] (cd46bbe)\n- docs: record factual changes for firmware-build-148 [skip ci] (6dbd9fd)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-49/Keystone-1.0.0-build-49.ipa",
+      "size": 1976381,
       "appPermissions": {}
     }
   ],
