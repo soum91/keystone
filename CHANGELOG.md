@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-56] - 2026-11-18
+
+## Verified changes since build-54
+
+- Fix build: rename download status variable ([`80e6c1c8`](https://github.com/soum91/keystone/commit/80e6c1c80f50f564e78a0c58ad4c54ac04b13f51); `Keystone/App/Store.swift`)
+- Keystone: re-check GitHub before every firmware update; clear errors for stale links ([`8acd472f`](https://github.com/soum91/keystone/commit/8acd472f67cdf1d19f0902bb46bc079d60a491ff); `Keystone/App/Store.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-54...build-56)
+
 ## [build-54] - 2026-11-18
 
 ## Verified changes since build-53
