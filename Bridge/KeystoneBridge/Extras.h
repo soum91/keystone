@@ -752,6 +752,7 @@ static void handleDevTest() {
 // Firmware update, uploaded by Afterglow (multipart, field "fw").
 static bool updateAllowed = false;
 static volatile bool otaActive = false;
+static void (*otaStarting)() = nullptr;   // close anything that would hold Wi-Fi buffers during the upload
 static String updateError;
 
 static void handleUpdateDone() {
@@ -776,6 +777,7 @@ static void handleUpdateUpload() {
     // The worker is stuck inside this upload, so relay::poll() can't drop the relay on its own: do it here
     // and hand its 5 KB buffer to the upload.
     if (relayLetGo) relayLetGo();
+    if (otaStarting) otaStarting();
     if (!Update.begin(UPDATE_SIZE_UNKNOWN)) updateError = Update.errorString();
   } else if (up.status == UPLOAD_FILE_WRITE) {
     if (!updateAllowed || updateError.length()) return;

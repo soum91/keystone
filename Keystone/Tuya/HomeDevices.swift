@@ -212,8 +212,8 @@ final class HomeDevices: ObservableObject {
 
     /// Finds addresses on the Wi-Fi: known addresses first, then a scan of port 6668 matched by key.
     /// Addresses the bridge heard Tuya devices announce (firmware 1.11.1+): id -> (ip, protocol version).
-    func bridgeHeard(_ link: BridgeLink) async -> [String: (String, Double?)] {
-        guard let (code, data) = try? await Transport.send(link, method: "GET", path: "/api/tuya/seen",
+    func bridgeHeard(_ link: BridgeLink, listen: Bool = false) async -> [String: (String, Double?)] {
+        guard let (code, data) = try? await Transport.send(link, method: "GET", path: listen ? "/api/tuya/seen?listen=1" : "/api/tuya/seen",
                                                              headers: ["X-Device-Token": link.token], body: nil, timeout: 5),
               code == 200, let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
         var out: [String: (String, Double?)] = [:]
@@ -231,7 +231,13 @@ final class HomeDevices: ObservableObject {
         var hits: [String: (String, Double)] = [:]
         var left = targets
         // The bridge hears every Tuya device announce its address; that's the reliable way.
-        let heard = await bridgeHeard(link)
+        // 1.11.3+ listens in short windows: ask it to listen, give it time, then read what it heard.
+        var heard = await bridgeHeard(link, listen: true)
+        if targets.contains(where: { heard[$0.id] == nil }) {
+            busy = "The bridge is listening for your devices (about 15 s)…"
+            try? await Task.sleep(nanoseconds: 15_000_000_000)
+            heard.merge(await bridgeHeard(link)) { _, new in new }
+        }
         for d in targets {
             if let h = heard[d.id] { hits[d.id] = (h.0, h.1 ?? d.version ?? 3.3); left.removeAll { $0.id == d.id } }
         }

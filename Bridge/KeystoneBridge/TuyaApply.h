@@ -26,6 +26,7 @@ static void applySeen(const tuyadisc::Seen &s) {
 
 static void handleTuyaSeen() {
   if (!screen::adminOK()) { respond(401, "{\"error\":\"unauthorized\"}"); return; }
+  if (server.hasArg("listen") || String(reqBody()).indexOf("listen") >= 0) tuyadisc::listenFor(14000);
   JsonDocument d;
   tuyadisc::info(d.to<JsonObject>());
   String out;

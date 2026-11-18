@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.2"
+#define FW_VERSION "1.11.3"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -1336,7 +1336,8 @@ static void startNetworkServices() {
     server.begin();
     serverUp = true;
     tuyadisc::onSeen = applySeen;
-    tuyadisc::begin();
+    tuyadisc::busy = []() { return (bool)otaActive; };
+    otaStarting = tuyadisc::close;
     configTime(0, 0, "pool.ntp.org", "time.google.com");
     logEvent("Online at " + WiFi.localIP().toString());
   }

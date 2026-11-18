@@ -2,6 +2,10 @@
 // 7000 AES-GCM for protocol 3.5), with their device id in "gwId". Listening gives every device's
 // address by id, no scanning and no key needed. Layout and key follow tinytuya (udp_helper.py,
 // message_helper.py): key = md5("yGAdlopoPVldABfn").
+//
+// Listening only happens in short windows (sockets closed the rest of the time). Open sockets that aren't
+// read hold on to every broadcast they receive, and those buffers come out of Wi-Fi's receive memory:
+// in 1.11.1 they piled up while the worker was busy (a firmware upload, a cloud call) and starved Wi-Fi.
 #pragma once
 #include <WiFiUdp.h>
 
@@ -10,7 +14,9 @@ namespace tuyadisc {
 struct Seen { String id, ip, ver; uint32_t at = 0; };
 static std::vector<Seen> seen;
 static WiFiUDP u6666, u6667, u7000;
-static bool started = false;
+static bool started = false;     // sockets open (inside a window)
+static uint32_t windowUntil = 0, nextWindow = 90000;   // first window 90 s after boot
+static bool (*busy)() = nullptr;  // e.g. a firmware upload: never listen then
 static uint32_t packets = 0, decoded = 0;
 static void (*onSeen)(const Seen &) = nullptr;
 
@@ -76,18 +82,44 @@ static void handle(const uint8_t *p, int n, const String &ip) {
   }
 }
 
-static void begin() {
+static void open() {
   if (started) return;
   u6666.begin(6666); u6667.begin(6667); u7000.begin(7000);
   started = true;
 }
 
-static void poll() {
+static void close() {
   if (!started) return;
+  u6666.stop(); u6667.stop(); u7000.stop();
+  started = false;
+}
+
+// Listen for the next `ms` (Keystone asks for this before reading the list).
+static void listenFor(uint32_t ms) {
+  if (busy && busy()) return;
+  windowUntil = millis() + ms;
+  if (!windowUntil) windowUntil = 1;
+}
+
+static void begin() {}   // windows open from poll()
+
+static void poll() {
+  uint32_t now = millis();
+  if (busy && busy()) { close(); return; }
+  if (!windowUntil && (int32_t)(now - nextWindow) >= 0) listenFor(15000);   // a 15 s listen every 15 minutes
+  if (windowUntil && (int32_t)(now - windowUntil) >= 0) {
+    windowUntil = 0;
+    nextWindow = now + 15UL * 60UL * 1000UL;
+    close();
+    return;
+  }
+  if (!windowUntil) return;
+  if (WiFi.status() != WL_CONNECTED) return;
+  open();
   static uint8_t buf[700];
   WiFiUDP *socks[] = {&u6666, &u6667, &u7000};
   for (WiFiUDP *u : socks) {
-    for (int guard = 0; guard < 4; guard++) {
+    for (int guard = 0; guard < 16; guard++) {   // drain everything that arrived
       int n = u->parsePacket();
       if (n <= 0) break;
       packets++;
@@ -104,7 +136,7 @@ static const Seen *find(const String &id) {
 }
 
 static void info(JsonObject o) {
-  o["packets"] = packets; o["decoded"] = decoded;
+  o["packets"] = packets; o["decoded"] = decoded; o["listening"] = windowUntil != 0;
   JsonArray a = o["devices"].to<JsonArray>();
   for (auto &s : seen) {
     JsonObject d = a.add<JsonObject>();
