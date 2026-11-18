@@ -344,8 +344,12 @@ final class Store: ObservableObject {
     }
 
     func installUpdate() async {
-        guard let l = latest, !updateRunning else { return }
+        guard !updateRunning else { return }
         if viaRelay { show("Firmware updates only go over your home Wi-Fi."); return }
+        // Always ask GitHub again first: a newer build replaces the old download link.
+        if let chip = info?.chip, let fresh = try? await Firmware.latest(chip: chip) { latest = fresh }
+        guard let l = latest else { updating = "Couldn't reach GitHub to find the firmware. Check your internet and try again."; return }
+        if l.build <= (info?.build ?? 0) { updating = "Already up to date (build \(info?.build ?? 0))."; return }
         updateRunning = true
         defer { updateRunning = false }
         updating = "Starting…"
@@ -407,8 +411,12 @@ enum Firmware {
     static func install(_ latest: Latest, link: BridgeLink, header: String = "X-Device-Token", progress: @escaping (String) -> Void) async throws {
         progress("Downloading build \(latest.build)…")
         let (bin, resp) = try await URLSession.shared.data(from: latest.url)
-        guard (resp as? HTTPURLResponse)?.statusCode == 200, bin.count > 100_000, bin.first == 0xE9 else {
-            throw BridgeError.message("The download didn't look like ESP32 firmware.")
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        guard code == 200 else {
+            throw BridgeError.message("GitHub answered \(code) for build \(latest.build). Tap Check for updates and try again.")
+        }
+        guard bin.count > 100_000, bin.first == 0xE9 else {
+            throw BridgeError.message("The download (\(bin.count / 1024) KB) wasn't ESP32 firmware. Tap Check for updates and try again.")
         }
         guard let u = BridgeAPI.url(link.host, link.port, "/api/update") else { throw BridgeError.message("Bad address.") }
         let boundary = "keystone-\(UUID().uuidString)"
