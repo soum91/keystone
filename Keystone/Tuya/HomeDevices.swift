@@ -295,6 +295,28 @@ final class HomeDevices: ObservableObject {
 }
 
 extension HomeDevices {
+    /// Every light, switch and plug, plus the first purifier, into Apple Home in one go.
+    func addAll(link: BridgeLink) async -> String {
+        var purifierTaken = false
+        for i in devices.indices where !(devices[i].localKey ?? "").isEmpty {
+            if devices[i].isPurifier {
+                devices[i].inHome = !purifierTaken
+                purifierTaken = true
+            } else {
+                devices[i].inHome = true
+            }
+        }
+        save()
+        let missing = devices.filter { $0.inHome && !$0.hasLocal }.map(\.id)
+        if !missing.isEmpty { await find(missing) }
+        let a = await push(link)
+        if purifierTaken { _ = await pushPurifier(link) }
+        let sent = devices.filter { $0.inHome && $0.problem == nil }.count
+        let stuck = devices.filter { $0.inHome && $0.problem != nil }.map(\.name)
+        return stuck.isEmpty ? "\(sent) device\(sent == 1 ? "" : "s") sent. \(a)"
+            : "\(sent) sent. Not on Wi-Fi or no local key: \(stuck.joined(separator: ", ")). \(a)"
+    }
+
     /// Sends the chosen purifier, or removes it from Home when none is chosen (that also removes one Exhale sent).
     @discardableResult
     func pushPurifier(_ link: BridgeLink) async -> String {

@@ -20,6 +20,18 @@ struct HomeDevicesView: View {
                 if let b = model.busy {
                     Section { HStack(spacing: 10) { ProgressView(); Text(b).font(.footnote) } }
                 }
+                if !model.devices.isEmpty {
+                    Section {
+                        Button {
+                            Task { working = "all"; store.show(await model.addAll(link: store.link)); working = nil; await store.refresh() }
+                        } label: {
+                            HStack { Label("Put everything in Apple Home", systemImage: "house.fill"); Spacer(); if working == "all" { ProgressView() } }
+                        }
+                        .disabled(working != nil || model.busy != nil)
+                    } footer: {
+                        Text("Every light, switch and plug on your Smart Life account, plus your air purifier, in one go. The bridge restarts once (about 20 s).")
+                    }
+                }
                 deviceSections
                 Section {
                     Button("Refresh from Smart Life") { Task { await reload() } }
