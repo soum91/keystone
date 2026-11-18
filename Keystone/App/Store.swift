@@ -411,9 +411,9 @@ enum Firmware {
     static func install(_ latest: Latest, link: BridgeLink, header: String = "X-Device-Token", progress: @escaping (String) -> Void) async throws {
         progress("Downloading build \(latest.build)…")
         let (bin, resp) = try await URLSession.shared.data(from: latest.url)
-        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
-        guard code == 200 else {
-            throw BridgeError.message("GitHub answered \(code) for build \(latest.build). Tap Check for updates and try again.")
+        let dlCode = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        guard dlCode == 200 else {
+            throw BridgeError.message("GitHub answered \(dlCode) for build \(latest.build). Tap Check for updates and try again.")
         }
         guard bin.count > 100_000, bin.first == 0xE9 else {
             throw BridgeError.message("The download (\(bin.count / 1024) KB) wasn't ESP32 firmware. Tap Check for updates and try again.")
