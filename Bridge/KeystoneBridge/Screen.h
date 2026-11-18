@@ -302,7 +302,8 @@ static void clearAllPairings() {
 }
 
 static void draw() {
-  if (!wakeInit) { pinMode(WAKE_PIN, INPUT_PULLUP); wakeInit = true; wakeUntil = 60000; }   // on for the first minute after boot
+  // On for the first minute after boot (who and where it is), or just 10 s when the screen is set to off.
+  if (!wakeInit) { pinMode(WAKE_PIN, INPUT_PULLUP); wakeInit = true; wakeUntil = cfg.on ? 60000 : 10000; }
   if (digitalRead(WAKE_PIN) == LOW) {
     wakeUntil = millis() + 30000;
     if (!heldSince) heldSince = millis();
@@ -396,30 +397,32 @@ static bool adminOK() {
   return token.length() && reqHeader("X-Afterglow-Token") == token;
 }
 
-static void deny() { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); }
+static void deny() { respond(401, "{\"error\":\"unauthorized\"}"); }
 
 static void handleDisplay() {
   if (!adminOK()) return deny();
-  if (server.method() == HTTP_POST) {
+  if (reqPost()) {
     JsonDocument d;
-    if (deserializeJson(d, server.arg("plain"))) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
+    if (deserializeJson(d, reqBody())) { respond(400, "{\"error\":\"bad json\"}"); return; }
+    bool was = cfg.on;
     fromJson(d.as<JsonObject>());
     save();
     apply();
     dimmed = false;
+    if (was != cfg.on) logEvent(cfg.on ? "Screen turned on" : "Screen turned off");
   }
   JsonDocument r;
   toJson(r.to<JsonObject>());
   String out;
   serializeJson(r, out);
-  server.send(200, "application/json", out);
+  respond(200, out);
 }
 
 static void handleIdentify() {
   if (!adminOK()) return deny();
   identifyUntil = millis() + 8000;
   if (!identifyUntil) identifyUntil = 1;
-  server.send(200, "application/json", "{\"ok\":true}");
+  respond(200, "{\"ok\":true}");
 }
 
 // The screen as a switch in Apple Home (on = the screen's normal settings, off = dark).
@@ -429,14 +432,14 @@ struct HomeSwitch : Service::Switch {
     on = new Characteristic::On(cfg.on);
     new Characteristic::Name("Bridge Screen");
   }
-  boolean update() override { cfg.on = on->getNewVal(); save(); return true; }
+  boolean update() override { cfg.on = on->getNewVal(); save(); logEvent(cfg.on ? "Screen turned on (Apple Home)" : "Screen turned off (Apple Home)"); return true; }
   void loop() override { if (on->getVal() != (int)cfg.on && on->timeVal() > 2000) on->setVal(cfg.on); }
 };
 
 static void handleAdmin() {
   if (!adminOK()) return deny();
   JsonDocument d;
-  deserializeJson(d, server.arg("plain"));
+  deserializeJson(d, reqBody());
   String a = d["action"] | "";
   if (a == "features") {
     if (!d["ac"].isNull()) { acEnabled = d["ac"]; prefs.putBool("en_ac", acEnabled); }
@@ -464,7 +467,7 @@ static void handleAdmin() {
       int slot = d["slot"] | -1;   // one phone, or all phones for that app
       if (slot >= 0 && slot < DEV_SLOTS) devClearSlot(app, slot); else devClearAll(app);
     }
-    else { server.send(400, "application/json", "{\"error\":\"unknown app\"}"); return; }
+    else { respond(400, "{\"error\":\"unknown app\"}"); return; }
     logEvent(app + " pairing cleared");
   } else if (a == "follow") {
     if (!d["lights"].isNull()) { followTV = d["lights"]; prefs.putBool("follow", followTV); if (!followTV) ruleDueMs = 0; }
@@ -472,15 +475,15 @@ static void handleAdmin() {
   } else if (a == "rename") {
     String n = d["name"] | "";
     n.trim();
-    if (n.length() < 1 || n.length() > 32) { server.send(400, "application/json", "{\"error\":\"name must be 1 to 32 characters\"}"); return; }
+    if (n.length() < 1 || n.length() > 32) { respond(400, "{\"error\":\"name must be 1 to 32 characters\"}"); return; }
     prefs.putString("bridgeName", n);
     logEvent("Renamed to " + n);
     pendingAction = 1;
   } else {
-    server.send(400, "application/json", "{\"error\":\"unknown action\"}");
+    respond(400, "{\"error\":\"unknown action\"}");
     return;
   }
-  server.send(200, "application/json", String("{\"ok\":true,\"restart\":") + (pendingAction ? "true" : "false") + "}");
+  respond(200, String("{\"ok\":true,\"restart\":") + (pendingAction ? "true" : "false") + "}");
 }
 
 static void registerRoutes() {

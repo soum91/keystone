@@ -25,11 +25,11 @@ static void applySeen(const tuyadisc::Seen &s) {
 }
 
 static void handleTuyaSeen() {
-  if (!screen::adminOK()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+  if (!screen::adminOK()) { respond(401, "{\"error\":\"unauthorized\"}"); return; }
   JsonDocument d;
   tuyadisc::info(d.to<JsonObject>());
   String out;
   serializeJson(d, out);
-  server.send(200, "application/json", out);
+  respond(200, out);
 }
 

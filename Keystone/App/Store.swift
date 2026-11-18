@@ -249,9 +249,14 @@ final class Store: ObservableObject {
             try? await Task.sleep(nanoseconds: 250_000_000)
             if Task.isCancelled { return }
             do {
-                try await BridgeAPI.setDisplay(snapshot, self?.link ?? .stored)
+                let r = try await BridgeAPI.setDisplay(snapshot, self?.link ?? .stored)
+                if let on = r["on"] as? Bool, on != snapshot.on {
+                    self?.show("The bridge didn't take the change (screen is still \(on ? "on" : "off")).")
+                    self?.display.on = on
+                }
             } catch {
-                self?.show(error.localizedDescription)
+                self?.show("Couldn't change the screen: \(error.localizedDescription)")
+                self?.displayEditedAt = .distantPast   // show the bridge's real setting again on the next refresh
             }
         }
     }

@@ -271,10 +271,12 @@ enum BridgeAPI {
                                       headers: ["X-Device-Token": link.token], body: Data("{}".utf8), timeout: 4)
     }
 
-    static func setDisplay(_ d: DisplaySettings, _ link: BridgeLink = .stored) async throws {
+    /// Returns what the bridge now has (its reply), so a change that didn't stick shows up.
+    @discardableResult
+    static func setDisplay(_ d: DisplaySettings, _ link: BridgeLink = .stored) async throws -> [String: Any] {
         var dict = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(d)) as? [String: Any]) ?? [:]
         dict["present"] = nil
-        try await post("/api/display", dict, link)
+        return try await post("/api/display", dict, link)
     }
 
     static func admin(_ action: String, _ extra: [String: Any] = [:], _ link: BridgeLink = .stored) async throws -> Bool {

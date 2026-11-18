@@ -136,11 +136,20 @@ static void handle(const String &sealed) {
   r["i"] = rid;
   if (!path.startsWith("/api/") || path.startsWith("/api/update")) {
     r["c"] = 403; r["b"] = "{\"error\":\"not over the relay\"}";
-  } else if (path.startsWith("/api/info") || path.startsWith("/api/control")) {
-    // Answered in place (no loopback through the web server, which could fail or be busy).
+  } else if (path.startsWith("/api/info") || path.startsWith("/api/control") || path.startsWith("/api/display") ||
+             path.startsWith("/api/admin") || path.startsWith("/api/identify") || path.startsWith("/api/ks/lights") ||
+             path.startsWith("/api/tuya/seen")) {
+    // Answered in place (no loopback through the web server, which could fail or be busy). Settings work
+    // here too, so a change still lands when the phone's direct Wi-Fi request times out and falls back.
     relayTask = xTaskGetCurrentTaskHandle(); relayFlag = true; relayCode = 500; relayOut = "{\"error\":\"no answer\"}";
-    relayTok = d["h"]["X-Device-Token"] | ""; relayBody = body;
-    if (path.startsWith("/api/info")) handleInfo(); else control::handle();
+    relayTok = d["h"]["X-Device-Token"] | ""; relayBody = body; relayMethod = method;
+    if (path.startsWith("/api/info")) handleInfo();
+    else if (path.startsWith("/api/control")) control::handle();
+    else if (path.startsWith("/api/display")) screen::handleDisplay();
+    else if (path.startsWith("/api/admin")) screen::handleAdmin();
+    else if (path.startsWith("/api/identify")) screen::handleIdentify();
+    else if (path.startsWith("/api/ks/lights")) handleKsLights();
+    else handleTuyaSeen();
     relayFlag = false;
     r["c"] = relayCode; r["b"] = relayOut;
     relayOut = ""; relayBody = "";

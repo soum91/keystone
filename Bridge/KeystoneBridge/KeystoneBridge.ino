@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.1"
+#define FW_VERSION "1.11.2"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -169,11 +169,12 @@ static WebServer server(API_PORT);
 static bool relayFlag = false;
 static TaskHandle_t relayTask = nullptr;
 #define viaRelay (relayFlag && xTaskGetCurrentTaskHandle() == relayTask)   // only for the task handling it
-static String relayTok, relayBody, relayOut;
+static String relayTok, relayBody, relayOut, relayMethod;
 static int relayCode = 0;
 static String reqHeader(const char *n) { return viaRelay ? (String(n) == "X-Device-Token" ? relayTok : String()) : server.header(n); }
 static String reqBody() { return viaRelay ? relayBody : server.arg("plain"); }
 static bool reqLite() { return viaRelay || server.hasArg("lite"); }
+static bool reqPost() { return viaRelay ? relayMethod == "POST" : server.method() == HTTP_POST; }
 static void respond(int code, const String &body) {
   if (viaRelay) { relayCode = code; relayOut = body; } else server.send(code, "application/json", body);
 }
@@ -1218,10 +1219,10 @@ static void handleConfig() {
 // Keystone's own list of lights and switches: {"lights":[...]} in Afterglow's format. Replaces the
 // previous Keystone list; Afterglow's lights stay. Restarts only if Home's accessory list changes.
 static void handleKsLights() {
-  if (!screen::adminOK()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
-  String body = server.arg("plain");
+  if (!screen::adminOK()) { respond(401, "{\"error\":\"unauthorized\"}"); return; }
+  String body = reqBody();
   std::vector<Light> check;
-  if (!parseConfig(body, check, false)) { server.send(400, "application/json", "{\"error\":\"bad json\"}"); return; }
+  if (!parseConfig(body, check, false)) { respond(400, "{\"error\":\"bad json\"}"); return; }
   if (check.empty()) prefs.remove("kscfg"); else prefs.putBytes("kscfg", body.c_str(), body.length());
   std::vector<Light> fresh;
   String cfg = loadStoredConfig();
@@ -1242,8 +1243,8 @@ static void handleKsLights() {
   } else {
     logEvent("Keystone changed the lights, restarting");
   }
-  server.send(200, "application/json", String("{\"ok\":true,\"restart\":") + (restart ? "true" : "false") + ",\"count\":" + String(check.size()) + "}");
-  if (restart) { delay(800); ESP.restart(); }
+  respond(200, String("{\"ok\":true,\"restart\":") + (restart ? "true" : "false") + ",\"count\":" + String(check.size()) + "}");
+  if (restart) { if (viaRelay) screen::pendingAction = 1; else { delay(800); ESP.restart(); } }
 }
 
 static void handleRun() {
