@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.52",
+          "buildVersion": "52",
+          "date": "2026-11-18T07:47:03Z",
+          "localizedDescription": "- Bridge 1.11.1 hears Tuya devices announce their address; Keystone uses it instead of scanning (330cf0c)\n- docs: record factual changes for build-51 [skip ci] (de79a14)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-52/Keystone-1.0.0-build-52.ipa",
+          "size": 1992974,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.51",
           "buildVersion": "51",
           "date": "2026-11-18T06:35:45Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-27/Keystone-1.0.0-build-27.ipa",
           "size": 1358330,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.26",
-          "buildVersion": "26",
-          "date": "2026-10-30T18:02:13Z",
-          "localizedDescription": "- Router tab: run the OpenWrt ASUS from Keystone through the bridge (bridge 1.9.11) (f2fd6bf)\n- Bridge 1.10: web server back on the worker, with a watchdog (fa3386b)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-26/Keystone-1.0.0-build-26.ipa",
-          "size": 1356981,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.51",
-      "versionDate": "2026-11-18T06:35:45Z",
-      "versionDescription": "- Keystone: Put everything in Apple Home button (all Smart Life lights, switches, plugs and the purifier) (9be3c3d)\n- docs: record factual changes for build-50 [skip ci] (9fc497d)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-51/Keystone-1.0.0-build-51.ipa",
-      "size": 1993185,
+      "version": "1.0.0.52",
+      "versionDate": "2026-11-18T07:47:03Z",
+      "versionDescription": "- Bridge 1.11.1 hears Tuya devices announce their address; Keystone uses it instead of scanning (330cf0c)\n- docs: record factual changes for build-51 [skip ci] (de79a14)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-52/Keystone-1.0.0-build-52.ipa",
+      "size": 1992974,
       "appPermissions": {}
     }
   ],
