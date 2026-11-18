@@ -1,5 +1,16 @@
 # Changelog
 
+## [firmware-build-152] - 2026-11-18
+
+## Verified changes since firmware-build-150
+
+- Fix build: move applySeen/handleTuyaSeen into TuyaApply.h (Arduino prototype order) ([`cc16b40c`](https://github.com/soum91/keystone/commit/cc16b40c1def495f962e0e3bce0f7f97ad4f40af); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/TuyaApply.h`)
+- Bridge 1.11.1 hears Tuya devices announce their address; Keystone uses it instead of scanning ([`330cf0c5`](https://github.com/soum91/keystone/commit/330cf0c58246ec8f7b134f39aab18569ffaf1088); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/TuyaDiscover.h`, `Keystone/Tuya/HomeDevices.swift`, and 1 more)
+- Keystone: Put everything in Apple Home button (all Smart Life lights, switches, plugs and the purifier) ([`9be3c3d4`](https://github.com/soum91/keystone/commit/9be3c3d42f8c5d76d8485fc755b266f87091f4c7); `Keystone/Tuya/HomeDevices.swift`, `Keystone/Views/HomeDevicesView.swift`)
+- Keystone: air purifier to Apple Home from the Devices screen ([`ef1d8df4`](https://github.com/soum91/keystone/commit/ef1d8df4352cd9a33fc4e1dc395d630f77597f5f); `Keystone/Strip/TuyaCloud.swift`, `Keystone/Tuya/HomeDevices.swift`, `Keystone/Views/HomeDevicesView.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-150...firmware-build-152)
+
 ## [build-52] - 2026-11-18
 
 ## Verified changes since build-51
