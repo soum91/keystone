@@ -35,7 +35,7 @@ struct HomeDevicesView: View {
                 deviceSections
                 Section {
                     Button("Refresh from Smart Life") { Task { await reload() } }
-                    Button("Look for them on Wi-Fi again") { Task { await model.find(); store.show(await model.push(store.link)) } }
+                    Button("Look for them on Wi-Fi again") { Task { await model.find(link: store.link); store.show(await model.push(store.link)) } }
                     Button("Sign out of Smart Life", role: .destructive) {
                         TuyaToken.stored = nil; token = nil
                     }
@@ -59,7 +59,7 @@ struct HomeDevicesView: View {
         guard let t = token else { return }
         model.message = nil
         await model.refresh(t)
-        if model.devices.contains(where: { $0.inHome && !$0.hasLocal }) { await model.find(model.devices.filter { $0.inHome && !$0.hasLocal }.map(\.id)) }
+        if model.devices.contains(where: { $0.inHome && !$0.hasLocal }) { await model.find(model.devices.filter { $0.inHome && !$0.hasLocal }.map(\.id), link: store.link) }
     }
 
     @ViewBuilder private var deviceSections: some View {

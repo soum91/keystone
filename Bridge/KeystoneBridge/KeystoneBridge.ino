@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.0"
+#define FW_VERSION "1.11.1"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -975,6 +975,7 @@ static void stopBluetoothForOta() {
 namespace provision { static String status; }   // Wi-Fi setup progress, drawn by Screen.h, set by Provision.h
 #include "Screen.h"
 #include "Strip.h"
+#include "TuyaDiscover.h"
 static void handleInfo();
 namespace control { static void handle(); }
 #include "Relay.h"
@@ -983,6 +984,37 @@ namespace control { static void handle(); }
 #include "Control.h"
 
 // Drop switched-off devices from memory before Home's accessories are built (their saved settings stay).
+// A Tuya device announced itself at a new address: point whatever uses it there. Fixes lights, the
+// purifier, the IR blaster and the strip after the router hands out new addresses, with no scanning.
+static void applySeen(const tuyadisc::Seen &s) {
+  float v = s.ver.length() ? s.ver.toFloat() : 0;
+  bool used = false;
+  xSemaphoreTake(stateLock, portMAX_DELAY);
+  for (auto &L : lights) if (L.id == s.id && L.ip != s.ip) { L.ip = s.ip; if (v >= 3.1f) L.ver = v; L.fails = 0; used = true; }
+  xSemaphoreGive(stateLock);
+  if (pur.id == s.id && pur.ip != s.ip) { pur.ip = s.ip; if (v >= 3.1f) pur.ver = v; used = true; }
+  if (ir.id == s.id && ir.ip != s.ip) { ir.ip = s.ip; if (v >= 3.1f) ir.ver = v; used = true; }
+  if (strip::lock && strip::cfg.id == s.id && strip::cfg.ip != s.ip) {
+    xSemaphoreTake(strip::lock, portMAX_DELAY);
+    strip::cfg.ip = s.ip;
+    if (v >= 3.1f) strip::cfg.ver = v;
+    xSemaphoreGive(strip::lock);
+    strip::save();
+    strip::scan.on = false;
+    used = true;
+  }
+  if (used) logEvent("Found " + s.id.substring(0, 6) + "… at " + s.ip + " (it announced itself)");
+}
+
+static void handleTuyaSeen() {
+  if (!screen::adminOK()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+  JsonDocument d;
+  tuyadisc::info(d.to<JsonObject>());
+  String out;
+  serializeJson(d, out);
+  server.send(200, "application/json", out);
+}
+
 static void applyFeatures() {
   for (auto &f : features) *f.flag = prefs.getBool((String("en_") + f.key).c_str(), true);
   if (!enLights) lights.clear();
@@ -1318,6 +1350,7 @@ static void startNetworkServices() {
     server.on("/api/claim", HTTP_POST, handleClaim);
     server.on("/api/config", HTTP_POST, handleConfig);
     server.on("/api/ks/lights", HTTP_POST, handleKsLights);
+    server.on("/api/tuya/seen", HTTP_GET, handleTuyaSeen);
     server.on("/api/run", HTTP_POST, handleRun);
     server.on("/api/bar/claim", HTTP_POST, handleBarClaim);
     server.on("/api/bar/config", HTTP_POST, handleBarConfig);
@@ -1331,6 +1364,8 @@ static void startNetworkServices() {
     server.onNotFound([]() { server.send(404, "text/plain", "Keystone Bridge"); });
     server.begin();
     serverUp = true;
+    tuyadisc::onSeen = applySeen;
+    tuyadisc::begin();
     configTime(0, 0, "pool.ntp.org", "time.google.com");
     logEvent("Online at " + WiFi.localIP().toString());
   }
@@ -1378,6 +1413,7 @@ static void worker(void *) {
     if (serverUp) { server.handleClient(); webBeat = millis(); }
     mark("relay"); relay::poll();
     mark("router"); router::follow();
+    mark("tuya announce"); tuyadisc::poll();
     mark("wifi watch"); netWatch();
     if (WiFi.status() != WL_CONNECTED) { vTaskDelay(pdMS_TO_TICKS(200)); continue; }
 

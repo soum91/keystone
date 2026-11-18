@@ -132,13 +132,16 @@ struct HomeDevice: Codable, Identifiable, Hashable {
         }
         if (localKey ?? "").isEmpty { return "Tuya gives no local key for it, so only the cloud can control it (common for Matter devices: add those to Apple Home with their Matter code)." }
         if !isPurifier, powerCode == nil || dpID(for: powerCode!) == nil { return "Keystone can't find its on/off control." }
-        if (host ?? "").isEmpty { return "Not found on your Wi-Fi yet: it never answered Tuya's local protocol (port 6668). Matter-only devices don't." }
+        if (host ?? "").isEmpty {
+            return isPurifier ? "Not heard on your Wi-Fi yet. Keep it on and powered; the bridge listens for it."
+                : "Sent, but the bridge hasn't heard it announce itself on your Wi-Fi yet. It picks the address up on its own when it does. If it never does, the device doesn't speak Tuya's local protocol (Matter-only devices don't)."
+        }
         return nil
     }
 
     /// The bridge's light entry (Afterglow's format), or nil if it can't go yet.
     func bridgeEntry() -> [String: Any]? {
-        guard !isPurifier, hasLocal, let pc = powerCode, let sw = dpID(for: pc) else { return nil }
+        guard !isPurifier, !(localKey ?? "").isEmpty, let pc = powerCode, let sw = dpID(for: pc) else { return nil }
         var d: [String: Any] = ["id": id, "name": name, "key": localKey ?? "", "ip": host ?? "", "ver": version ?? 3.3, "sw": sw]
         if let c = modeCode, let dp = dpID(for: c) { d["mode"] = dp }
         if let c = brightCode, let dp = dpID(for: c) {
@@ -208,14 +211,32 @@ final class HomeDevices: ObservableObject {
     }
 
     /// Finds addresses on the Wi-Fi: known addresses first, then a scan of port 6668 matched by key.
-    func find(_ ids: [String]? = nil) async {
-        guard LocalScan.wifiAddress() != nil else { message = "Connect to your home Wi-Fi first."; return }
+    /// Addresses the bridge heard Tuya devices announce (firmware 1.11.1+): id -> (ip, protocol version).
+    func bridgeHeard(_ link: BridgeLink) async -> [String: (String, Double?)] {
+        guard let (code, data) = try? await Transport.send(link, method: "GET", path: "/api/tuya/seen",
+                                                             headers: ["X-Device-Token": link.token], body: nil, timeout: 5),
+              code == 200, let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
+        var out: [String: (String, Double?)] = [:]
+        for d in obj["devices"] as? [[String: Any]] ?? [] {
+            if let id = d["id"] as? String, let ip = d["ip"] as? String { out[id] = (ip, (d["ver"] as? String).flatMap(Double.init)) }
+        }
+        return out
+    }
+
+    func find(_ ids: [String]? = nil, link: BridgeLink = .stored) async {
         let targets = devices.filter { (ids == nil || ids!.contains($0.id)) && !($0.localKey ?? "").isEmpty }
         guard !targets.isEmpty else { return }
-        busy = "Looking for devices on your Wi-Fi…"
+        busy = "Asking the bridge which devices it has heard…"
         defer { busy = nil }
         var hits: [String: (String, Double)] = [:]
         var left = targets
+        // The bridge hears every Tuya device announce its address; that's the reliable way.
+        let heard = await bridgeHeard(link)
+        for d in targets {
+            if let h = heard[d.id] { hits[d.id] = (h.0, h.1 ?? d.version ?? 3.3); left.removeAll { $0.id == d.id } }
+        }
+        guard !left.isEmpty, LocalScan.wifiAddress() != nil else { apply(hits, targets: targets, left: left); return }
+        busy = "Looking for devices on your Wi-Fi…"
         for d in targets {
             guard let h = d.host else { continue }
             if let v = await Self.probe(d, host: h, versions: d.version.map { [$0] } ?? [3.3, 3.4, 3.5]) {
@@ -245,11 +266,13 @@ final class HomeDevices: ObservableObject {
             }
             for (id, h) in await pool.hits { hits[id] = h }
         }
+        apply(hits, targets: targets, left: left)
+    }
+
+    private func apply(_ hits: [String: (String, Double)], targets: [HomeDevice], left: [HomeDevice]) {
         for i in devices.indices {
             if let h = hits[devices[i].id] { devices[i].host = h.0; devices[i].version = h.1 }
-            else if targets.contains(where: { $0.id == devices[i].id }) && left.contains(where: { $0.id == devices[i].id }) {
-                devices[i].host = nil   // stale address: it's not there any more
-            }
+            else if left.contains(where: { $0.id == devices[i].id }) { devices[i].host = nil }   // not there any more
         }
         save()
     }
@@ -271,7 +294,7 @@ final class HomeDevices: ObservableObject {
             for j in devices.indices where j != i && devices[j].isPurifier { devices[j].inHome = false }
         }
         save()
-        if on && !devices[i].hasLocal { await find([id]) }
+        if on && !devices[i].hasLocal { await find([id], link: link) }
         let r: String
         if devices[i].isPurifier { r = await pushPurifier(link) } else { r = await push(link) }
         if on, let d = devices.first(where: { $0.id == id }), let why = d.problem {
@@ -308,7 +331,7 @@ extension HomeDevices {
         }
         save()
         let missing = devices.filter { $0.inHome && !$0.hasLocal }.map(\.id)
-        if !missing.isEmpty { await find(missing) }
+        if !missing.isEmpty { await find(missing, link: link) }
         let a = await push(link)
         if purifierTaken { _ = await pushPurifier(link) }
         let sent = devices.filter { $0.inHome && $0.problem == nil }.count
