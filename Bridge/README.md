@@ -123,10 +123,10 @@ sends a fresh measurement about every 15 seconds to Keystone over home Wi-Fi.
 - After DewPoint stops reporting, Keystone falls back to its existing BLE scan
   bursts **if internal heap thresholds permit**. It never starts a risky BLE
   scan just to make the status indicator appear live.
-- Keystone creates **one Govee sensor accessory** even if the first DewPoint
-  packet arrives after boot. It preserves the existing HomeKit accessory ID
-  when a local Govee MAC was previously pinned, and pins the forwarded MAC
-  without switching sensors silently.
+- If Keystone has not yet locked onto a Govee, its first valid DewPoint
+  packet pins the sensor MAC and triggers **one settings-preserving restart**
+  to add its accessory. Existing HomeKit accessory IDs are preserved when
+  a Govee MAC was already saved; another sensor cannot silently replace it.
 - At \`GET /api/info?lite=1\`, \`govee.source\` is \`dewpoint\`, \`localBLE\` or
   \`stale\`; \`feedPackets\`, \`feedRejected\`, \`feedAge\` and \`feedHost\` aid diagnosis.
 - Keep both ESP32 devices on the **same trusted, broadcast-capable LAN**. Client

@@ -37,7 +37,8 @@ static bool feedOpen = false;
 static volatile uint32_t remotePacketMs = 0, remoteHeardMs = 0;
 static uint32_t feedAccepted = 0, feedRejected = 0;
 static char feedHost[16] = "";
-static bool feedAid = false;  // stable HomeKit ID if no previous local BLE lock
+static uint32_t pickStartedMs = 0;  // delay local BLE selection while awaiting DewPoint
+static volatile uint32_t localHeardMs = 0;
 
 static bool remoteFresh() {
   uint32_t now = millis(), received = remotePacketMs, heard = remoteHeardMs;
@@ -141,10 +142,13 @@ static bool acceptFeed(char *message, const IPAddress &sender) {
     strlcpy(lockedAddr, fields[1], sizeof(lockedAddr));
     strlcpy(lockedName, fields[2], sizeof(lockedName));
     locked = true;
-    feedAid = true;
     prefs.putString("gv_addr", lockedAddr);
     prefs.putString("gv_name", lockedName);
-    prefs.putBool("gv_feed_aid", true);
+    // HomeSpan's accessory list is fixed at boot; reboot once after pinning.
+    Serial.printf("[keystone] pinned DewPoint sensor %s; restarting to expose it in Home\n", lockedAddr);
+    delay(150);
+    ESP.restart();
+    return true;
   }
   uint32_t now = millis();
   portENTER_CRITICAL(&mux);
@@ -211,6 +215,7 @@ class Callbacks : public NimBLEScanCallbacks {
     temp = t; hum = h; batt = b;
     seq = seq + 1;
     lastHeard = millis();
+    localHeardMs = lastHeard;
     portEXIT_CRITICAL(&mux);
   }
   void onScanEnd(const NimBLEScanResults &, int) override { NimBLEDevice::getScan()->start(0, false, true); }
@@ -218,7 +223,9 @@ class Callbacks : public NimBLEScanCallbacks {
 static Callbacks callbacks;
 
 static bool stale() {
-  uint32_t l = lastHeard;
+  // Don't keep an old DewPoint reading looking live after the feed stops.
+  if (remoteFresh()) return false;
+  uint32_t l = localHeardMs;
   return l == 0 || millis() - l > GOVEE_STALE_MS;
 }
 
@@ -310,22 +317,21 @@ static void begin() {
     strlcpy(lockedName, n.c_str(), sizeof(lockedName));
     locked = true;
   }
-  feedAid = prefs.getBool("gv_feed_aid", false);
-  if (!locked) radioStart();   // picking: listen until DewPoint or a local BLE lock arrives
+  // Give DewPoint time to report before starting a memory-hungry local BLE scan.
+  // If no remote data arrives, tick() starts a guarded local scanner after 60s.
 }
 
 static void addAccessory(std::vector<uint32_t> &used) {
-  // Reserve one HomeKit sensor even when DewPoint discovers the MAC after startup.
-  // Preserve the old accessory identity for existing Keystone BLE installations.
+  // Avoid an unconfigured ghost accessory; first discovery restarts once to add it.
+  if (!locked) return;
   inHome = true;
-  String aidKey = locked && !feedAid ? String("govee:") + lockedAddr : String("govee:feed");
-  new SpanAccessory(aidFor(aidKey, used));
+  new SpanAccessory(aidFor(String("govee:") + lockedAddr, used));
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Name("Thermometer");
       new Characteristic::Manufacturer("Govee");
       new Characteristic::Model(lockedName[0] ? lockedName : "H5102");
-      new Characteristic::SerialNumber(locked ? lockedAddr : "DewPoint feed");
+      new Characteristic::SerialNumber(lockedAddr);
     new Temperature();
     new Humidity();
     new Battery();
@@ -366,7 +372,18 @@ static void tick() {
     }
     return;
   }
-  if (millis() - bootMs < GOVEE_PICK_MS || bestAddr[0] == 0) return;
+  if (!radioOn) {
+    if (millis() - bootMs < 60000UL) return; // wait for remote feed first
+    uint32_t available = ESP.getFreeHeap(), block = ESP.getMaxAllocHeap();
+    if (available <= 75000 || block <= 40000) {
+      skippedLowMem++;
+      lastLowFree = available; lastLowBlock = block;
+      return;
+    }
+    radioStart();
+    pickStartedMs = millis();
+  }
+  if (millis() - pickStartedMs < GOVEE_PICK_MS || bestAddr[0] == 0) return;
   portENTER_CRITICAL(&mux);
   String a = bestAddr, n = bestName;
   portEXIT_CRITICAL(&mux);
@@ -380,7 +397,6 @@ static void tick() {
 static void forget(const char *) {
   prefs.remove("gv_addr");
   prefs.remove("gv_name");
-  prefs.remove("gv_feed_aid");
   Serial.println("Forgot the Govee sensor. Restarting; keep the bridge next to the right one for 30 s.");
   delay(500);
   ESP.restart();
