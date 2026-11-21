@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.5"
+#define FW_VERSION "1.11.6"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -1401,6 +1401,9 @@ static void worker(void *) {
     if (millis() - lastNet > 3000) { lastNet = millis(); startNetworkServices(); }
     mark("web request");
     if (serverUp) { server.handleClient(); webBeat = millis(); }
+#ifdef HAS_GOVEE
+    mark("govee feed"); if (enGovee) govee::pollFeed();
+#endif
     mark("relay"); relay::poll();
     mark("router"); router::follow();
     mark("tuya announce"); tuyadisc::poll();

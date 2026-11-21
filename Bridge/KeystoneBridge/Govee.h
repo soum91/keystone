@@ -6,10 +6,17 @@
 #if !defined(CONFIG_IDF_TARGET_ESP32C3)   // the C3 build is out of flash room for Bluetooth
 #define HAS_GOVEE 1
 #include <NimBLEDevice.h>
+#include <WiFiUdp.h>
+#include <stdlib.h>
+#include <math.h>
+#include <ctype.h>
 
 #define GOVEE_PICK_MS 30000UL
 #define GOVEE_STALE_MS (15UL * 60UL * 1000UL)
 #define GOVEE_PUSH_MS 15000UL
+#define GOVEE_FEED_PORT 8092
+#define GOVEE_FEED_TIMEOUT_MS 90000UL
+#define GOVEE_FEED_SAMPLE_MAX_AGE_MS 120000UL
 
 namespace govee {
 
@@ -23,6 +30,21 @@ static char bestAddr[18] = "", bestName[32] = "";
 static volatile int bestRssi = -127;
 static uint32_t bootMs = 0;
 static bool inHome = false;
+// DewPoint continuously scans BLE; Keystone receives its LAN broadcast instead.
+// If the feed expires, the existing memory-gated local NimBLE scanner is the fallback.
+static WiFiUDP feedUdp;
+static bool feedOpen = false;
+static volatile uint32_t remotePacketMs = 0, remoteHeardMs = 0;
+static uint32_t feedAccepted = 0, feedRejected = 0;
+static char feedHost[16] = "";
+static bool feedAid = false;  // stable HomeKit ID if no previous local BLE lock
+
+static bool remoteFresh() {
+  uint32_t now = millis(), received = remotePacketMs, heard = remoteHeardMs;
+  return received != 0 && heard != 0 && now - received <= GOVEE_FEED_TIMEOUT_MS &&
+         now - heard <= GOVEE_FEED_SAMPLE_MAX_AGE_MS;
+}
+
 
 static bool decodePacked(uint8_t a, uint8_t b, uint8_t c, float &t, float &h) {
   int32_t base = ((int32_t)a << 16) | ((int32_t)b << 8) | c;
@@ -56,6 +78,112 @@ static bool parse(const std::string &name, const std::string &md, float &t, floa
   return false;
 }
 
+// Receive small UDP frames only from the same LAN. Sensor pinning is not authentication;
+// don't run the feed on untrusted networks or forward this port to the internet.
+static bool sameSubnet(const IPAddress &sender) {
+  IPAddress me = WiFi.localIP(), mask = WiFi.subnetMask();
+  for (int i = 0; i < 4; ++i)
+    if ((sender[i] & mask[i]) != (me[i] & mask[i])) return false;
+  return true;
+}
+
+static bool decimal(const char *s, float &value) {
+  if (!s || !*s) return false;
+  char *end = nullptr;
+  value = strtof(s, &end);
+  return end != s && *end == 0 && isfinite(value);
+}
+
+static bool unsignedNumber(const char *s, uint32_t &value) {
+  if (!s || !*s || *s == '-') return false;
+  char *end = nullptr;
+  unsigned long n = strtoul(s, &end, 10);
+  if (end == s || *end != 0) return false;
+  value = (uint32_t)n;
+  return true;
+}
+
+static bool validMac(const char *mac) {
+  if (!mac || strlen(mac) != 17) return false;
+  for (int i = 0; i < 17; i++) {
+    if ((i + 1) % 3 == 0) { if (mac[i] != ':') return false; }
+    else if (!isxdigit((unsigned char)mac[i])) return false;
+  }
+  return true;
+}
+
+// Runs on Keystone's network worker, never in the HomeSpan or NimBLE callbacks.
+static bool acceptFeed(char *message, const IPAddress &sender) {
+  if (!sameSubnet(sender)) return false;
+  char *fields[8] = {};
+  char *context = nullptr;
+  char *p = strtok_r(message, ",", &context);
+  for (int i = 0; i < 8 && p; i++) {
+    fields[i] = p;
+    p = strtok_r(nullptr, ",", &context);
+  }
+  if (p) return false;  // extra fields
+  for (int i = 0; i < 8; i++) if (!fields[i]) return false;
+  if (strcmp(fields[0], "DPG1") != 0 || !validMac(fields[1]) || strlen(fields[2]) >= sizeof(lockedName))
+    return false;
+  if (strncmp(fields[2], "GV", 2) != 0 && strncmp(fields[2], "Govee", 5) != 0) return false;
+  float t, h;
+  uint32_t battery, age, sampleSeq;
+  if (!decimal(fields[3], t) || !decimal(fields[4], h) ||
+      !unsignedNumber(fields[5], battery) || !unsignedNumber(fields[6], age) ||
+      !unsignedNumber(fields[7], sampleSeq)) return false;
+  if (t < -40 || t > 100 || h < 0 || h > 100 || battery > 100 ||
+      age > GOVEE_FEED_SAMPLE_MAX_AGE_MS || sampleSeq == 0) return false;
+  // A different nearby Govee must never silently replace a paired sensor.
+  if (locked && strcasecmp(fields[1], lockedAddr) != 0) return false;
+
+  if (!locked) {
+    strlcpy(lockedAddr, fields[1], sizeof(lockedAddr));
+    strlcpy(lockedName, fields[2], sizeof(lockedName));
+    locked = true;
+    feedAid = true;
+    prefs.putString("gv_addr", lockedAddr);
+    prefs.putString("gv_name", lockedName);
+    prefs.putBool("gv_feed_aid", true);
+  }
+  uint32_t now = millis();
+  portENTER_CRITICAL(&mux);
+  temp = t; hum = h; batt = (int)battery;
+  lastHeard = now - age;  // keep actual sample freshness, not just arrival time
+  seq++;
+  remoteHeardMs = now - age;
+  remotePacketMs = now;
+  portEXIT_CRITICAL(&mux);
+  strlcpy(feedHost, sender.toString().c_str(), sizeof(feedHost));
+  feedAccepted++;
+  return true;
+}
+
+static void pollFeed() {
+  if (WiFi.status() != WL_CONNECTED) {
+    if (feedOpen) { feedUdp.stop(); feedOpen = false; }
+    return;
+  }
+  if (!feedOpen) feedOpen = feedUdp.begin(GOVEE_FEED_PORT) != 0;
+  if (!feedOpen) return;
+  // Limit processing to keep other devices and web requests responsive.
+  for (int i = 0; i < 3; ++i) {
+    int length = feedUdp.parsePacket();
+    if (length <= 0) break;
+    char packet[160];
+    IPAddress sender = feedUdp.remoteIP();
+    if (length >= (int)sizeof(packet)) {
+      while (feedUdp.available()) feedUdp.read();
+      feedRejected++;
+      continue;
+    }
+    int received = feedUdp.read((uint8_t *)packet, length);
+    if (received != length) { feedRejected++; continue; }
+    packet[received] = 0;
+    if (!acceptFeed(packet, sender)) feedRejected++;
+  }
+}
+
 class Callbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice *dev) override {
     if (dev->getManufacturerDataCount() == 0) return;
@@ -78,7 +206,7 @@ class Callbacks : public NimBLEScanCallbacks {
       }
       return;
     }
-    if (strcasecmp(addr.c_str(), lockedAddr) != 0) return;
+    if (strcasecmp(addr.c_str(), lockedAddr) != 0 || remoteFresh()) return;
     portENTER_CRITICAL(&mux);
     temp = t; hum = h; batt = b;
     seq = seq + 1;
@@ -182,19 +310,22 @@ static void begin() {
     strlcpy(lockedName, n.c_str(), sizeof(lockedName));
     locked = true;
   }
-  if (!locked) radioStart();   // picking: listen continuously for 30 s
+  feedAid = prefs.getBool("gv_feed_aid", false);
+  if (!locked) radioStart();   // picking: listen until DewPoint or a local BLE lock arrives
 }
 
 static void addAccessory(std::vector<uint32_t> &used) {
-  if (!locked) return;
+  // Reserve one HomeKit sensor even when DewPoint discovers the MAC after startup.
+  // Preserve the old accessory identity for existing Keystone BLE installations.
   inHome = true;
-  new SpanAccessory(aidFor(String("govee:") + lockedAddr, used));
+  String aidKey = locked && !feedAid ? String("govee:") + lockedAddr : String("govee:feed");
+  new SpanAccessory(aidFor(aidKey, used));
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Name("Thermometer");
       new Characteristic::Manufacturer("Govee");
-      new Characteristic::Model(lockedName);
-      new Characteristic::SerialNumber(lockedAddr);
+      new Characteristic::Model(lockedName[0] ? lockedName : "H5102");
+      new Characteristic::SerialNumber(locked ? lockedAddr : "DewPoint feed");
     new Temperature();
     new Humidity();
     new Battery();
@@ -203,6 +334,7 @@ static void addAccessory(std::vector<uint32_t> &used) {
 // From the worker: finish the first-boot pick.
 static void tick() {
   if (otaActive) { radioStop(); return; }
+  if (remoteFresh()) { if (radioOn) radioStop(); return; }
   if (locked) {
     if (radioOn) {
       if ((int32_t)(millis() - scanUntil) >= 0) {
@@ -248,6 +380,7 @@ static void tick() {
 static void forget(const char *) {
   prefs.remove("gv_addr");
   prefs.remove("gv_name");
+  prefs.remove("gv_feed_aid");
   Serial.println("Forgot the Govee sensor. Restarting; keep the bridge next to the right one for 30 s.");
   delay(500);
   ESP.restart();
@@ -256,6 +389,12 @@ static void forget(const char *) {
 static void info(JsonDocument &d) {
   JsonObject g = d["govee"].to<JsonObject>();
   g["locked"] = (bool)locked;
+  g["source"] = remoteFresh() ? "dewpoint" : (!stale() ? "localBLE" : "stale");
+  g["feedPackets"] = feedAccepted;
+  g["feedRejected"] = feedRejected;
+  g["feedHost"] = feedHost;
+  g["feedAge"] = remotePacketMs ? (int)((millis() - remotePacketMs) / 1000) : -1;
+  g["feedActive"] = remoteFresh();
   if (locked) {
     g["name"] = lockedName;
     if (!stale()) { g["temp"] = (float)temp; g["humidity"] = (float)hum; g["battery"] = (int)batt; }

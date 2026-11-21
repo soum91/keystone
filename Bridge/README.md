@@ -108,3 +108,35 @@ Since firmware 1.1 the bridge also switches a Vizio sound bar with the TV, set u
 
 - Many bulbs accept only one local connection. The bridge never holds one open (connect, send, close), and polls each light every 15 s, so the app and Smart Life still work.
 - Adding or removing lights restarts the bridge (about 20 s) so Home sees the change. Accessory IDs come from the Tuya device ID, so rooms you assigned in Home stick.
+
+## DewPoint Govee relay and local BLE fallback
+
+Keystone automatically listens on **UDP 8092** for sensor readings from the
+[DewPoint ESP32 bridge](https://github.com/soum91/dewpoint). DewPoint stays
+pinned to the Govee sensor and continuously scans its BLE broadcasts, then
+sends a fresh measurement about every 15 seconds to Keystone over home Wi-Fi.
+
+- Keystone **prefers DewPoint** while the last packet is at most 90 seconds old
+  and its underlying BLE sample is at most 120 seconds old. Keystone switches
+  off its own BLE radio in that case, freeing internal heap for HomeKit, Tuya
+  and the remote MQTT relay.
+- After DewPoint stops reporting, Keystone falls back to its existing BLE scan
+  bursts **if internal heap thresholds permit**. It never starts a risky BLE
+  scan just to make the status indicator appear live.
+- Keystone creates **one Govee sensor accessory** even if the first DewPoint
+  packet arrives after boot. It preserves the existing HomeKit accessory ID
+  when a local Govee MAC was previously pinned, and pins the forwarded MAC
+  without switching sensors silently.
+- At \`GET /api/info?lite=1\`, \`govee.source\` is \`dewpoint\`, \`localBLE\` or
+  \`stale\`; \`feedPackets\`, \`feedRejected\`, \`feedAge\` and \`feedHost\` aid diagnosis.
+- Keep both ESP32 devices on the **same trusted, broadcast-capable LAN**. Client
+  isolation, segmented VLANs, or restricted UDP broadcasts will prevent the
+  automatic feed. **Do not forward UDP 8092 to the internet.** LAN packets are
+  not cryptographically authenticated; sensor MAC, sender subnet, age and range
+  validation prevent accidental errors, not malicious local spoofing.
+- Remove DewPoint's separate sensor from Apple Home if you've paired it
+  independently and want **only** Keystone's accessory to appear.
+
+The firmware can be updated in place without erasing Keystone settings or its
+Apple Home pairing. This does **not** require purchasing another ESP32 or
+changing the existing ideaSpark OLED.
