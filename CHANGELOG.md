@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-158] - 2026-11-21
+
+## Verified changes since firmware-build-157
+
+- Bridge: prefer DewPoint LAN Govee feed; fall back to memory-safe local BLE ([`25acaec0`](https://github.com/soum91/keystone/commit/25acaec0c295debabf366311ee30befaa76ddd7b); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/README.md`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-157...firmware-build-158)
+
 ## [firmware-build-157] - 2026-11-21
 
 ## Verified changes since firmware-build-156
