@@ -212,6 +212,14 @@ struct BridgeView: View {
                     if i.govee != nil {
                         Section {
                             LabeledContent("Thermometer", value: i.govee?.name ?? "not picked yet")
+                            if let g = i.govee {
+                                if let n = g.lowMem { LabeledContent("BLE blocked by RAM", value: "\(n) attempts") }
+                                if let n = g.borrowedRelay { LabeledContent("Relay memory borrowed", value: "\(n) times") }
+                                if let n = g.bursts, let h = g.burstsHeard { LabeledContent("BLE scans with data", value: "\(h) / \(n)") }
+                                if let m = g.lastSkippedFree, let b = g.lastSkippedBlock {
+                                    LabeledContent("RAM at last rejected scan", value: "\(m / 1024) KB free, \(b / 1024) KB block")
+                                }
+                            }
                             Button("Pick a different Govee sensor") { confirm = .govee }
                         } footer: {
                             Text("The bridge restarts and locks onto the strongest Govee sensor it hears in 30 s, so hold the right one close.")

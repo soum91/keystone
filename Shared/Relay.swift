@@ -376,7 +376,8 @@ enum Transport {
             } catch let e as URLError where relayReady && e.code != .cancelled {
                 NetLog.add("LAN \(link.host) \(path) failed: \(e.code.rawValue) \(e.localizedDescription)")
                 // Any network failure on the LAN path (cellular, VPN, other Wi-Fi): go through the relay.
-                lock.lock(); preferRelayUntil = Date().addingTimeInterval(45); lock.unlock()
+                // Retry local Wi-Fi promptly after a transient failure.
+                lock.lock(); preferRelayUntil = Date().addingTimeInterval(6); lock.unlock()
             }
         }
         do {

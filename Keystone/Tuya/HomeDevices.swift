@@ -318,7 +318,7 @@ final class HomeDevices: ObservableObject {
             if (r["restart"] as? Bool) == true { return "Sent. The bridge is restarting to update Apple Home (about 20 s)." }
             return "Sent to the bridge."
         } catch {
-            return "Couldn't send to the bridge (it needs firmware 1.11 or newer): \(error.localizedDescription)"
+            return "Couldn't reach the bridge. Check Wi-Fi or remote relay: \(error.localizedDescription)"
         }
     }
 }
@@ -355,7 +355,7 @@ extension HomeDevices {
             let r = try await BridgeAPI.post("/api/dev/config?app=exhale", body, link, timeout: 10)
             return (r["restart"] as? Bool) == true ? "Sent. The bridge is restarting to update Apple Home (about 20 s)." : "Sent to the bridge."
         } catch {
-            return "Couldn't send to the bridge (it needs firmware 1.11 or newer): \(error.localizedDescription)"
+            return "Couldn't reach the bridge. Check Wi-Fi or remote relay: \(error.localizedDescription)"
         }
     }
 }

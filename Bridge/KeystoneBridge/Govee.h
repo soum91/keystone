@@ -59,11 +59,14 @@ static bool parse(const std::string &name, const std::string &md, float &t, floa
 class Callbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice *dev) override {
     if (dev->getManufacturerDataCount() == 0) return;
+    std::string addr = dev->getAddress().toString();
     std::string name = dev->getName();
+    // A locked H5102 can broadcast its measurement without its device name.
+    if (name.empty() && locked && strcasecmp(addr.c_str(), lockedAddr) == 0)
+      name = lockedName;
     float t, h;
     int b;
     if (!parse(name, dev->getManufacturerData(), t, h, b)) return;
-    std::string addr = dev->getAddress().toString();
     if (!locked) {
       int rssi = dev->getRSSI();
       if (rssi > bestRssi) {

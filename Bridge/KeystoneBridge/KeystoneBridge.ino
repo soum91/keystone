@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.4"
+#define FW_VERSION "1.11.5"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -1125,6 +1125,8 @@ static void handleInfo() {
   d["boot"]["crashes"] = crashCount;
   d["boot"]["safeMode"] = safeMode;
   d["boot"]["minHeap"] = ESP.getMinFreeHeap();
+  d["heap"] = ESP.getFreeHeap();
+  d["heapBlock"] = ESP.getMaxAllocHeap();
   if (crashDuring.length()) d["boot"]["during"] = crashDuring;
   if (heapAtStart) { d["boot"]["heapEntry"] = heapEntry; d["boot"]["btFreed"] = btFreed; d["boot"]["heapStart"] = heapAtStart; d["boot"]["heapAfterHome"] = heapAfterHome; }
 #ifdef HAS_GOVEE
@@ -1356,20 +1358,19 @@ static void startNetworkServices() {
 
 // Watchdog for the worker: if it stops looping (a stuck socket, a hung request) the web API and the
 // automations stop too, so the bridge restarts itself. Firmware uploads are allowed to take longer.
-// Network watchdog: restart when Wi-Fi has been gone 3 min, or Wi-Fi is up but the internet has been
-// unreachable for 10 min. After an internet restart the wait grows (10, 30, 60 min) so a long outage
-// doesn't mean constant restarts.
-RTC_NOINIT_ATTR static uint32_t netStrikes;   // survives a restart, so a long outage backs off
+// A public DNS outage must not reset the locally connected Apple Home bridge.
+// Restart only when Wi-Fi association is actually lost for three minutes.
 static void netWatch() {
   static uint32_t lost = 0, last = 0;
   uint32_t now = millis();
-  if (otaActive || setupOnly || now - last < 60000UL) return;
+  if (otaActive || setupOnly || now - last < 10000UL) return;
   last = now;
-  IPAddress ip;
-  if (WiFi.status() == WL_CONNECTED && WiFi.hostByName("pool.ntp.org", ip) == 1) { lost = 0; netStrikes = 0; return; }
+  if (WiFi.status() == WL_CONNECTED) { lost = 0; return; }
   if (!lost) lost = now;
-  if (netStrikes > 3) netStrikes = 0;
-  if (now - lost > (WiFi.status() != WL_CONNECTED ? 180000UL : 600000UL << netStrikes)) { netStrikes++; ESP.restart(); }
+  if (now - lost >= 180000UL) {
+    logEvent("Wi-Fi lost for 3 minutes; restarting without erasing settings");
+    ESP.restart();
+  }
 }
 
 static void worker(void *) {

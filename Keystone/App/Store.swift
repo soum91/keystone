@@ -27,6 +27,7 @@ final class Store: ObservableObject {
     private var displayTask: Task<Void, Never>?
     private var toastTask: Task<Void, Never>?
     private var displayEditedAt = Date.distantPast
+    private var lastFullInfoAt = Date.distantPast
 
     var isPaired: Bool { link.isSet }
 
@@ -149,7 +150,12 @@ final class Store: ObservableObject {
     func refresh() async {
         guard isPaired else { return }
         do {
-            let i = try await BridgeAPI.info(link, timeout: 3)
+            // Keep frequent status polling small; get full activity/events every 30 s.
+            let needFull = Date().timeIntervalSince(lastFullInfoAt) >= 30
+            var i = try await BridgeAPI.info(link, timeout: 3, lite: !needFull)
+            if needFull { lastFullInfoAt = .now }
+            if i.events == nil { i.events = info?.events }
+            if i.bar?.events == nil { i.bar?.events = info?.bar?.events }
             viaRelay = Transport.lastWasRelay
             lastError = nil
             apply(i)

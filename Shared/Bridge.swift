@@ -24,7 +24,9 @@ struct BridgeInfo: Codable, Equatable {
     }
     struct IR: Codable, Equatable { struct R: Codable, Equatable { var name: String; var buttons: Int?; var power: Bool?; var names: [String]? }; var paired: Bool?; var remotes: [R]? }
     struct Govee: Codable, Equatable { var locked: Bool?; var name: String?; var temp: Double?; var humidity: Double?; var battery: Int?; var heardAgo: Int?
-        var bursts: Int?; var burstsHeard: Int?; var lowMem: Int? }
+        var bursts: Int?; var burstsHeard: Int?; var lowMem: Int?
+        var borrowedRelay: Int?; var freeHeap: Int?; var maxBlock: Int?
+        var lastSkippedFree: Int?; var lastSkippedBlock: Int? }
     struct Strip: Codable, Equatable {
         struct Outlet: Codable, Equatable { var name: String; var dp: String; var on: Bool? }
         var configured: Bool?; var name: String?; var id: String?; var ip: String?; var ver: Double?
@@ -172,8 +174,8 @@ enum BridgeAPI {
     }
 
     /// LAN when home, the encrypted relay when not.
-    static func info(_ link: BridgeLink = .stored, timeout: Double = 4) async throws -> BridgeInfo {
-        let (_, data) = try await Transport.send(link, method: "GET", path: "/api/info",
+    static func info(_ link: BridgeLink = .stored, timeout: Double = 4, lite: Bool = false) async throws -> BridgeInfo {
+        let (_, data) = try await Transport.send(link, method: "GET", path: lite ? "/api/info?lite=1" : "/api/info",
                                                  headers: ["X-Device-Token": link.token], timeout: timeout)
         let info = try JSONDecoder().decode(BridgeInfo.self, from: data)
         guard info.app == "afterglow-bridge" else { throw BridgeError.message("That isn't a Keystone bridge.") }

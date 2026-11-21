@@ -154,7 +154,12 @@ struct Tile : Service::Outlet {
 
 
 static void startScan(const char *why) {
-  if (scan.on || !cfg.configured || WiFi.status() != WL_CONNECTED || ESP.getMaxAllocHeap() < 40000) return;
+  if (scan.on || !cfg.configured || WiFi.status() != WL_CONNECTED) return;
+  // Do not repeatedly walk the heap when a low-memory discovery attempt fails.
+  static uint32_t lastAttempt = 0;
+  if (lastAttempt && millis() - lastAttempt < 10000UL) return;
+  lastAttempt = millis();
+  if (ESP.getMaxAllocHeap() < 40000) return;
   IPAddress ip = WiFi.localIP();
   scan = Scan();
   scan.on = true;
@@ -247,8 +252,17 @@ static void poll() {
 // Called from the worker task. True if it did network work.
 static bool step() {
   if (!cfg.configured) return false;
-  // A Tuya session needs ~10 KB at once. When the bridge is short, wait instead of tipping it over.
-  if (otaActive || ESP.getMaxAllocHeap() < 24000 || govee::radioOn || acNetBusy) { st.lowMem++; return false; }
+  if (otaActive || govee::radioOn || acNetBusy) return false;
+  // getMaxAllocHeap walks the heap under a lock. Doing this every 40 ms on
+  // the network worker competes with Wi-Fi/TCP even when the strip is idle.
+  static uint32_t lastHeapCheck = 0;
+  static bool heapReady = false;
+  if (!lastHeapCheck || millis() - lastHeapCheck >= 2000UL) {
+    lastHeapCheck = millis();
+    heapReady = ESP.getMaxAllocHeap() >= 24000;
+    if (!heapReady) st.lowMem++;
+  }
+  if (!heapReady) return false;
   if (scan.on) scanStep();
   if (!cfg.ip.length()) {
     // No address yet (or it was cleared): look for it now and every few minutes after.
