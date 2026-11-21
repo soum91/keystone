@@ -267,6 +267,39 @@ enum BridgeAPI {
         return obj
     }
 
+    /// Accessory setup changes HomeSpan's accessory database and must be confirmed on
+    /// the local bridge. Never silently fall back to MQTT for configuration writes.
+    /// Relay control remains available for ordinary device commands away from home.
+    static func postLocal(_ path: String, _ body: [String: Any], _ link: BridgeLink = .stored,
+                          timeout: Double = 12) async throws -> [String: Any] {
+        guard let url = url(link.host, link.port, path) else {
+            throw BridgeError.message("The bridge's saved network address is invalid.")
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.timeoutInterval = timeout
+        req.cachePolicy = .reloadIgnoringLocalCacheData
+        req.setValue(link.token, forHTTPHeaderField: "X-Device-Token")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: req)
+        } catch {
+            throw BridgeError.message("Can't reach the bridge at \(link.host):\(link.port) over local Wi-Fi. Connect to the bridge's home Wi-Fi and check that the bridge is online. Your Apple Home selections were saved on this phone, but nothing was sent. (\(error.localizedDescription))")
+        }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+        if status == 401 {
+            throw BridgeError.message("This phone's bridge pairing is no longer accepted. Re-pair Keystone with the bridge on your home Wi-Fi.")
+        }
+        guard status == 200, json["ok"] as? Bool == true else {
+            throw BridgeError.message((json["error"] as? String) ?? "Bridge rejected the change (HTTP \(status)).")
+        }
+        return json
+    }
+
     /// This phone gives up its pairing slot (when you forget the bridge in Keystone).
     static func unpair(_ link: BridgeLink) async {
         _ = try? await Transport.send(link, method: "POST", path: "/api/dev/unpair?app=keystone",

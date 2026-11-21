@@ -1225,7 +1225,24 @@ static void handleKsLights() {
   String body = reqBody();
   std::vector<Light> check;
   if (!parseConfig(body, check, false)) { respond(400, "{\"error\":\"bad json\"}"); return; }
-  if (check.empty()) prefs.remove("kscfg"); else prefs.putBytes("kscfg", body.c_str(), body.length());
+  JsonDocument requested;
+  if (deserializeJson(requested, body) || !requested["lights"].is<JsonArray>() ||
+      requested["lights"].as<JsonArray>().size() != check.size()) {
+    respond(422, "{\"error\":\"one or more devices lacks a valid ID or on/off data point; existing Home configuration was not changed\"}");
+    return;
+  }
+  if (!enLights && !check.empty()) {
+    respond(409, "{\"error\":\"Lights and switches are disabled under Bridge features; enable them before sending\"}");
+    return;
+  }
+  // Never acknowledge an unsaved configuration. An NVS write failure previously
+  // returned 200 and restarted, losing the requested devices.
+  if (check.empty()) {
+    prefs.remove("kscfg");
+  } else if (prefs.putBytes("kscfg", body.c_str(), body.length()) != body.length()) {
+    respond(507, "{\"error\":\"could not save Keystone accessory list (NVS full or write failed)\"}");
+    return;
+  }
   std::vector<Light> fresh;
   String cfg = loadStoredConfig();
   if (cfg.length()) parseConfig(cfg, fresh, false);

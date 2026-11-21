@@ -164,6 +164,7 @@ final class HomeDevices: ObservableObject {
     @Published var devices: [HomeDevice] = AppGroup.read([HomeDevice].self, "home-devices.json") ?? []
     @Published var busy: String?
     @Published var message: String?
+    @Published var syncFailure: String?  // Selections are local until the bridge acknowledges and verifies them.
 
     private func save() { AppGroup.write(devices, "home-devices.json") }
 
@@ -278,7 +279,8 @@ final class HomeDevices: ObservableObject {
     private func apply(_ hits: [String: (String, Double)], targets: [HomeDevice], left: [HomeDevice]) {
         for i in devices.indices {
             if let h = hits[devices[i].id] { devices[i].host = h.0; devices[i].version = h.1 }
-            else if left.contains(where: { $0.id == devices[i].id }) { devices[i].host = nil }   // not there any more
+            // A missed discovery window is not proof that a working device moved.
+            // Preserve its last known address instead of wiping a valid saved setup.
         }
         save()
     }
@@ -303,22 +305,49 @@ final class HomeDevices: ObservableObject {
         if on && !devices[i].hasLocal { await find([id], link: link) }
         let r: String
         if devices[i].isPurifier { r = await pushPurifier(link) } else { r = await push(link) }
+        if let failure = syncFailure { return failure }
         if on, let d = devices.first(where: { $0.id == id }), let why = d.problem {
             return "\(d.name) can't go to Apple Home yet: \(why)"
         }
         return r
     }
 
-    /// Sends every chosen device that the bridge can reach. The bridge restarts if Home's list changes.
+    /// Only claim a send after the local bridge has accepted the entire selection
+    /// AND its status reflects the resulting Keystone accessory list.
     @discardableResult
     func push(_ link: BridgeLink) async -> String {
-        let entries = devices.filter(\.inHome).compactMap { $0.bridgeEntry() }
+        let chosen = devices.filter { $0.inHome && !$0.isPurifier }
+        let unready = chosen.filter { !$0.hasLocal || $0.bridgeEntry() == nil }
+        guard unready.isEmpty else {
+            let names = unready.map(\.name).joined(separator: ", ")
+            let error = "Not sent: \(names) needs a reachable local IP, a valid Tuya key and an on/off data point. Existing Apple Home accessories were left unchanged."
+            syncFailure = error
+            return error
+        }
+        let entries = chosen.compactMap { $0.bridgeEntry() }
         do {
-            let r = try await BridgeAPI.post("/api/ks/lights", ["lights": entries], link, timeout: 10)
-            if (r["restart"] as? Bool) == true { return "Sent. The bridge is restarting to update Apple Home (about 20 s)." }
-            return "Sent to the bridge."
+            let r = try await BridgeAPI.postLocal("/api/ks/lights", ["lights": entries], link, timeout: 12)
+            guard (r["count"] as? Int) == entries.count else {
+                throw BridgeError.message("The bridge acknowledged a different number of devices; its accessory list has not been verified.")
+            }
+            let wanted = Set(chosen.map(\.id))
+            let restarting = (r["restart"] as? Bool) == true
+            var verified = false
+            for attempt in 0..<(restarting ? 18 : 4) {
+                if attempt > 0 || restarting { try? await Task.sleep(nanoseconds: 2_000_000_000) }
+                if let info = try? await BridgeAPI.info(host: link.host, port: link.port, timeout: 3) {
+                    let actual = Set((info.lights ?? []).filter { $0.ks == true }.map(\.id))
+                    if actual == wanted { verified = true; break }
+                }
+            }
+            guard verified else {
+                throw BridgeError.message("The bridge accepted the update but did not confirm the accessory list after restarting. Do not send it again until the bridge is reachable.")
+            }
+            syncFailure = nil
+            return "Confirmed \(wanted.count) Keystone device(s) on the bridge. Open Apple Home to check their response."
         } catch {
-            return "Couldn't reach the bridge. Check Wi-Fi or remote relay: \(error.localizedDescription)"
+            syncFailure = "Apple Home send not confirmed: \(error.localizedDescription)"
+            return syncFailure!
         }
     }
 }
@@ -338,12 +367,22 @@ extension HomeDevices {
         save()
         let missing = devices.filter { $0.inHome && !$0.hasLocal }.map(\.id)
         if !missing.isEmpty { await find(missing, link: link) }
-        let a = await push(link)
-        if purifierTaken { _ = await pushPurifier(link) }
-        let sent = devices.filter { $0.inHome && $0.problem == nil }.count
+        let lightsResult = await push(link)
+        let lightsFailure = syncFailure
+        var purifierResult: String?
+        var purifierFailure: String?
+        if purifierTaken {
+            purifierResult = await pushPurifier(link)
+            purifierFailure = syncFailure
+        }
+        let failures = [lightsFailure, purifierFailure].compactMap { $0 }
+        if !failures.isEmpty {
+            syncFailure = failures.joined(separator: " ")
+            return syncFailure!
+        }
         let stuck = devices.filter { $0.inHome && $0.problem != nil }.map(\.name)
-        return stuck.isEmpty ? "\(sent) device\(sent == 1 ? "" : "s") sent. \(a)"
-            : "\(sent) sent. Not on Wi-Fi or no local key: \(stuck.joined(separator: ", ")). \(a)"
+        let ok = [lightsResult, purifierResult].compactMap { $0 }.joined(separator: " ")
+        return stuck.isEmpty ? ok : "\(ok) Still awaiting usable local addresses: \(stuck.joined(separator: ", "))."
     }
 
     /// Sends the chosen purifier, or removes it from Home when none is chosen (that also removes one Exhale sent).
@@ -352,10 +391,14 @@ extension HomeDevices {
         var body: [String: Any] = ["utcOffset": TimeZone.current.secondsFromGMT()]
         if let p = devices.first(where: { $0.isPurifier && $0.inHome }), let e = p.purifierEntry() { body["purifier"] = e }
         do {
-            let r = try await BridgeAPI.post("/api/dev/config?app=exhale", body, link, timeout: 10)
-            return (r["restart"] as? Bool) == true ? "Sent. The bridge is restarting to update Apple Home (about 20 s)." : "Sent to the bridge."
+            let r = try await BridgeAPI.postLocal("/api/dev/config?app=exhale", body, link, timeout: 12)
+            syncFailure = nil
+            return (r["restart"] as? Bool) == true
+                ? "The purifier configuration was accepted; the bridge is restarting. Check Apple Home afterward."
+                : "Purifier configuration accepted by the bridge. Check Apple Home for its response."
         } catch {
-            return "Couldn't reach the bridge. Check Wi-Fi or remote relay: \(error.localizedDescription)"
+            syncFailure = "Purifier send not confirmed: \(error.localizedDescription)"
+            return syncFailure!
         }
     }
 }

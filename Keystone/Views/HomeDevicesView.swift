@@ -35,7 +35,19 @@ struct HomeDevicesView: View {
                 deviceSections
                 Section {
                     Button("Refresh from Smart Life") { Task { await reload() } }
-                    Button("Look for them on Wi-Fi again") { Task { await model.find(link: store.link); store.show(await model.push(store.link)) } }
+                    Button("Look for them on Wi-Fi again") {
+                        Task {
+                            working = "find"
+                            defer { working = nil }
+                            await model.find(link: store.link)
+                            store.show(await model.push(store.link))
+                            if model.syncFailure == nil, model.devices.contains(where: { $0.isPurifier && $0.inHome }) {
+                                store.show(await model.pushPurifier(store.link))
+                            }
+                            await store.refresh()
+                        }
+                    }
+                    .disabled(working != nil || model.busy != nil)
                     Button("Sign out of Smart Life", role: .destructive) {
                         TuyaToken.stored = nil; token = nil
                     }
@@ -45,6 +57,13 @@ struct HomeDevicesView: View {
             }
             if let m = model.message {
                 Section { Text(m).font(.footnote).foregroundStyle(Theme.bad) }
+            }
+            if let failure = model.syncFailure {
+                Section {
+                    Text(failure).font(.footnote).foregroundStyle(Theme.bad)
+                    Text("No bridge changes are confirmed. Your selections are kept on this phone for retry.")
+                        .font(.caption).foregroundStyle(.secondary)
+                } header: { Text("Apple Home sync failed") }
             }
         }
         .scrollContentBackground(.hidden)
@@ -98,10 +117,14 @@ struct HomeDevicesView: View {
             } else if d.inHome, let why = d.problem {
                 Text(why).font(.caption).foregroundStyle(Theme.bad)
             } else if d.inHome {
-                Text(onBridge ? "In Apple Home · \(d.host ?? "")" : "Sent · \(d.host ?? "") (the bridge picks it up after restarting)")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(model.syncFailure != nil
+                     ? "Selected, not confirmed on the bridge"
+                     : onBridge
+                        ? "Configured on bridge · \(d.host ?? "")"
+                        : "Selected on phone · bridge has not confirmed this device")
+                    .font(.caption).foregroundStyle(model.syncFailure != nil ? Theme.bad : .secondary)
             } else if onBridge {
-                Text("Already in Apple Home through \(d.isPurifier ? "Exhale" : "Afterglow")").font(.caption).foregroundStyle(.secondary)
+                Text("Already configured through \(d.isPurifier ? "Exhale" : "Afterglow")").font(.caption).foregroundStyle(.secondary)
             }
         }
     }
