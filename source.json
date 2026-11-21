@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.57",
+          "buildVersion": "57",
+          "date": "2026-11-21T00:21:27Z",
+          "localizedDescription": "- Bridge 1.11.4: recover memory for Govee, accept Tuya STATUS, fix relay response race (9368395)\n- docs: record factual changes for build-56 [skip ci] (de6edf4)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-57/Keystone-1.0.0-build-57.ipa",
+          "size": 1998471,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.56",
           "buildVersion": "56",
           "date": "2026-11-18T18:43:07Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-31/Keystone-1.0.0-build-31.ipa",
           "size": 1540908,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.30",
-          "buildVersion": "30",
-          "date": "2026-11-06T06:47:14Z",
-          "localizedDescription": "- Router tab: own router login for the bridge (\"keystone\"), Sign in again when it's rejected (a11eeea)\n- Clear stale outdoor coordinates when Home location changes or is removed (eaa252c)\n- Add bridge-based scene schedules, weather rules and gradual light fades (8bf300c)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-30/Keystone-1.0.0-build-30.ipa",
-          "size": 1432045,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.56",
-      "versionDate": "2026-11-18T18:43:07Z",
-      "versionDescription": "- Fix build: rename download status variable (80e6c1c)\n- Keystone: re-check GitHub before every firmware update; clear errors for stale links (8acd472)\n- docs: record factual changes for build-54 [skip ci] (d3cf62c)\n- docs: record factual changes for firmware-build-154 [skip ci] (146bc03)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-56/Keystone-1.0.0-build-56.ipa",
-      "size": 1998722,
+      "version": "1.0.0.57",
+      "versionDate": "2026-11-21T00:21:27Z",
+      "versionDescription": "- Bridge 1.11.4: recover memory for Govee, accept Tuya STATUS, fix relay response race (9368395)\n- docs: record factual changes for build-56 [skip ci] (de6edf4)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-57/Keystone-1.0.0-build-57.ipa",
+      "size": 1998471,
       "appPermissions": {}
     }
   ],
