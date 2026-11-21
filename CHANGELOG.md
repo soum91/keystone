@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-156] - 2026-11-21
+
+## Verified changes since firmware-build-155
+
+- Bridge 1.11.5: reduce network starvation and preserve local HomeKit during DNS outages ([`725f0def`](https://github.com/soum91/keystone/commit/725f0def701404de227e3dc4ebe477dfa3e68d31); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Strip.h`, and 5 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-155...firmware-build-156)
+
 ## [build-58] - 2026-11-21
 
 ## Verified changes since build-57
