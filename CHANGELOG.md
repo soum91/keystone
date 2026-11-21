@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-57] - 2026-11-21
+
+## Verified changes since build-56
+
+- Bridge 1.11.4: recover memory for Govee, accept Tuya STATUS, fix relay response race ([`93683954`](https://github.com/soum91/keystone/commit/93683954f45cd80976da10ecb279e42dea72ef1f); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, and 3 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-56...build-57)
+
 ## [build-56] - 2026-11-18
 
 ## Verified changes since build-54
