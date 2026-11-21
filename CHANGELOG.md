@@ -1,5 +1,15 @@
 # Changelog
 
+## [firmware-build-155] - 2026-11-21
+
+## Verified changes since firmware-build-154
+
+- Bridge 1.11.4: recover memory for Govee, accept Tuya STATUS, fix relay response race ([`93683954`](https://github.com/soum91/keystone/commit/93683954f45cd80976da10ecb279e42dea72ef1f); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/KeystoneBridge/Relay.h`, and 3 more)
+- Fix build: rename download status variable ([`80e6c1c8`](https://github.com/soum91/keystone/commit/80e6c1c80f50f564e78a0c58ad4c54ac04b13f51); `Keystone/App/Store.swift`)
+- Keystone: re-check GitHub before every firmware update; clear errors for stale links ([`8acd472f`](https://github.com/soum91/keystone/commit/8acd472f67cdf1d19f0902bb46bc079d60a491ff); `Keystone/App/Store.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-154...firmware-build-155)
+
 ## [build-57] - 2026-11-21
 
 ## Verified changes since build-56
