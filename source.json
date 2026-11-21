@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.59",
+          "buildVersion": "59",
+          "date": "2026-11-21T18:34:49Z",
+          "localizedDescription": "- Fix Apple Home accessory sending: LAN-only acknowledgement, verify applied device list, prevent false success (fe3f123)\n- docs: record factual changes for firmware-build-156 [skip ci] (b2d5a39)\n- docs: record factual changes for build-58 [skip ci] (11a941b)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-59/Keystone-1.0.0-build-59.ipa",
+          "size": 2017382,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.58",
           "buildVersion": "58",
           "date": "2026-11-21T06:09:02Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-33/Keystone-1.0.0-build-33.ipa",
           "size": 1546088,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.32",
-          "buildVersion": "32",
-          "date": "2026-11-06T18:58:02Z",
-          "localizedDescription": "- Bridge 1.9.18: Govee retries 20 s after a missed listen, listen diagnostics, AC/Govee room source for Smart; Keystone says why the Govee isn't heard (ddac97f)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-32/Keystone-1.0.0-build-32.ipa",
-          "size": 1546104,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.58",
-      "versionDate": "2026-11-21T06:09:02Z",
-      "versionDescription": "- Bridge 1.11.5: reduce network starvation and preserve local HomeKit during DNS outages (725f0de)\n- docs: record factual changes for firmware-build-155 [skip ci] (e6d28de)\n- docs: record factual changes for build-57 [skip ci] (533623f)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-58/Keystone-1.0.0-build-58.ipa",
-      "size": 2009232,
+      "version": "1.0.0.59",
+      "versionDate": "2026-11-21T18:34:49Z",
+      "versionDescription": "- Fix Apple Home accessory sending: LAN-only acknowledgement, verify applied device list, prevent false success (fe3f123)\n- docs: record factual changes for firmware-build-156 [skip ci] (b2d5a39)\n- docs: record factual changes for build-58 [skip ci] (11a941b)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-59/Keystone-1.0.0-build-59.ipa",
+      "size": 2017382,
       "appPermissions": {}
     }
   ],
