@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-159] - 2026-11-21
+
+## Verified changes since firmware-build-158
+
+- Delay local BLE while waiting for feed and preserve HomeKit accessory IDs ([`204c98f2`](https://github.com/soum91/keystone/commit/204c98f2151b9afb9151dd4d828d4950cab7b5d9); `Bridge/KeystoneBridge/Govee.h`, `Bridge/README.md`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-158...firmware-build-159)
+
 ## [firmware-build-158] - 2026-11-21
 
 ## Verified changes since firmware-build-157
