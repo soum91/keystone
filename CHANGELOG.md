@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-157] - 2026-11-21
+
+## Verified changes since firmware-build-156
+
+- Fix Apple Home accessory sending: LAN-only acknowledgement, verify applied device list, prevent false success ([`fe3f1239`](https://github.com/soum91/keystone/commit/fe3f12390773789d06d017bb57cf600ef95505f8); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Keystone/Tuya/HomeDevices.swift`, `Keystone/Views/HomeDevicesView.swift`, and 1 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-156...firmware-build-157)
+
 ## [build-59] - 2026-11-21
 
 ## Verified changes since build-58
