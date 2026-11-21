@@ -137,6 +137,11 @@ struct Tile : Service::Outlet {
     new Characteristic::ConfiguredName(cfg.outlets[i].name.c_str());
   }
   boolean update() override {
+    if (!cfg.ip.length()) {
+      st.ok = false;
+      st.error = "power strip IP unknown; run Find in Keystone";
+      return false;  // Cannot claim a HomeKit command succeeded without an address.
+    }
     setOutlets({idx}, on->getNewVal());
     return true;
   }
@@ -262,7 +267,7 @@ static bool step() {
   if (next.length()) {
     String err;
     if (send(next, err)) { st.ok = true; st.fails = 0; st.error = ""; }
-    else { st.error = err; logEvent("Power strip: " + err); }
+    else { st.ok = false; st.fails++; st.error = err; logEvent("Power strip: " + err); }
     st.lastSent = millis();
     return true;
   }
@@ -384,6 +389,7 @@ static void registerRoutes() { server.on("/api/strip", HTTP_POST, handleApi); }
 // From /api/control (LAN or relay).
 static void control(JsonDocument &d, void (*done)(int, const String &)) {
   if (!cfg.configured) return done(400, "no power strip");
+  if (!cfg.ip.length()) return done(503, "power strip IP unknown; run Find in Keystone");
   if (d["on"].isNull() && d["all"].isNull()) return done(400, "nothing to do");
   std::vector<int> idx;
   bool on;

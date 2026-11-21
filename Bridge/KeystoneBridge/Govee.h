@@ -149,7 +149,8 @@ struct Battery : Service::BatteryService {
 // 2.5 minutes and switch the radio off in between, so Wi-Fi, HomeKit and the AC's TLS have room.
 static volatile bool radioOn = false;
 static uint32_t scanUntil = 0, nextScan = 0, seqAtStart = 0;
-static uint16_t bursts = 0, burstsHeard = 0, skippedLowMem = 0;
+static uint16_t bursts = 0, burstsHeard = 0, skippedLowMem = 0, borrowedRelay = 0;
+static uint32_t lastLowFree = 0, lastLowBlock = 0;
 
 static void radioStart() {
   NimBLEDevice::init("");
@@ -209,13 +210,22 @@ static void tick() {
       }
     } else if (millis() > 45000UL && (int32_t)(millis() - nextScan) >= 0) {
       // Bluetooth takes ~50 KB the moment it starts; starting it with less free tipped the bridge over.
-      if (ESP.getFreeHeap() > 75000 && ESP.getMaxAllocHeap() > 40000) {
+      // Return the MQTT socket/buffer to the heap before refusing the BLE scan.
+      // Keep the crash-protection thresholds unchanged.
+      if ((ESP.getFreeHeap() <= 75000 || ESP.getMaxAllocHeap() <= 40000) &&
+          relayHolding && relayLetGo) {
+        relayLetGo();
+        borrowedRelay++;
+      }
+      uint32_t freeNow = ESP.getFreeHeap(), largest = ESP.getMaxAllocHeap();
+      if (freeNow > 75000 && largest > 40000) {
         seqAtStart = seq;
         radioStart();
         scanUntil = millis() + 20000UL;
         bursts++;
       } else {
         skippedLowMem++;
+        lastLowFree = freeNow; lastLowBlock = largest;
         nextScan = millis() + 10000UL;
       }
     }
@@ -248,6 +258,9 @@ static void info(JsonDocument &d) {
     if (!stale()) { g["temp"] = (float)temp; g["humidity"] = (float)hum; g["battery"] = (int)batt; }
     g["heardAgo"] = lastHeard ? (int)((millis() - lastHeard) / 1000) : -1;
     g["bursts"] = bursts; g["burstsHeard"] = burstsHeard; g["lowMem"] = skippedLowMem;
+    g["borrowedRelay"] = borrowedRelay;
+    g["freeHeap"] = ESP.getFreeHeap(); g["maxBlock"] = ESP.getMaxAllocHeap();
+    if (skippedLowMem) { g["lastSkippedFree"] = lastLowFree; g["lastSkippedBlock"] = lastLowBlock; }
   }
 }
 
@@ -255,6 +268,7 @@ static void info(JsonDocument &d) {
 #else
 namespace govee {   // no Bluetooth on this chip
 static const bool radioOn = false;
+static const bool inHome = false;
 static void radioStop() {}
 }  // namespace govee
 #endif

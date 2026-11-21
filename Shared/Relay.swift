@@ -129,10 +129,13 @@ actor RelayLink {
         if let body { msg["b"] = body }
         let plain = try JSONSerialization.data(withJSONObject: msg)
         let sealed = try AES.GCM.seal(plain, using: key).combined!.base64EncodedData()
-        try await send(Self.publish(topic: "keystone/\(c.id)/req", payload: sealed))
-        return try await withCheckedThrowingContinuation { cont in
+        // Register the waiter before sending: a fast reply must not be lost.
+        let packet = Self.publish(topic: "keystone/\(c.id)/req", payload: sealed)
+        return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<(Int, Data), Error>) in
             waiting[rid] = cont
             Task {
+                do { try await self.send(packet) }
+                catch { await self.fail(rid, error); return }
                 try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
                 await self.fail(rid, RelayError.timeout)
             }

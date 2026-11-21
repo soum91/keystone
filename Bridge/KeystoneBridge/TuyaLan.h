@@ -123,7 +123,8 @@ class Conn {
     String j = "{\"gwId\":\"" + devId + "\",\"devId\":\"" + devId + "\",\"uid\":\"" + devId + "\",\"t\":\"" + t + "\"}";
     if (!send(CMD_DP_QUERY, j)) return "";
     Frame f;
-    if (!waitFrame(f, 1500, CMD_DP_QUERY)) return "";
+    // Tuya 3.3 may answer DP_QUERY with STATUS (0x08), not DP_QUERY (0x0A).
+    if (!waitFrame(f, 1500)) return "";
     String txt = f.text();
     if (txt.indexOf("data unvalid") >= 0) {
       // "device22" firmware: ask through CONTROL_NEW with null values.
@@ -134,7 +135,8 @@ class Conn {
       if (!send(CMD_CONTROL_NEW, q)) return "";
       return waitDps(1500);
     }
-    return extractDps(txt);
+    String dps = extractDps(txt);
+    return dps.length() ? dps : waitDps(700);
   }
 
   // dps: JSON object text. Returns the echoed dps if the device answered within the window ("" otherwise).

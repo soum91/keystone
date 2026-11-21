@@ -182,9 +182,10 @@ static void letGo() {
 }
 
 static void poll() {
-  if (!on || otaActive || safeMode || setupOnly || acNetBusy || WiFi.status() != WL_CONNECTED || millis() < 20000UL) {
+  if (!on || otaActive || safeMode || setupOnly || acNetBusy || (enGovee && govee::inHome && govee::radioOn) ||
+      WiFi.status() != WL_CONNECTED || millis() < 20000UL) {
     letGo();
-    if (acNetBusy) lastTry = 0;   // reconnect as soon as the AC call is done
+    if (acNetBusy || (enGovee && govee::inHome && govee::radioOn)) lastTry = 0;   // reconnect after memory-intensive work
     return;
   }
   if (!mq.connected()) {
