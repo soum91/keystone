@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-162] - 2026-11-22
+
+## Verified changes since firmware-build-161
+
+- Govee fallback: remember named BLE address for iOS-pinned sensor ([`c34dd45b`](https://github.com/soum91/keystone/commit/c34dd45bc039f13e6bb0f137056ce16b5a0ec631); `Bridge/KeystoneBridge/Govee.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-161...firmware-build-162)
+
 ## [firmware-build-161] - 2026-11-22
 
 ## Verified changes since firmware-build-160
