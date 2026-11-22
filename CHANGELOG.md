@@ -1,5 +1,15 @@
 # Changelog
 
+## [build-60] - 2026-11-22
+
+## Verified changes since build-59
+
+- Bridge + app: ingest DewPoint iOS Govee feed and show source in Keystone ([`3023cb7c`](https://github.com/soum91/keystone/commit/3023cb7c6555c6c6f27e4009b9b22cc17633bdda); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/README.md`, and 2 more)
+- Delay local BLE while waiting for feed and preserve HomeKit accessory IDs ([`204c98f2`](https://github.com/soum91/keystone/commit/204c98f2151b9afb9151dd4d828d4950cab7b5d9); `Bridge/KeystoneBridge/Govee.h`, `Bridge/README.md`)
+- Bridge: prefer DewPoint LAN Govee feed; fall back to memory-safe local BLE ([`25acaec0`](https://github.com/soum91/keystone/commit/25acaec0c295debabf366311ee30befaa76ddd7b); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/README.md`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-59...build-60)
+
 ## [firmware-build-159] - 2026-11-21
 
 ## Verified changes since firmware-build-158
