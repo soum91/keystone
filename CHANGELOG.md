@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-160] - 2026-11-22
+
+## Verified changes since firmware-build-159
+
+- Bridge + app: ingest DewPoint iOS Govee feed and show source in Keystone ([`3023cb7c`](https://github.com/soum91/keystone/commit/3023cb7c6555c6c6f27e4009b9b22cc17633bdda); `Bridge/KeystoneBridge/Govee.h`, `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Bridge/README.md`, and 2 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-159...firmware-build-160)
+
 ## [build-60] - 2026-11-22
 
 ## Verified changes since build-59
