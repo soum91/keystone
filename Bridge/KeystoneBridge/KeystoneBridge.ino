@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.7"
+#define FW_VERSION "1.11.8"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -67,6 +67,13 @@ static volatile bool acNetBusy = false;
 static volatile bool relayHolding = false;
 static void (*relayLetGo)() = nullptr;
 static volatile uint32_t webBeat = 0;
+// Track whether HomeSpan has any secure HomeKit controller connections.
+// RTC memory bounds automatic recovery to ONE restart per prolonged outage.
+RTC_NOINIT_ATTR static uint32_t hapRecoveryMagic, hapRecoveryAttempts;
+static const uint32_t HAP_RECOVERY_MAGIC = 0x4B534850UL;
+static uint32_t recoveryCount = 0, wifiDrops = 0, wifiReconnects = 0;
+static String lastRecovery = "";
+static uint32_t wifiConnectedSince = 0;
 
 // Devices switched off in Keystone (prefs "en_<key>"). Off = not in Apple Home, never polled, its memory
 // stays free. Read once at boot (turning one on or off restarts the bridge) because Home's accessory list
@@ -1124,6 +1131,15 @@ static void handleInfo() {
   d["boot"]["reason"] = bootReason;
   d["boot"]["crashes"] = crashCount;
   d["boot"]["safeMode"] = safeMode;
+  auto hap = homeSpan.getStatus();
+  d["homekit"]["status"] = homeSpan.statusString(hap.first);
+  d["homekit"]["connected"] = (hap.first == HS_CONNECTED);
+  d["homekit"]["statusSeconds"] = hap.second;
+  d["homekit"]["recoveries"] = recoveryCount;
+  d["homekit"]["recoveryUsedThisOutage"] = (hapRecoveryAttempts != 0);
+  d["homekit"]["wifiDrops"] = wifiDrops;
+  d["homekit"]["wifiReconnects"] = wifiReconnects;
+  if (lastRecovery.length()) d["homekit"]["lastRecovery"] = lastRecovery;
   d["boot"]["minHeap"] = ESP.getMinFreeHeap();
   d["heap"] = ESP.getFreeHeap();
   d["heapBlock"] = ESP.getMaxAllocHeap();
@@ -1379,12 +1395,31 @@ static void startNetworkServices() {
 // Restart only when Wi-Fi association is actually lost for three minutes.
 static void netWatch() {
   static uint32_t lost = 0, last = 0;
+  static bool previouslyConnected = false;
   uint32_t now = millis();
   if (otaActive || setupOnly || now - last < 10000UL) return;
   last = now;
-  if (WiFi.status() == WL_CONNECTED) { lost = 0; return; }
+  bool connected = WiFi.status() == WL_CONNECTED;
+  if (connected != previouslyConnected) {
+    previouslyConnected = connected;
+    if (connected) {
+      if (wifiDrops) wifiReconnects++;
+      wifiConnectedSince = now;
+      // Keep a mains-powered HomeKit bridge responsive to TCP and mDNS packets.
+      WiFi.setSleep(false);
+      logEvent("Wi-Fi associated: " + WiFi.localIP().toString());
+    } else {
+      wifiDrops++;
+      wifiConnectedSince = 0;
+      logEvent("Wi-Fi disconnected");
+    }
+  }
+  if (connected) { lost = 0; return; }
   if (!lost) lost = now;
   if (now - lost >= 180000UL) {
+    lastRecovery = "Wi-Fi disconnected for 3 minutes";
+    prefs.putString("autoRecovery", lastRecovery);
+    prefs.putUInt("autoRecoveryCount", ++recoveryCount);
     logEvent("Wi-Fi lost for 3 minutes; restarting without erasing settings");
     ESP.restart();
   }
@@ -1484,6 +1519,15 @@ void setup() {
   oled::begin();
   stateLock = xSemaphoreCreateMutex();
   prefs.begin("afterglow", false);
+  // Remember a HomeKit recovery across software restart, but not power-on.
+  esp_reset_reason_t initialReason = esp_reset_reason();
+  if (hapRecoveryMagic != HAP_RECOVERY_MAGIC ||
+      initialReason == ESP_RST_POWERON || initialReason == ESP_RST_BROWNOUT) {
+    hapRecoveryMagic = HAP_RECOVERY_MAGIC;
+    hapRecoveryAttempts = 0;
+  }
+  lastRecovery = prefs.getString("autoRecovery", "");
+  recoveryCount = prefs.getUInt("autoRecoveryCount", 0);
   token = prefs.getString("token", "");
   followTV = prefs.getBool("follow", true);
   barToken = prefs.getString("bartoken", "");
@@ -1625,6 +1669,32 @@ void loop() {
   labelAt(crumbHome, "apple home");
   homeSpan.poll();
   labelAt(crumbHome, "idle (home loop)");
+  // HomeSpan 2.1.8: HS_PAIRED means on Wi-Fi but zero secure HAP sessions.
+  // HS_CONNECTED means a HomeKit hub/controller has authenticated. A long
+  // HS_PAIRED state often corresponds to all accessories showing No Response.
+  static uint32_t lastHapCheck = 0;
+  uint32_t now = millis();
+  if (!otaActive && !setupOnly && now - lastHapCheck >= 15000UL) {
+    lastHapCheck = now;
+    auto hap = homeSpan.getStatus();
+    if (hap.first == HS_CONNECTED && hap.second >= 300) {
+      // Five uninterrupted minutes of health arms recovery for the next outage.
+      hapRecoveryAttempts = 0;
+    } else if (hap.first == HS_PAIRED && hap.second >= 600 &&
+               now >= 900000UL && WiFi.status() == WL_CONNECTED &&
+               wifiConnectedSince && now - wifiConnectedSince > 180000UL &&
+               hapRecoveryAttempts == 0) {
+      // Exactly one settings-preserving reboot during a single outage.
+      // If the HomePod/router is down, never reboot in a loop.
+      hapRecoveryAttempts = 1;
+      lastRecovery = "No secure Apple Home connection for 10 minutes";
+      prefs.putString("autoRecovery", lastRecovery);
+      prefs.putUInt("autoRecoveryCount", ++recoveryCount);
+      Serial.println("[keystone] prolonged HomeKit disconnect; one recovery restart");
+      delay(100);
+      ESP.restart();
+    }
+  }
   uint32_t beat = workerBeat;
   uint32_t wb = webBeat;
   if (!otaActive && serverUp && wb && millis() - wb > 60000UL) {
