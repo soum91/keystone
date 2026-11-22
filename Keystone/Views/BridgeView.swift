@@ -164,6 +164,34 @@ struct BridgeView: View {
                         }
                     }
 
+                    if let hap = i.homekit {
+                        Section {
+                            LabeledContent("Secure HomeKit link", value: hap.connected == true ? "Connected" : (hap.status ?? "Checking"))
+                            if let seconds = hap.statusSeconds, hap.connected != true {
+                                LabeledContent("In this state", value: "\(seconds / 60) min")
+                            }
+                            if let n = hap.recoveries, n > 0 {
+                                LabeledContent("Automatic recoveries", value: "\(n)")
+                            }
+                            if let cause = hap.lastRecovery, !cause.isEmpty {
+                                Text("Last recovery: \(cause)")
+                                    .font(.footnote).foregroundStyle(.secondary)
+                            }
+                            if let drops = hap.wifiDrops {
+                                LabeledContent("Wi-Fi drops this boot", value: "\(drops)")
+                            }
+                            if let reconnects = hap.wifiReconnects, reconnects > 0 {
+                                LabeledContent("Wi-Fi reconnects", value: "\(reconnects)")
+                            }
+                            if hap.recoveryUsedThisOutage == true {
+                                Text("Automatic recovery already attempted for this outage; repeated restarts are suppressed.")
+                                    .font(.footnote).foregroundStyle(.secondary)
+                            }
+                        } header: { Text("Apple Home connection") } footer: {
+                            Text("If Keystone works while Apple Home says No Response, this section distinguishes a lost secure HomeKit session from Wi-Fi or low-memory failures. Recovery preserves existing pairing and accessories.")
+                        }
+                    }
+
                     Section("Network") {
                         LabeledContent("Wi-Fi", value: i.ssid ?? "–")
                         LabeledContent("Signal", value: Fmt.signal(i.rssi).text)

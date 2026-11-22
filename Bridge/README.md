@@ -131,3 +131,29 @@ continues to manage the bridge, its firmware, pairing, devices and Apple Home.
   authenticated; do not forward port 8092 to the internet.
 - Keep the Govee feature enabled in the Keystone iOS app. No other bridge
   firmware, extra flash procedure or hardware is necessary.
+
+
+## HomeKit bridge-wide "No Response" recovery
+
+Keystone is one ESP32 bridge; only the Keystone iOS app manages its firmware.
+HomeSpan 2.1.8 reports HS_CONNECTED when the bridge has one or more secure
+HomeKit client sessions, or HS_PAIRED when it has Wi-Fi and a Home pairing but
+no active secure sessions. HomeKit accessories can all show "No Response"
+when this state persists. A HomePod/router outage may also cause that state.
+
+Firmware 1.11.8 exposes homekit.status, homekit.statusSeconds,
+homekit.connected, homekit.recoveries, homekit.lastRecovery,
+homekit.wifiDrops, and homekit.wifiReconnects in /api/info, which the
+Keystone iOS app displays under Bridge > Apple Home connection.
+
+The Wi-Fi radio disables modem sleep after association for more responsive
+local TCP/mDNS. If the bridge has had stable Wi-Fi for at least 3 minutes
+but HomeSpan reports HS_PAIRED for at least 10 minutes (and bridge uptime
+exceeds 15 minutes), Keystone attempts **one** settings-preserving restart
+per prolonged outage, rather than restarting endlessly when a HomePod is off.
+After 5 minutes in HS_CONNECTED, recovery is armed again for a new outage.
+
+This does not erase NVS, Wi-Fi credentials, HomeKit pairings or device IDs.
+If the issue recurs, inspect Bridge > Health, Bridge > Network, and
+Bridge > Apple Home connection for the actual reason. Also check whether
+Keystone itself reaches the ESP32 when Apple Home cannot.
