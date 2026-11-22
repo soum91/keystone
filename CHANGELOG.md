@@ -1,5 +1,16 @@
 # Changelog
 
+## [build-61] - 2026-11-22
+
+## Verified changes since build-60
+
+- Keystone app: display HomeKit secure-session state and recovery diagnostics ([`df063c7d`](https://github.com/soum91/keystone/commit/df063c7d1844db889c1a641bde89274a9b20400f); `Bridge/README.md`, `Keystone/Views/BridgeView.swift`, `Shared/Bridge.swift`)
+- HomeSpan: recover one prolonged HomeKit session loss; disable Wi-Fi modem sleep and expose diagnostics ([`f936543d`](https://github.com/soum91/keystone/commit/f936543ddf55eb5f9fc84236754bfe1e658e9a49); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Govee fallback: remember named BLE address for iOS-pinned sensor ([`c34dd45b`](https://github.com/soum91/keystone/commit/c34dd45bc039f13e6bb0f137056ce16b5a0ec631); `Bridge/KeystoneBridge/Govee.h`)
+- Fix DewPoint feed expiry: never reuse older local BLE validity for stale phone data ([`4d8aff44`](https://github.com/soum91/keystone/commit/4d8aff44476c485edd91c999eddfa9e420bf2904); `Bridge/KeystoneBridge/Govee.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-60...build-61)
+
 ## [firmware-build-162] - 2026-11-22
 
 ## Verified changes since firmware-build-161
