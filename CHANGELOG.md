@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-161] - 2026-11-22
+
+## Verified changes since firmware-build-160
+
+- Fix DewPoint feed expiry: never reuse older local BLE validity for stale phone data ([`4d8aff44`](https://github.com/soum91/keystone/commit/4d8aff44476c485edd91c999eddfa9e420bf2904); `Bridge/KeystoneBridge/Govee.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-160...firmware-build-161)
+
 ## [firmware-build-160] - 2026-11-22
 
 ## Verified changes since firmware-build-159
