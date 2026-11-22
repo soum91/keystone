@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-163] - 2026-11-22
+
+## Verified changes since firmware-build-162
+
+- HomeSpan: recover one prolonged HomeKit session loss; disable Wi-Fi modem sleep and expose diagnostics ([`f936543d`](https://github.com/soum91/keystone/commit/f936543ddf55eb5f9fc84236754bfe1e658e9a49); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-162...firmware-build-163)
+
 ## [build-61] - 2026-11-22
 
 ## Verified changes since build-60
