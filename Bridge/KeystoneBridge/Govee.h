@@ -39,6 +39,7 @@ static uint32_t feedAccepted = 0, feedRejected = 0;
 static char feedHost[16] = "";
 static uint32_t pickStartedMs = 0;  // delay local BLE selection while awaiting DewPoint
 static volatile uint32_t localHeardMs = 0;
+static volatile bool latestFromPhone = false;
 
 static bool remoteFresh() {
   uint32_t now = millis(), received = remotePacketMs, heard = remoteHeardMs;
@@ -168,6 +169,7 @@ static bool acceptFeed(char *message, const IPAddress &sender) {
   portENTER_CRITICAL(&mux);
   temp = t; hum = h; batt = (int)battery;
   lastHeard = now - age;  // preserve measurement age, not just network receipt time
+  latestFromPhone = true;
   seq++;
   remoteHeardMs = now - age;
   remotePacketMs = now;
@@ -234,6 +236,7 @@ class Callbacks : public NimBLEScanCallbacks {
     seq = seq + 1;
     lastHeard = millis();
     localHeardMs = lastHeard;
+    latestFromPhone = false;
     portEXIT_CRITICAL(&mux);
   }
   void onScanEnd(const NimBLEScanResults &, int) override { NimBLEDevice::getScan()->start(0, false, true); }
@@ -241,8 +244,9 @@ class Callbacks : public NimBLEScanCallbacks {
 static Callbacks callbacks;
 
 static bool stale() {
-  // Don't keep an old DewPoint reading looking live after the feed stops.
-  if (remoteFresh()) return false;
+  // If the last measurement came from the iPhone, it expires with its feed.
+  // A previous local BLE measurement must not extend that remote reading's lifetime.
+  if (latestFromPhone) return !remoteFresh();
   uint32_t l = localHeardMs;
   return l == 0 || millis() - l > GOVEE_STALE_MS;
 }
@@ -423,7 +427,7 @@ static void forget(const char *) {
 static void info(JsonDocument &d) {
   JsonObject g = d["govee"].to<JsonObject>();
   g["locked"] = (bool)locked;
-  g["source"] = remoteFresh() ? "dewpoint" : (!stale() ? "localBLE" : "stale");
+  g["source"] = !stale() ? (latestFromPhone ? "dewpoint" : "localBLE") : "stale";
   g["feedPackets"] = feedAccepted;
   g["feedRejected"] = feedRejected;
   g["feedHost"] = feedHost;
