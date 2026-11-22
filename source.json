@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.61",
+          "buildVersion": "61",
+          "date": "2026-11-22T18:27:07Z",
+          "localizedDescription": "- Keystone app: display HomeKit secure-session state and recovery diagnostics (df063c7)\n- HomeSpan: recover one prolonged HomeKit session loss; disable Wi-Fi modem sleep and expose diagnostics (f936543)\n- docs: record factual changes for firmware-build-162 [skip ci] (4790cc8)\n- docs: record factual changes for firmware-build-161 [skip ci] (41447b3)\n- docs: record factual changes for firmware-build-160 [skip ci] (c0ed1c0)\n- Govee fallback: remember named BLE address for iOS-pinned sensor (c34dd45)\n- docs: record factual changes for build-60 [skip ci] (8554ff2)\n- Fix DewPoint feed expiry: never reuse older local BLE validity for stale phone data (4d8aff4)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-61/Keystone-1.0.0-build-61.ipa",
+          "size": 2036141,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.60",
           "buildVersion": "60",
           "date": "2026-11-22T03:48:34Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-34/Keystone-1.0.0-build-34.ipa",
           "size": 1549928,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.35",
-          "buildVersion": "35",
-          "date": "2026-11-06T20:21:40Z",
-          "localizedDescription": "- Internet sources: 'Automatic weight' wording (e6dc8e3)\n- Show actual installed app version and build in UI (26f61c7)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-35/Keystone-1.0.0-build-35.ipa",
-          "size": 1549893,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.60",
-      "versionDate": "2026-11-22T03:48:34Z",
-      "versionDescription": "- Bridge + app: ingest DewPoint iOS Govee feed and show source in Keystone (3023cb7)\n- docs: record factual changes for firmware-build-159 [skip ci] (d1c6917)\n- docs: record factual changes for firmware-build-158 [skip ci] (7f0fd31)\n- Delay local BLE while waiting for feed and preserve HomeKit accessory IDs (204c98f)\n- Bridge: prefer DewPoint LAN Govee feed; fall back to memory-safe local BLE (25acaec)\n- docs: record factual changes for firmware-build-157 [skip ci] (4191820)\n- docs: record factual changes for build-59 [skip ci] (91eac94)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-60/Keystone-1.0.0-build-60.ipa",
-      "size": 2019345,
+      "version": "1.0.0.61",
+      "versionDate": "2026-11-22T18:27:07Z",
+      "versionDescription": "- Keystone app: display HomeKit secure-session state and recovery diagnostics (df063c7)\n- HomeSpan: recover one prolonged HomeKit session loss; disable Wi-Fi modem sleep and expose diagnostics (f936543)\n- docs: record factual changes for firmware-build-162 [skip ci] (4790cc8)\n- docs: record factual changes for firmware-build-161 [skip ci] (41447b3)\n- docs: record factual changes for firmware-build-160 [skip ci] (c0ed1c0)\n- Govee fallback: remember named BLE address for iOS-pinned sensor (c34dd45)\n- docs: record factual changes for build-60 [skip ci] (8554ff2)\n- Fix DewPoint feed expiry: never reuse older local BLE validity for stale phone data (4d8aff4)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-61/Keystone-1.0.0-build-61.ipa",
+      "size": 2036141,
       "appPermissions": {}
     }
   ],
