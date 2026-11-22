@@ -26,7 +26,9 @@ struct BridgeInfo: Codable, Equatable {
     struct Govee: Codable, Equatable { var locked: Bool?; var name: String?; var temp: Double?; var humidity: Double?; var battery: Int?; var heardAgo: Int?
         var bursts: Int?; var burstsHeard: Int?; var lowMem: Int?
         var borrowedRelay: Int?; var freeHeap: Int?; var maxBlock: Int?
-        var lastSkippedFree: Int?; var lastSkippedBlock: Int? }
+        var lastSkippedFree: Int?; var lastSkippedBlock: Int?
+        var source: String?; var feedActive: Bool?; var feedAge: Int?; var feedHost: String?
+        var feedPackets: Int?; var feedRejected: Int? }
     struct Strip: Codable, Equatable {
         struct Outlet: Codable, Equatable { var name: String; var dp: String; var on: Bool? }
         var configured: Bool?; var name: String?; var id: String?; var ip: String?; var ver: Double?

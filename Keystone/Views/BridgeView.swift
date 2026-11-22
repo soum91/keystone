@@ -213,6 +213,18 @@ struct BridgeView: View {
                         Section {
                             LabeledContent("Thermometer", value: i.govee?.name ?? "not picked yet")
                             if let g = i.govee {
+                                if let source = g.source {
+                                    LabeledContent("Reading source", value: source == "dewpoint" ? "DewPoint iPhone" : source == "localBLE" ? "Bridge Bluetooth" : "Stale")
+                                }
+                                if let count = g.feedPackets, count > 0 {
+                                    LabeledContent("DewPoint readings", value: "\(count) received")
+                                }
+                                if let age = g.feedAge, age >= 0 {
+                                    LabeledContent("Last iPhone feed", value: "\(age) s ago")
+                                }
+                                if let rejected = g.feedRejected, rejected > 0 {
+                                    LabeledContent("Rejected feed packets", value: "\(rejected)")
+                                }
                                 if let n = g.lowMem { LabeledContent("BLE blocked by RAM", value: "\(n) attempts") }
                                 if let n = g.borrowedRelay { LabeledContent("Relay memory borrowed", value: "\(n) times") }
                                 if let n = g.bursts, let h = g.burstsHeard { LabeledContent("BLE scans with data", value: "\(h) / \(n)") }
@@ -222,7 +234,7 @@ struct BridgeView: View {
                             }
                             Button("Pick a different Govee sensor") { confirm = .govee }
                         } footer: {
-                            Text("The bridge restarts and locks onto the strongest Govee sensor it hears in 30 s, so hold the right one close.")
+                            Text("DewPoint on an iPhone can forward fresh Govee readings while running. Keystone handles firmware, bridge pairing and Apple Home. If DewPoint stops reporting, the bridge tries its own memory-guarded Bluetooth scans. Picking another Govee restarts the bridge.")
                         }
                     }
 

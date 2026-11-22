@@ -30,7 +30,7 @@ static char bestAddr[18] = "", bestName[32] = "";
 static volatile int bestRssi = -127;
 static uint32_t bootMs = 0;
 static bool inHome = false;
-// DewPoint continuously scans BLE; Keystone receives its LAN broadcast instead.
+// DewPoint's iPhone app forwards BLE observations while iOS keeps it running.
 // If the feed expires, the existing memory-gated local NimBLE scanner is the fallback.
 static WiFiUDP feedUdp;
 static bool feedOpen = false;
@@ -79,7 +79,7 @@ static bool parse(const std::string &name, const std::string &md, float &t, floa
   return false;
 }
 
-// Receive small UDP frames only from the same LAN. Sensor pinning is not authentication;
+// Receive small iOS UDP frames only from the same LAN. Sensor pinning is not authentication;
 // don't run the feed on untrusted networks or forward this port to the internet.
 static bool sameSubnet(const IPAddress &sender) {
   IPAddress me = WiFi.localIP(), mask = WiFi.subnetMask();
@@ -116,44 +116,58 @@ static bool validMac(const char *mac) {
 // Runs on Keystone's network worker, never in the HomeSpan or NimBLE callbacks.
 static bool acceptFeed(char *message, const IPAddress &sender) {
   if (!sameSubnet(sender)) return false;
-  char *fields[8] = {};
+
+  // DewPoint is an iOS app. CoreBluetooth intentionally hides BLE MAC addresses,
+  // so a DPG2 packet identifies its Govee by the advertised sensor name instead.
+  char *fields[7] = {};
   char *context = nullptr;
   char *p = strtok_r(message, ",", &context);
-  for (int i = 0; i < 8 && p; i++) {
-    fields[i] = p;
-    p = strtok_r(nullptr, ",", &context);
-  }
-  if (p) return false;  // extra fields
-  for (int i = 0; i < 8; i++) if (!fields[i]) return false;
-  if (strcmp(fields[0], "DPG1") != 0 || !validMac(fields[1]) || strlen(fields[2]) >= sizeof(lockedName))
-    return false;
-  if (strncmp(fields[2], "GV", 2) != 0 && strncmp(fields[2], "Govee", 5) != 0) return false;
+  int count = 0;
+  while (p && count < 7) { fields[count++] = p; p = strtok_r(nullptr, ",", &context); }
+  if (count != 7 || p || strcmp(fields[0], "DPG2") != 0) return false;
+
+  const char *name = fields[1];
+  size_t nameLen = strlen(name);
+  if (!nameLen || nameLen >= sizeof(lockedName)) return false;
+  if (strncmp(name, "GV", 2) && strncmp(name, "Govee", 5)) return false;
+  for (size_t i = 0; i < nameLen; i++)
+    if (!isalnum((unsigned char)name[i]) && name[i] != '_' && name[i] != '-') return false;
+
   float t, h;
   uint32_t battery, age, sampleSeq;
-  if (!decimal(fields[3], t) || !decimal(fields[4], h) ||
-      !unsignedNumber(fields[5], battery) || !unsignedNumber(fields[6], age) ||
-      !unsignedNumber(fields[7], sampleSeq)) return false;
+  if (!decimal(fields[2], t) || !decimal(fields[3], h) ||
+      !unsignedNumber(fields[4], battery) || !unsignedNumber(fields[5], age) ||
+      !unsignedNumber(fields[6], sampleSeq)) return false;
   if (t < -40 || t > 100 || h < 0 || h > 100 || battery > 100 ||
       age > GOVEE_FEED_SAMPLE_MAX_AGE_MS || sampleSeq == 0) return false;
-  // A different nearby Govee must never silently replace a paired sensor.
-  if (locked && strcasecmp(fields[1], lockedAddr) != 0) return false;
+  // Never let a different Govee override the accessory already paired in Home.
+  if (locked && strcasecmp(name, lockedName)) return false;
 
   if (!locked) {
-    strlcpy(lockedAddr, fields[1], sizeof(lockedAddr));
-    strlcpy(lockedName, fields[2], sizeof(lockedName));
+    // Use the advertised name for a stable HomeKit identity. iOS does not
+    // expose the real BLE MAC, and we must not assume the UUID is a MAC.
+    uint32_t hash = 2166136261UL;
+    for (const char *q = name; *q; ++q) {
+      hash ^= (uint8_t)toupper((unsigned char)*q);
+      hash *= 16777619UL;
+    }
+    snprintf(lockedAddr, sizeof(lockedAddr), "ios:%08lx", (unsigned long)hash);
+    strlcpy(lockedName, name, sizeof(lockedName));
     locked = true;
     prefs.putString("gv_addr", lockedAddr);
     prefs.putString("gv_name", lockedName);
-    // HomeSpan's accessory list is fixed at boot; reboot once after pinning.
-    Serial.printf("[keystone] pinned DewPoint sensor %s; restarting to expose it in Home\n", lockedAddr);
+    // HomeSpan accessories are created only at boot. One settings-preserving
+    // restart adds the first discovered sensor without changing other pairings.
+    Serial.printf("[keystone] pinned Govee %s from DewPoint iOS; restarting once\n", lockedName);
     delay(150);
     ESP.restart();
     return true;
   }
+
   uint32_t now = millis();
   portENTER_CRITICAL(&mux);
   temp = t; hum = h; batt = (int)battery;
-  lastHeard = now - age;  // keep actual sample freshness, not just arrival time
+  lastHeard = now - age;  // preserve measurement age, not just network receipt time
   seq++;
   remoteHeardMs = now - age;
   remotePacketMs = now;
@@ -210,7 +224,11 @@ class Callbacks : public NimBLEScanCallbacks {
       }
       return;
     }
-    if (strcasecmp(addr.c_str(), lockedAddr) != 0 || remoteFresh()) return;
+    // An iOS-pinned sensor has no BLE MAC, so fall back by advertised name.
+    bool fromIOS = strncmp(lockedAddr, "ios:", 4) == 0;
+    bool sameSensor = fromIOS ? strcasecmp(name.c_str(), lockedName) == 0
+                              : strcasecmp(addr.c_str(), lockedAddr) == 0;
+    if (!sameSensor || remoteFresh()) return;
     portENTER_CRITICAL(&mux);
     temp = t; hum = h; batt = b;
     seq = seq + 1;
