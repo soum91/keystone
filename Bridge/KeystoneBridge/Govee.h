@@ -40,6 +40,7 @@ static char feedHost[16] = "";
 static uint32_t pickStartedMs = 0;  // delay local BLE selection while awaiting DewPoint
 static volatile uint32_t localHeardMs = 0;
 static volatile bool latestFromPhone = false;
+static char localFallbackAddr[18] = "";  // learned from a named BLE advert after an iOS pin
 
 static bool remoteFresh() {
   uint32_t now = millis(), received = remotePacketMs, heard = remoteHeardMs;
@@ -209,8 +210,16 @@ class Callbacks : public NimBLEScanCallbacks {
     if (dev->getManufacturerDataCount() == 0) return;
     std::string addr = dev->getAddress().toString();
     std::string name = dev->getName();
-    // A locked H5102 can broadcast its measurement without its device name.
-    if (name.empty() && locked && strcasecmp(addr.c_str(), lockedAddr) == 0)
+    // H5102 occasionally omits its name. A locally pinned sensor has its MAC;
+    // an iOS-pinned sensor has only a name, so learn the MAC when a named BLE
+    // advert comes through before allowing subsequent nameless packets.
+    bool iosPinned = locked && strncmp(lockedAddr, "ios:", 4) == 0;
+    if (iosPinned && !name.empty() && strcasecmp(name.c_str(), lockedName) == 0)
+      strlcpy(localFallbackAddr, addr.c_str(), sizeof(localFallbackAddr));
+    if (name.empty() && locked &&
+        (strcasecmp(addr.c_str(), lockedAddr) == 0 ||
+         (iosPinned && localFallbackAddr[0] &&
+          strcasecmp(addr.c_str(), localFallbackAddr) == 0)))
       name = lockedName;
     float t, h;
     int b;
