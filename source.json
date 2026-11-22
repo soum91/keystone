@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.60",
+          "buildVersion": "60",
+          "date": "2026-11-22T03:48:34Z",
+          "localizedDescription": "- Bridge + app: ingest DewPoint iOS Govee feed and show source in Keystone (3023cb7)\n- docs: record factual changes for firmware-build-159 [skip ci] (d1c6917)\n- docs: record factual changes for firmware-build-158 [skip ci] (7f0fd31)\n- Delay local BLE while waiting for feed and preserve HomeKit accessory IDs (204c98f)\n- Bridge: prefer DewPoint LAN Govee feed; fall back to memory-safe local BLE (25acaec)\n- docs: record factual changes for firmware-build-157 [skip ci] (4191820)\n- docs: record factual changes for build-59 [skip ci] (91eac94)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-60/Keystone-1.0.0-build-60.ipa",
+          "size": 2019345,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.59",
           "buildVersion": "59",
           "date": "2026-11-21T18:34:49Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-35/Keystone-1.0.0-build-35.ipa",
           "size": 1549893,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.33",
-          "buildVersion": "33",
-          "date": "2026-11-06T19:17:07Z",
-          "localizedDescription": "- Internet sources: note that links that can't connect are switched off (ca6518b)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-33/Keystone-1.0.0-build-33.ipa",
-          "size": 1546088,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.59",
-      "versionDate": "2026-11-21T18:34:49Z",
-      "versionDescription": "- Fix Apple Home accessory sending: LAN-only acknowledgement, verify applied device list, prevent false success (fe3f123)\n- docs: record factual changes for firmware-build-156 [skip ci] (b2d5a39)\n- docs: record factual changes for build-58 [skip ci] (11a941b)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-59/Keystone-1.0.0-build-59.ipa",
-      "size": 2017382,
+      "version": "1.0.0.60",
+      "versionDate": "2026-11-22T03:48:34Z",
+      "versionDescription": "- Bridge + app: ingest DewPoint iOS Govee feed and show source in Keystone (3023cb7)\n- docs: record factual changes for firmware-build-159 [skip ci] (d1c6917)\n- docs: record factual changes for firmware-build-158 [skip ci] (7f0fd31)\n- Delay local BLE while waiting for feed and preserve HomeKit accessory IDs (204c98f)\n- Bridge: prefer DewPoint LAN Govee feed; fall back to memory-safe local BLE (25acaec)\n- docs: record factual changes for firmware-build-157 [skip ci] (4191820)\n- docs: record factual changes for build-59 [skip ci] (91eac94)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-60/Keystone-1.0.0-build-60.ipa",
+      "size": 2019345,
       "appPermissions": {}
     }
   ],
