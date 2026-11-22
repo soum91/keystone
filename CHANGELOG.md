@@ -1,5 +1,14 @@
 # Changelog
 
+## [firmware-build-164] - 2026-11-22
+
+## Verified changes since firmware-build-162
+
+- Keystone app: display HomeKit secure-session state and recovery diagnostics ([`df063c7d`](https://github.com/soum91/keystone/commit/df063c7d1844db889c1a641bde89274a9b20400f); `Bridge/README.md`, `Keystone/Views/BridgeView.swift`, `Shared/Bridge.swift`)
+- HomeSpan: recover one prolonged HomeKit session loss; disable Wi-Fi modem sleep and expose diagnostics ([`f936543d`](https://github.com/soum91/keystone/commit/f936543ddf55eb5f9fc84236754bfe1e658e9a49); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-162...firmware-build-164)
+
 ## [firmware-build-163] - 2026-11-22
 
 ## Verified changes since firmware-build-162
