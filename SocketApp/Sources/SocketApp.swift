@@ -4,19 +4,24 @@ import UIKit
 @main
 struct SocketApp: App {
     @StateObject private var store = SocketStore.shared
+    @StateObject private var cloud = SurgeCloudStore.shared
     @Environment(\.scenePhase) private var phase
     var body: some Scene {
         WindowGroup {
             SocketHome().environmentObject(store).tint(.mint).preferredColorScheme(.dark)
         }
         .onChange(of: phase, initial: true) { _, state in
-            if state == .active && store.paired { Task { await store.refresh() } }
+            if state == .active { Task {
+                await store.refresh()
+                await cloud.load()
+            } }
         }
     }
 }
 
 struct SocketHome: View {
     @EnvironmentObject var store: SocketStore
+    @StateObject private var cloud = SurgeCloudStore.shared
     @State private var showingSettings = false
     @State private var showManualAddress = false
     @StateObject private var finder = SurgeBridgeFinder()
@@ -26,10 +31,11 @@ struct SocketHome: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
-                    if store.paired {
+                    if store.paired || (cloud.authorized && cloud.selected != nil) {
                         socketsCard
-                        if store.strip?.configured == true { shortcutsCard }
+                        if !store.sockets.isEmpty { shortcutsCard }
                     } else { pairCard }
+                    cloudCard
                     if let message = store.message {
                         Text(message).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
                     }
@@ -45,20 +51,28 @@ struct SocketHome: View {
                 }
             }
             .sheet(isPresented: $showingSettings) { settings }
-            .refreshable { await store.refresh() }
+            .refreshable {
+                await store.refresh()
+                await cloud.load()
+            }
             .task {
+                finder.start() // Also rediscover after DHCP changed an existing pairing's IP.
                 if store.paired { await store.refresh() }
-                else { finder.start() }
+                await cloud.load()
             }
             .onChange(of: finder.found) { _, hosts in
-                if !store.paired && hosts.count == 1 {
+                guard hosts.count == 1 else { return }
+                if store.paired {
+                    if !store.reachable {
+                        Task { await store.useDiscoveredBridge(host: hosts[0].host, port: hosts[0].port) }
+                    }
+                } else {
                     store.host = hosts[0].host
                     store.port = hosts[0].port
                 }
             }
             .onChange(of: store.paired) { _, paired in
-                if paired { finder.stop() }
-                else { finder.start() }
+                if !paired { finder.start() }
             }
             .onDisappear { finder.stop() }
         }
@@ -71,9 +85,11 @@ struct SocketHome: View {
                 .frame(width: 54, height: 54)
                 .background(.mint.opacity(0.12), in: RoundedRectangle(cornerRadius: 16))
             VStack(alignment: .leading, spacing: 4) {
-                Text(store.strip?.name ?? "Power strip").font(.title2.bold())
-                Label(store.reachable ? (store.strip?.configured != true ? "Bridge connected · outlets not set up" : store.strip?.ok == true ? "Online" : "Strip unavailable") : "Bridge offline",
-                      systemImage: store.reachable ? "wifi" : "wifi.slash")
+                Text(store.usingCloud ? cloud.selected?.name ?? "Power strip" : store.strip?.name ?? "Power strip")
+                    .font(.title2.bold())
+                Label(store.usingCloud ? "Tuya Smart cloud fallback" :
+                      store.reachable ? (store.strip?.configured != true ? "Bridge connected · outlets not set up" : store.strip?.ok == true ? "Keystone LAN connected" : "Strip unavailable") : "Keystone bridge offline",
+                      systemImage: store.usingCloud ? "cloud" : store.reachable ? "wifi" : "wifi.slash")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
@@ -90,9 +106,10 @@ struct SocketHome: View {
             }
             .buttonStyle(.bordered)
             .font(.caption)
-            .disabled(store.busy != nil || !store.reachable || store.strip?.ok != true)
+            .disabled(store.busy != nil || store.sockets.isEmpty ||
+                      (store.usingCloud ? !cloud.connected : !store.reachable || store.strip?.ok != true))
             .padding(.bottom, 8)
-            if store.strip?.configured != true {
+            if !store.usingCloud && store.strip?.configured != true {
                 VStack(alignment: .leading, spacing: 12) {
                     Label("No outlet mappings on Keystone yet", systemImage: "exclamationmark.circle")
                         .font(.subheadline.weight(.semibold))
@@ -116,29 +133,106 @@ struct SocketHome: View {
             ForEach(store.sockets) { socket in
                 Divider().overlay(.white.opacity(0.1))
                 HStack(spacing: 12) {
-                    Image(systemName: socket.index >= 3 ? "cable.connector" : "poweroutlet.type.b")
+                    Image(systemName: socket.name.hasPrefix("USB") ? "cable.connector" : "poweroutlet.type.b")
                         .font(.title3).foregroundStyle(.mint).frame(width: 32)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(socket.name).font(.body.weight(.medium))
-                        Text("Channel \(socket.index + 1) · DP \(socket.dp)")
+                        Text(socket.code.map { "Tuya code \($0)" } ?? "Channel \(socket.index + 1) · DP \(socket.dp)")
                             .font(.caption2).foregroundStyle(.secondary)
-                        if socket.powersBridge {
-                            Text("May power Keystone — keep enabled")
+                        if socket.powersBridge || cloud.protectedOutletIDs.contains(socket.id) {
+                            Text("Protected from All Off")
                                 .font(.caption2).foregroundStyle(.orange)
                         }
                     }
                     Spacer()
-                    if store.busy == socket.id { ProgressView() }
-                    else {
+                    if store.usingCloud {
+                        Button {
+                            cloud.setProtected(socket.id, !cloud.protectedOutletIDs.contains(socket.id))
+                        } label: {
+                            Image(systemName: cloud.protectedOutletIDs.contains(socket.id) ? "shield.fill" : "shield")
+                                .foregroundStyle(cloud.protectedOutletIDs.contains(socket.id) ? .mint : .orange)
+                        }
+                        .accessibilityLabel("Protect \(socket.name) from All Off")
+                    }
+                    if store.busy == socket.id || cloud.busy == socket.id { ProgressView() }
+                    else if store.usingCloud && socket.on == nil {
+                        HStack {
+                            Button("On") { Task { await store.flip(socket, to: true) } }
+                            Button("Off") { Task { await store.flip(socket, to: false) } }
+                        }
+                        .buttonStyle(.bordered).font(.caption)
+                    } else {
                         Toggle(socket.name, isOn: Binding(
                             get: { socket.on == true },
                             set: { on in Task { await store.flip(socket, to: on) } }
                         ))
                         .labelsHidden()
                         .disabled(socket.on == nil || store.busy != nil ||
-                                  !store.reachable || store.strip?.ok != true)
+                                  (store.usingCloud ? !cloud.connected : !store.reachable || store.strip?.ok != true))
                     }
                 }.padding(.vertical, 12)
+            }
+        }
+        .padding(18)
+        .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private var cloudCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Tuya Smart fallback", systemImage: "cloud.fill").font(.headline)
+            Text("Control the actual reported Tuya outlet functions when Keystone's LAN connection is unavailable. This does not add cloud-only outlets to Apple Home.")
+                .font(.subheadline).foregroundStyle(.secondary)
+            if cloud.authorized {
+                HStack {
+                    Label(cloud.connected ? "Tuya connected" : "Tuya account saved", systemImage: "checkmark.shield")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Refresh") { Task { await cloud.load() } }.font(.caption)
+                }
+                if !cloud.devices.isEmpty {
+                    Picker("Power strip", selection: Binding(
+                        get: { cloud.selectedID },
+                        set: { cloud.select($0) }
+                    )) {
+                        Text("Choose strip").tag("")
+                        ForEach(cloud.devices) { item in
+                            Text(item.name + " (\(item.channels.count) controls)").tag(item.id)
+                        }
+                    }
+                    Text("Switches shown: \(cloud.selected?.channels.count ?? 0), exactly as reported by Tuya Smart.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                if store.usingCloud {
+                    Text("For All Off, first tap the shield beside the outlet powering Keystone/HomePod. Other cloud outlets are individually controllable.")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+                Button("Sign out of Tuya Smart", role: .destructive) { cloud.signOut() }
+                    .font(.caption)
+            } else {
+                Text("Sign in using Tuya Smart's User Code: Me → Settings → Account and Security → User Code.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if let qr = cloud.qrImage {
+                    Image(uiImage: qr).interpolation(.none).resizable().scaledToFit()
+                        .padding(10).background(.white, in: RoundedRectangle(cornerRadius: 14))
+                        .frame(maxWidth: 260).frame(maxWidth: .infinity)
+                    ShareLink(item: Image(uiImage: qr), preview: SharePreview("Surge Tuya QR", image: Image(uiImage: qr))) {
+                        Label("Share or save QR to Photos", systemImage: "square.and.arrow.up")
+                    }
+                    Button("Open Tuya Smart") { cloud.openTuyaApp() }
+                    Button("Start over") { cloud.restartLogin() }.font(.caption)
+                    Text("In Tuya Smart tap + → Scan → photo icon and select the saved QR. Return here after confirming.")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    TextField("Tuya Smart user code", text: $cloud.userCode)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .padding(10).background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                    Button("Get Tuya Smart login QR") { Task { await cloud.requestQR() } }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(cloud.busy != nil || cloud.userCode.isEmpty)
+                }
+            }
+            if let note = cloud.message {
+                Text(note).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             }
         }
         .padding(18)
@@ -159,7 +253,7 @@ struct SocketHome: View {
     private var pairCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Connect Keystone").font(.headline)
-            Text("Surge finds the existing Keystone ESP32 bridge automatically. Don't enter the power strip's own IP address.")
+            Text("Surge finds Keystone automatically, even after its DHCP IP changes. Or sign in to Tuya Smart below for cloud fallback—no ESP32 pairing required.")
                 .font(.subheadline).foregroundStyle(.secondary)
             if finder.searching && finder.found.isEmpty {
                 HStack(spacing: 8) {
@@ -260,6 +354,10 @@ struct SocketHome: View {
                             Task { await store.forget() }
                         }
                     }
+                }
+                Section("Tuya Smart fallback") {
+                    Button("Refresh Tuya devices") { Task { await cloud.load() } }
+                    Text("Cloud control is independent of Keystone. The Tuya public IP cannot be used as a LAN endpoint.")
                 }
                 Section("Apple Home") {
                     Text("The existing Keystone ESP32 is the Apple Home bridge. No extra firmware or hardware. Your HomePod mini 2 handles automations.")

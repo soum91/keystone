@@ -8,6 +8,7 @@ struct SocketOutlet: Codable, Hashable, Identifiable {
     let on: Bool?
     let index: Int
     let stripID: String
+    var code: String? = nil
     var id: String { stripID + ":" + dp }
     var powersBridge: Bool { name.localizedCaseInsensitiveContains("keystone") }
 }
@@ -99,7 +100,7 @@ enum SocketAPI {
         do {
             (data, response) = try await URLSession.shared.data(for: request)
         } catch {
-            throw SocketFailure(message: "Keystone did not answer at \(host):\(port). That may be the power strip's IP rather than the ESP32's. Select a discovered Keystone bridge on your Wi-Fi. (\(error.localizedDescription))")
+            throw SocketFailure(message: "Keystone bridge at \(host):\(port) is unreachable (\(error.localizedDescription)). Its DHCP address may have changed, or it may be offline. Scan for Keystone again or use Tuya Smart cloud fallback. The strip's public IP isn't a LAN control address.")
         }
         let code = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard code == 200 else {
@@ -125,7 +126,26 @@ enum SocketAPI {
         token = SocketSecret.read()
     }
     var paired: Bool { token != nil }
-    var sockets: [SocketOutlet] { strip?.sockets ?? SocketCache.read() }
+    var usingCloud: Bool {
+        SurgeCloudStore.shared.connected && SurgeCloudStore.shared.selected != nil &&
+        (!reachable || strip?.configured != true || strip?.ok != true)
+    }
+    var sockets: [SocketOutlet] {
+        if usingCloud { return SurgeCloudStore.shared.outlets }
+        return strip?.sockets ?? SocketCache.read()
+    }
+    func useDiscoveredBridge(host discovered: String, port discoveredPort: Int) async {
+        guard !discovered.isEmpty && (host != discovered || port != discoveredPort) else { return }
+        do {
+            let data = try await SocketAPI.send(host: discovered, port: discoveredPort, token: token, path: "/api/info?lite=1")
+            guard try JSONDecoder().decode(BridgeState.self, from: data).app == "afterglow-bridge" else { return }
+            host = discovered
+            port = discoveredPort
+            UserDefaults.standard.set(host, forKey: "socket.host")
+            UserDefaults.standard.set(port, forKey: "socket.port")
+            await refresh()
+        } catch { /* Only persist a verified Keystone service. */ }
+    }
     func pair() async {
         busy = "pair"; message = nil
         defer { busy = nil }
@@ -159,7 +179,10 @@ enum SocketAPI {
         } catch { message = error.localizedDescription }
     }
     func refresh() async {
-        guard !host.isEmpty else { return }
+        guard !host.isEmpty else {
+            await SurgeCloudStore.shared.load()
+            return
+        }
         do {
             let data = try await SocketAPI.send(host: host, port: port, token: token, path: "/api/info?lite=1")
             let info = try JSONDecoder().decode(BridgeState.self, from: data)
@@ -176,9 +199,16 @@ enum SocketAPI {
             reachable = false
             message = error.localizedDescription
         }
+        if !reachable || strip?.configured != true || strip?.ok != true {
+            await SurgeCloudStore.shared.load()
+        }
     }
     func control(id: String, action: SocketAction) async throws {
-        guard let token else { throw SocketFailure(message: "Pair Socket with Keystone first.") }
+        if usingCloud || id.contains(":cloud_") {
+            try await SurgeCloudStore.shared.control(id, action: action)
+            return
+        }
+        guard let token else { throw SocketFailure(message: "Pair Surge with Keystone or sign in to Tuya Smart first.") }
         // Resolve the identifier against the current bridge mapping to avoid stale channel indices.
         let data = try await SocketAPI.send(host: host, port: port, token: token, path: "/api/info?lite=1")
         let current = try JSONDecoder().decode(BridgeState.self, from: data).strip
@@ -199,7 +229,11 @@ enum SocketAPI {
         await refresh()
     }
     func all(_ on: Bool) async throws {
-        guard let token else { throw SocketFailure(message: "Pair Socket with Keystone first.") }
+        if usingCloud || !paired {
+            try await SurgeCloudStore.shared.all(on)
+            return
+        }
+        guard let token else { throw SocketFailure(message: "Pair Surge with Keystone or sign in to Tuya Smart first.") }
         let data = try await SocketAPI.send(host: host, port: port, token: token, path: "/api/info?lite=1")
         guard let s = try JSONDecoder().decode(BridgeState.self, from: data).strip, s.configured == true else {
             throw SocketFailure(message: "No strip has been configured in Keystone.")

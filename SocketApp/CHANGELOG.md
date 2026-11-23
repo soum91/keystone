@@ -22,3 +22,8 @@
 - Open Keystone's power strip setup from Surge and hide unusable Shortcuts until configured.
 - Add one-tap multi-outlet setup beside the existing Smart Life plug in Keystone, using its existing Tuya login.
 - Reject single-channel guesses and leave generic Apple Home controls untouched until the user decides otherwise.
+
+## Tuya Smart cloud fallback
+- QR account authorization and direct Tuya cloud channel control when Keystone is offline/unconfigured.
+- iOS Keychain token storage, real Tuya switch-code detection, cloud-aware Shortcuts, safe All Off protection.
+- Re-discover the paired Keystone bridge after DHCP changes and correct the stale-IP error message.
