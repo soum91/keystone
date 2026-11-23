@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-74] - 2026-11-23
+
+## Verified changes since build-73
+
+- Publish Socket IPA in shared FlareStore feed and preserve multi-app source entries ([`e3d09369`](https://github.com/soum91/keystone/commit/e3d0936927e03050f527cfba8460fdadf960ab7e); `.github/scripts/update-socket-source.py`, `.github/scripts/update-source.py`, `.github/workflows/socket-app.yml`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-73...build-74)
+
 ## [build-73] - 2026-11-23
 
 ## Verified changes since build-67
