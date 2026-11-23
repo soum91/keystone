@@ -251,6 +251,34 @@
       "downloadURL": "https://github.com/soum91/keystone/releases/download/build-73/Keystone-1.0.0-build-73.ipa",
       "size": 2055652,
       "appPermissions": {}
+    },
+    {
+      "name": "Socket",
+      "bundleIdentifier": "com.soum91.socket",
+      "developerName": "soum91",
+      "subtitle": "Power strip controls & Shortcuts",
+      "localizedDescription": "Control independently switched outlets through your existing Keystone Bridge, with native Shortcuts and Apple Home integration via Keystone. Requires compatible Tuya LAN strip configured in Keystone.",
+      "iconURL": "https://raw.githubusercontent.com/soum91/keystone/main/Keystone/Assets.xcassets/AppIcon.appiconset/icon.png",
+      "tintColor": "34D399",
+      "category": "utilities",
+      "screenshotURLs": [],
+      "versions": [
+        {
+          "version": "1.0.4",
+          "buildVersion": "4",
+          "date": "2026-11-23T17:04:22Z",
+          "localizedDescription": "- First Socket iPhone release: per-outlet power controls and status over Keystone's bridge.\n- Native Apple Shortcuts actions: Control Socket and Set All Sockets.\n- Scoped Socket-only bridge pairing; no separate ESP32 firmware.\n- Hardware Tuya protocol, USB channel mapping and device operation require testing.",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/socket-build-4/Socket-1.0.4-build-4.ipa",
+          "size": 173962,
+          "minOSVersion": "17.0"
+        }
+      ],
+      "version": "1.0.4",
+      "versionDate": "2026-11-23T17:04:22Z",
+      "versionDescription": "- First Socket iPhone release: per-outlet power controls and status over Keystone's bridge.\n- Native Apple Shortcuts actions: Control Socket and Set All Sockets.\n- Scoped Socket-only bridge pairing; no separate ESP32 firmware.\n- Hardware Tuya protocol, USB channel mapping and device operation require testing.",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/socket-build-4/Socket-1.0.4-build-4.ipa",
+      "size": 173962,
+      "appPermissions": {}
     }
   ],
   "news": []
