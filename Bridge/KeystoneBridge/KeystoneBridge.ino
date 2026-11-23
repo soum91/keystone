@@ -1522,6 +1522,8 @@ void setup() {
   oled::begin();
   stateLock = xSemaphoreCreateMutex();
   prefs.begin("afterglow", false);
+  remoteota::begin();
+  remoteota::earlyBoot(); // isolated OTA before HomeSpan and all nonessential devices
   // Remember a HomeKit recovery across software restart, but not power-on.
   esp_reset_reason_t initialReason = esp_reset_reason();
   if (hapRecoveryMagic != HAP_RECOVERY_MAGIC ||
@@ -1583,7 +1585,6 @@ void setup() {
   sceneauto::loadEquinox(readFile("/equinox.json"));
   cam::load();
   relay::begin();
-  remoteota::begin();
   router::begin();
   applyFeatures();
 #ifdef HAS_GOVEE
