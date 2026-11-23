@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.73",
+          "buildVersion": "73",
+          "date": "2026-11-23T17:11:12Z",
+          "localizedDescription": "- Avoid redundant Keystone IPA builds for standalone Socket changes (ef46992)\n- Separate AppShortcutsBuilder expressions without array comma (ecf6460)\n- Fix AppShortcutsBuilder syntax for Socket iOS compilation (c329f0c)\n- Restrict Socket pairing to outlet control and display its pairing in Keystone (5ac7c0d)\n- Complete Socket iPhone UI, App Intents, scoped bridge authentication and IPA CI (15e730c)\n- Start standalone Socket app project and Keystone client (3be5aac)\n- docs: record factual changes for build-67 [skip ci] (b497fa8)\n- docs: record factual changes for firmware-build-173 [skip ci] (50431e4)\n- Document Equinox-primary Govee feed and DewPoint/BLE fallback (ab78c1d)\n- Bump Keystone firmware to 1.11.10 for Equinox-first Govee feed (c4cacf0)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-73/Keystone-1.0.0-build-73.ipa",
+          "size": 2055652,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.67",
           "buildVersion": "67",
           "date": "2026-11-23T16:57:41Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-41/Keystone-1.0.0-build-41.ipa",
           "size": 1759906,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.40",
-          "buildVersion": "40",
-          "date": "2026-11-11T04:24:16Z",
-          "localizedDescription": "- Firmware update: wait for the bridge to restart between retries, keep the screen awake (125582e)\n- docs: record factual changes for firmware-build-134 [skip ci] (759a566)\n- docs: record factual changes for build-39 [skip ci] (ea97dfc)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-40/Keystone-1.0.0-build-40.ipa",
-          "size": 1740830,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.67",
-      "versionDate": "2026-11-23T16:57:41Z",
-      "versionDescription": "- Display active Equinox, DewPoint, or bridge BLE Govee source in Keystone (c48ac8a)\n- Prefer Equinox Govee UDP feed over DewPoint with BLE fallback (baeabe9)\n- docs: record factual changes for firmware-build-170 [skip ci] (fb995e4)\n- docs: record factual changes for build-66 [skip ci] (2b44d3c)\n- docs: record factual changes for build-65 [skip ci] (21f64d7)\n- docs: record factual changes for firmware-build-169 [skip ci] (9969a0c)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-67/Keystone-1.0.0-build-67.ipa",
-      "size": 2054526,
+      "version": "1.0.0.73",
+      "versionDate": "2026-11-23T17:11:12Z",
+      "versionDescription": "- Avoid redundant Keystone IPA builds for standalone Socket changes (ef46992)\n- Separate AppShortcutsBuilder expressions without array comma (ecf6460)\n- Fix AppShortcutsBuilder syntax for Socket iOS compilation (c329f0c)\n- Restrict Socket pairing to outlet control and display its pairing in Keystone (5ac7c0d)\n- Complete Socket iPhone UI, App Intents, scoped bridge authentication and IPA CI (15e730c)\n- Start standalone Socket app project and Keystone client (3be5aac)\n- docs: record factual changes for build-67 [skip ci] (b497fa8)\n- docs: record factual changes for firmware-build-173 [skip ci] (50431e4)\n- Document Equinox-primary Govee feed and DewPoint/BLE fallback (ab78c1d)\n- Bump Keystone firmware to 1.11.10 for Equinox-first Govee feed (c4cacf0)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-73/Keystone-1.0.0-build-73.ipa",
+      "size": 2055652,
       "appPermissions": {}
     }
   ],
