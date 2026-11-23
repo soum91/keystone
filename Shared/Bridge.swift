@@ -86,6 +86,11 @@ struct BridgeInfo: Codable, Equatable {
     var ac: AC?
     var camera: Camera?
     var remote: Remote?
+    var remoteOta: RemoteOta?
+    struct RemoteOta: Codable, Equatable {
+        var supported: Bool?; var state: String?; var targetBuild: Int?
+        var installedBuild: Int?; var attempt: Int?; var error: String?
+    }
     var boot: Boot?
     var homekit: HomeKitHealth?
     var heapBlock: Int?
