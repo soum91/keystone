@@ -13,6 +13,7 @@ struct HomeDevicesView: View {
     @State private var working: String?
     @State private var surgeCandidate: HomeDevice?
     @State private var surgeMessage: String?
+    @State private var surgeDeviceID: String?
 
     var body: some View {
         Form {
@@ -60,12 +61,6 @@ struct HomeDevicesView: View {
             if let m = model.message {
                 Section { Text(m).font(.footnote).foregroundStyle(Theme.bad) }
             }
-            if let surgeMessage {
-                Section {
-                    Text(surgeMessage).font(.footnote).foregroundStyle(surgeMessage.hasPrefix("Added") ? .green : Theme.bad)
-                        .textSelection(.enabled)
-                } header: { Text("Surge power strip") }
-            }
             if let failure = model.syncFailure {
                 Section {
                     Text(failure).font(.footnote).foregroundStyle(Theme.bad)
@@ -97,53 +92,93 @@ struct HomeDevicesView: View {
         }
     }
 
+    /// Configure the separate strip only when Tuya's actual DP IDs and an authenticated
+    /// LAN response agree. A generic "plug" with an unresponsive local endpoint is not
+    /// proof its individual relays can be controlled.
     private func configureForSurge(_ device: HomeDevice) async {
-        guard let token = TuyaToken.stored ?? token else {
-            surgeMessage = "Sign in to Smart Life in Keystone first."
+        surgeDeviceID = device.id
+        surgeMessage = "Checking Tuya data points and the local strip connection…"
+        guard let session = TuyaToken.stored ?? token else {
+            surgeMessage = "Tuya Smart login is missing. Sign in under Devices in Apple Home first."
             return
         }
         guard store.info?.features?.strip != false else {
-            surgeMessage = "Power strip is switched off in Keystone → Bridge → Devices on the bridge. Enable it before setting up outlets."
+            surgeMessage = "The bridge's Power strip feature is off. Enable it under Keystone → Bridge → Devices on the bridge, then try again."
             return
         }
         if store.info?.strip?.configured == true, store.info?.strip?.id != device.id {
-            surgeMessage = "Another power strip is already configured. Open Keystone → Bridge → Power strip to review it before changing anything."
+            surgeMessage = "Keystone already has a different strip configured. Open Bridge → Power strip to review it first."
             return
         }
         working = device.id
-        surgeMessage = nil
         defer { working = nil }
+        let client = TuyaClient(token: session)
+        // The cloud details endpoint can omit a device that the already-saved
+        // Smart Life home list knows. Preserve the known key as a fallback.
+        let latest = try? await client.device(id: device.id)
+        guard let key = latest?.localKey ?? device.localKey, key.count == 16 else {
+            surgeMessage = "Tuya Smart did not provide a usable local key. This plug cannot be controlled reliably over LAN. Open the DP detector below; do not guess a key."
+            return
+        }
+        var dpMap = device.dpMap
+        if let freshCodes = try? await client.dpCodes(id: device.id) {
+            dpMap.merge(freshCodes) { _, new in new }
+        }
+        let channels = TuyaClient.stripOutlets(from: dpMap)
+        // Keep diagnostics free of account keys, personal tokens and cloud IDs.
+        let mapped = channels.map { "\($0.name) = DP \($0.dp)" }.joined(separator: ", ")
+        let address = device.host?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !address.isEmpty else {
+            surgeMessage = "Tuya reports \(channels.count) mapped switch(es), but Keystone has no confirmed local IP. Tap 'Look for them on Wi-Fi again' and retry. \(mapped)"
+            return
+        }
+        var liveDPs: [String: JSONValue] = [:]
+        var workingVersion = device.version ?? 3.3
         do {
-            let client = TuyaClient(token: token)
-            let fresh = try await client.device(id: device.id)
-            guard let key = fresh?.localKey ?? device.localKey, key.count == 16 else {
-                surgeMessage = "Smart Life has not provided the device's 16-character local key. Open Keystone → Bridge → Power strip for manual setup."
+            let (link, data) = try await LocalLink.detect(
+                devId: device.id, host: address, localKey: key,
+                knownDPs: Array(Set(channels.map(\.dp) + ["1", "2", "3", "4", "5", "6", "7", "8"])),
+                timeout: 2, versions: [device.version ?? 3.3, 3.3, 3.4, 3.5].uniqued(),
+                onDPS: { _ in }, onClose: { _ in })
+            workingVersion = await link.version
+            liveDPs = data
+            await link.close()
+        } catch {
+            surgeMessage = "Keystone sees this plug at \(address), but Tuya LAN authentication/status failed: \(error.localizedDescription). This also explains 'not answering' on the generic plug. Check its local key, Wi-Fi and firmware protocol in Bridge → Power strip → Enter details by hand → Detect outlets. No changes were sent to Apple Home."
+            return
+        }
+        let liveSwitchIDs = liveDPs.compactMap { key, value -> String? in
+            if case .bool = value { return key }
+            return nil
+        }.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
+        guard channels.count >= 2 else {
+            let detail = liveSwitchIDs.isEmpty ? "The LAN status did not expose any Boolean DPs." :
+                "LAN reported Boolean DPs: \(liveSwitchIDs.joined(separator: ", "))."
+            surgeMessage = "The Tuya cloud mapped only \(channels.count) individual outlet(s), so automatically adding switches could include a master switch or child lock. \(detail) Use 'Review and test DP mapping' below to identify each physical outlet. Nothing has been changed."
+            return
+        }
+        if !liveDPs.isEmpty {
+            let unverified = channels.filter { channel in
+                guard let value = liveDPs[channel.dp] else { return true }
+                if case .bool = value { return false }
+                return true
+            }
+            if !unverified.isEmpty {
+                surgeMessage = "LAN at \(address) answered, but the following cloud outlet IDs were absent or not Boolean in the live status: \(unverified.map(\.dp).joined(separator: ", ")). Live Boolean DPs: \(liveSwitchIDs.joined(separator: ", ")). Review and test the DP mapping below before creating any Home switches."
                 return
             }
-            let outlets = try await client.outlets(id: device.id)
-            guard outlets.count >= 2 else {
-                surgeMessage = "Smart Life reports only \(outlets.count) separately controllable channel(s), so Keystone cannot safely create individual outlets from this entry. Check Keystone → Bridge → Power strip → Enter details by hand for a LAN data point probe."
-                return
-            }
-            let body: [String: Any] = [
-                "action": "config",
-                "name": fresh?.name ?? device.name,
-                "id": device.id,
-                "key": key,
-                "ip": device.host ?? "",
-                "ver": device.version ?? 3.3,
-                "outlets": outlets.map { ["name": $0.name, "dp": $0.dp] },
-            ]
-            let response = try await BridgeAPI.post("/api/strip", body, store.link, timeout: 10)
-            if response["restart"] as? Bool == true {
-                surgeMessage = "Added \(outlets.count) individually addressable outlets. Keystone is restarting to publish them in Apple Home. Reopen Surge after the bridge reconnects."
-            } else {
-                surgeMessage = "Added \(outlets.count) outlets to Keystone. Reopen Surge to load their controls."
-            }
-            // The generic single switch remains in Home until explicitly removed.
+        }
+        let body: [String: Any] = [
+            "action": "config", "name": latest?.name ?? device.name,
+            "id": device.id, "key": key, "ip": address, "ver": workingVersion,
+            "outlets": channels.map { ["name": $0.name, "dp": $0.dp] }
+        ]
+        do {
+            let reply = try await BridgeAPI.postLocal("/api/strip", body, store.link, timeout: 12)
+            surgeMessage = "Keystone accepted \(channels.count) verified Tuya switch DP(s) over LAN \(address), protocol \(workingVersion). \(mapped). \(reply["restart"] as? Bool == true ? "The bridge is restarting to publish them to Home." : "Refresh Surge to load them.") Existing generic Home plug was not deleted."
             await store.refresh()
         } catch {
-            surgeMessage = "Couldn't configure the separate outlets: \(error.localizedDescription)"
+            surgeMessage = "The strip was verified over Tuya LAN, but Keystone rejected the new outlet configuration: \(error.localizedDescription). The original Home plug was left unchanged."
         }
     }
 
@@ -201,6 +236,8 @@ struct HomeDevicesView: View {
             }
             if d.isSwitch && (d.category == "cz" || d.category == "pc" || d.name.localizedCaseInsensitiveContains("Power Outlet")) {
                 Button {
+                    surgeDeviceID = d.id
+                    surgeMessage = nil
                     surgeCandidate = d
                 } label: {
                     HStack(spacing: 6) {
@@ -211,6 +248,26 @@ struct HomeDevicesView: View {
                 }
                 .disabled(working != nil || model.busy != nil)
                 .padding(.top, 5)
+                if surgeDeviceID == d.id, let surgeMessage {
+                    Text(surgeMessage)
+                        .font(.caption)
+                        .foregroundStyle(surgeMessage.hasPrefix("Keystone accepted") ? .green : Theme.bad)
+                        .textSelection(.enabled)
+                        .padding(.vertical, 6)
+                    Button {
+                        UIPasteboard.general.string = surgeMessage
+                        store.show("Surge diagnostic copied.")
+                    } label: {
+                        Label("Copy outlet diagnostic", systemImage: "doc.on.doc")
+                    }
+                    .font(.caption)
+                }
+                NavigationLink {
+                    StripManualView(preset: d).environmentObject(store)
+                } label: {
+                    Label("Review and test DP mapping", systemImage: "slider.horizontal.3")
+                        .font(.caption)
+                }
             }
         }
     }
@@ -276,5 +333,13 @@ struct HomeDevicesView: View {
         } catch {
             model.message = error.localizedDescription
         }
+    }
+}
+
+private extension Array where Element: Equatable {
+    func uniqued() -> [Element] {
+        var result: [Element] = []
+        for item in self where !result.contains(item) { result.append(item) }
+        return result
     }
 }
