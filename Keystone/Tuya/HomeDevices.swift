@@ -48,17 +48,50 @@ struct HomeDevice: Codable, Identifiable, Hashable {
     }
     var isPurifier: Bool { category == "kj" }
     var isSwitch: Bool {
-        !isLight && !isPurifier && category != "pc" && (Self.switchCategories.contains(category) || statusCodes.contains { $0 == "switch" || $0.hasPrefix("switch_") })
+        !isLight && !isPurifier && (category == "pc" || Self.switchCategories.contains(category) || statusCodes.contains { $0 == "switch" || $0.hasPrefix("switch_") })
     }
     var supported: Bool { isLight || isSwitch || isPurifier }
     var kind: String {
         if isLight { return "Light" }
         if isPurifier { return "Air purifier" }
         switch category {
+        case "pc": return "Power strip"
         case "cz": return "Plug"
         case "kg", "tdq", "kgq": return "Wall switch"
         default: return "Switch"
         }
+    }
+
+    /// Only expose recognized power functions from Tuya's actual device
+    /// status/schema. Separate outlet codes take priority over master power,
+    /// preventing "all off" from accidentally switching the whole strip.
+    var cloudControlChannels: [(code: String, name: String)] {
+        let found = Set(statusCodes).union(ranges.keys)
+        let individual = found.filter { code in
+            if code.hasPrefix("switch_usb") { return true }
+            guard code.hasPrefix("switch_") else { return false }
+            return Int(code.dropFirst("switch_".count)) != nil
+        }.sorted { a, b in
+            func order(_ s: String) -> Int {
+                if s.hasPrefix("switch_usb") { return 100 + (Int(s.dropFirst("switch_usb".count)) ?? 1) }
+                return Int(s.dropFirst("switch_".count)) ?? 999
+            }
+            return order(a) < order(b)
+        }
+        if !individual.isEmpty {
+            return individual.map { code in
+                if code.hasPrefix("switch_usb") {
+                    let suffix = String(code.dropFirst("switch_usb".count))
+                    return (code: code, name: suffix.isEmpty || suffix == "1" ? "USB" : "USB \(suffix)")
+                }
+                let number = String(code.dropFirst("switch_".count))
+                return (code: code, name: "Outlet \(number)")
+            }
+        }
+        if let code = ["switch_led", "led_switch", "switch", "switch_1", "power"].first(where: { found.contains($0) }) {
+            return [(code: code, name: isLight ? "Light" : "Power")]
+        }
+        return []
     }
 
     var isV1: Bool {
