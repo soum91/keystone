@@ -482,18 +482,51 @@ enum Firmware {
         var result: (Data, URLResponse)?
         var lastError: Error?
         let attempts = 4
-        // Start every attempt from a fresh boot: right after a restart the bridge has the most memory free it
-        // will ever have, and the relay (20 s) and the cloud clients (30 s) haven't started yet. On a busy bridge
-        // the upload's network buffers didn't fit otherwise and it crashed mid-upload.
+        // Prefer the bridge's isolated upload-only boot (firmware 1.11.12+).
+        // HomeSpan, the 24-KB worker, Govee and cloud/TLS clients are absent,
+        // so the WebServer can receive the binary without competing for RAM.
+        // Firmware 1.11.11 and earlier don't know "prepareUpdate": use their
+        // original restart-and-upload path for backward compatibility.
+        func localMaintenanceReady() async -> Bool {
+            guard let endpoint = BridgeAPI.url(link.host, link.port, "/api/ota/local") else { return false }
+            var check = URLRequest(url: endpoint)
+            check.timeoutInterval = 3
+            check.cachePolicy = .reloadIgnoringLocalCacheData
+            check.setValue(link.token, forHTTPHeaderField: "X-Device-Token")
+            guard let (data, response) = try? await URLSession.shared.data(for: check),
+                  (response as? HTTPURLResponse)?.statusCode == 200,
+                  let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return false }
+            return obj["ready"] as? Bool == true && obj["mode"] as? String == "isolated"
+        }
         func freshBoot(_ attempt: Int) async -> Bool {
-            progress(attempt == 1 ? "Restarting the bridge so it has room for the update…"
-                                  : "Restarting the bridge for another try (\(attempt) of \(attempts))…")
+            progress(attempt == 1 ? "Preparing a low-memory firmware upload…"
+                                  : "Preparing another firmware upload (\(attempt) of \(attempts))…")
+            let prepared = (try? await BridgeAPI.postLocal("/api/admin",
+                                                             ["action": "prepareUpdate"],
+                                                             link, timeout: 7))?["restart"] as? Bool == true
+            if prepared {
+                progress("Bridge is entering isolated upload mode (HomeKit and cloud services paused)…")
+                for _ in 0..<45 { // 90 s allows Wi-Fi to reconnect after the one-shot reboot
+                    if await localMaintenanceReady() { return true }
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                }
+                lastError = BridgeError.message("Bridge acknowledged isolated OTA but its upload-only server did not become reachable. It returns to normal mode automatically; check Wi-Fi and try again.")
+                return false
+            }
+            // A timed-out acknowledgment could still have triggered the reboot.
+            for _ in 0..<3 {
+                if await localMaintenanceReady() { return true }
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+            }
+            progress("This firmware uses the older, memory-limited upload method…")
             _ = try? await BridgeAPI.admin("restart", [:], link)
             try? await Task.sleep(nanoseconds: 4_000_000_000)
-            for _ in 0..<30 {   // up to ~90 s
-                if let i = try? await BridgeAPI.info(host: link.host, port: link.port, timeout: 3), (i.uptime ?? 99) < 60 { return true }
+            for _ in 0..<30 {
+                if let i = try? await BridgeAPI.info(host: link.host, port: link.port, timeout: 3),
+                   (i.uptime ?? 99) < 60 { return true }
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
             }
+            lastError = BridgeError.message("Bridge did not return to the local upload service after restarting.")
             return false
         }
         for attempt in 1...attempts {
