@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.11"
+#define FW_VERSION "1.11.12"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -988,6 +988,7 @@ namespace provision { static String status; }   // Wi-Fi setup progress, drawn b
 static void handleInfo();
 namespace control { static void handle(); }
 #include "RemoteOTA.h"
+#include "LocalOTA.h"
 #include "Relay.h"
 #include "Provision.h"
 #include "Router.h"
@@ -1523,7 +1524,8 @@ void setup() {
   stateLock = xSemaphoreCreateMutex();
   prefs.begin("afterglow", false);
   remoteota::begin();
-  remoteota::earlyBoot(); // isolated OTA before HomeSpan and all nonessential devices
+  remoteota::earlyBoot(); // isolated internet OTA before HomeSpan and nonessential devices
+  localota::earlyBoot();  // authenticated local upload-only boot (preserves HomeKit NVS)
   // Remember a HomeKit recovery across software restart, but not power-on.
   esp_reset_reason_t initialReason = esp_reset_reason();
   if (hapRecoveryMagic != HAP_RECOVERY_MAGIC ||
