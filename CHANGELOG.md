@@ -1,5 +1,16 @@
 # Changelog
 
+## [build-78] - 2026-11-23
+
+## Verified changes since build-76
+
+- Avoid treating Tuya master switch as an extra strip outlet when individual relays exist ([`129a5bc7`](https://github.com/soum91/keystone/commit/129a5bc7a29038f35cfe5b080bce186f0ddd1f92); `Keystone/Strip/TuyaCloud.swift`)
+- Let Keystone promote existing Smart Life plugs to Surge multi-outlet controls; deep-link setup ([`4f15be72`](https://github.com/soum91/keystone/commit/4f15be726cfd453cdbc19665d7563fe68804e61e); `Keystone/App/KeystoneApp.swift`, `Keystone/Views/BridgeView.swift`, `Keystone/Views/HomeDevicesView.swift`, and 4 more)
+- Restore original neon Surge icon as app and FlareStore artwork ([`85e16745`](https://github.com/soum91/keystone/commit/85e16745e1b3bb3d78fb0f83e2810a89f196a53f); `SocketApp/Art/surge-neon-original.webp`, `SocketApp/CHANGELOG.md`, `SocketApp/README.md`, and 1 more)
+- Correct isolated OTA serial diagnostic newline ([`68aa98bb`](https://github.com/soum91/keystone/commit/68aa98bbde8307b0c3d95cecd497338e7d5c7a42); `Bridge/KeystoneBridge/RemoteOTA.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-76...build-78)
+
 ## [build-76] - 2026-11-23
 
 ## Verified changes since build-75
