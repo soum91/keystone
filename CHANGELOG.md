@@ -1,5 +1,17 @@
 # Changelog
 
+## [build-62] - 2026-11-23
+
+## Verified changes since build-61
+
+- Decode bridge internet OTA status in Keystone iOS app ([`53906b81`](https://github.com/soum91/keystone/commit/53906b816a00f694c805c32f18f6be8602b1cd00); `Shared/Bridge.swift`)
+- Allow only authenticated Keystone remote OTA command through encrypted MQTT relay ([`aeb95e78`](https://github.com/soum91/keystone/commit/aeb95e78a88d0e55c4f3a530a702d0609f37d7c3); `Bridge/KeystoneBridge/Relay.h`)
+- Integrate internet OTA maintenance boot into Keystone worker and status ([`7a8f5b81`](https://github.com/soum91/keystone/commit/7a8f5b819d49e066d5296044fef8ff6fc84c40b0); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Introduce verified HTTPS pull OTA handler for remote bridge maintenance ([`891553f8`](https://github.com/soum91/keystone/commit/891553f85ce8fe84cb22864749e38cffca7d3152); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Publish build marker and SHA-256 sidecar for verified internet OTA ([`8a5ba7c1`](https://github.com/soum91/keystone/commit/8a5ba7c1393e4c9c7f40a81f1a93bf54bf45689a); `.github/workflows/bridge.yml`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-61...build-62)
+
 ## [firmware-build-164] - 2026-11-22
 
 ## Verified changes since firmware-build-162
