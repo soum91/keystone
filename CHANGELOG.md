@@ -1,5 +1,21 @@
 # Changelog
 
+## [firmware-build-180] - 2026-11-23
+
+## Verified changes since firmware-build-179
+
+- Add Tuya Smart launch and safe guided outlet DP verification for Surge ([`160b038d`](https://github.com/soum91/keystone/commit/160b038daa903b332253beb296c0113ae56dc93d); `Bridge/KeystoneBridge/Strip.h`, `Keystone/Tuya/TuyaSmartApp.swift`, `Keystone/Views/HomeDevicesView.swift`, and 2 more)
+- Diagnose true Tuya strip LAN connectivity and show per-outlet setup failures inline ([`97c8b5f0`](https://github.com/soum91/keystone/commit/97c8b5f0e6802b9641ad0e71fbde29c8636c06c6); `Keystone/Views/HomeDevicesView.swift`)
+- Parse Tuya strip data point mappings robustly and reuse known device DP codes ([`2f558a02`](https://github.com/soum91/keystone/commit/2f558a029203b7944aa659c14c3faf3c84783449); `Keystone/Strip/TuyaCloud.swift`)
+- Explain memory-blocked Govee and phone-feed fallback on Home dashboard ([`b0e2d792`](https://github.com/soum91/keystone/commit/b0e2d792bb4521a0edd09cb246b234756731265a); `Keystone/Views/DashboardView.swift`)
+- Decode deferred DewPoint Govee packet telemetry in Keystone ([`8d8488a4`](https://github.com/soum91/keystone/commit/8d8488a45765b81445016cc1d13091d58a60f018); `Shared/Bridge.swift`)
+- Show Equinox/DewPoint Govee feed diagnostics and correct stale source label ([`641193e3`](https://github.com/soum91/keystone/commit/641193e31373435ae00f0a1ee623fe2f1db8c898); `Keystone/Views/BridgeView.swift`)
+- Avoid treating Tuya master switch as an extra strip outlet when individual relays exist ([`129a5bc7`](https://github.com/soum91/keystone/commit/129a5bc7a29038f35cfe5b080bce186f0ddd1f92); `Keystone/Strip/TuyaCloud.swift`)
+- Let Keystone promote existing Smart Life plugs to Surge multi-outlet controls; deep-link setup ([`4f15be72`](https://github.com/soum91/keystone/commit/4f15be726cfd453cdbc19665d7563fe68804e61e); `Keystone/App/KeystoneApp.swift`, `Keystone/Views/BridgeView.swift`, `Keystone/Views/HomeDevicesView.swift`, and 4 more)
+- Restore original neon Surge icon as app and FlareStore artwork ([`85e16745`](https://github.com/soum91/keystone/commit/85e16745e1b3bb3d78fb0f83e2810a89f196a53f); `SocketApp/Art/surge-neon-original.webp`, `SocketApp/CHANGELOG.md`, `SocketApp/README.md`, and 1 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-179...firmware-build-180)
+
 ## [socket-build-9] - 2026-11-23
 
 ## Verified changes since socket-build-8
