@@ -19,10 +19,10 @@ struct SurgeCloudDevice: Identifiable, Equatable {
         if let rows = item["status"] as? [[String: Any]] {
             for row in rows {
                 guard let code = row["code"] as? String else { continue }
-                status[code] = row["value"] as? Bool
+                status[code] = .some(row["value"] as? Bool)
             }
         } else if let dict = item["status"] as? [String: Any] {
-            for (key, value) in dict { status[key] = value as? Bool }
+            for (key, value) in dict { status[key] = .some(value as? Bool) }
         }
         // Never treat cloud list position as a Tuya DP number.
         let codes = status.keys.filter { code in

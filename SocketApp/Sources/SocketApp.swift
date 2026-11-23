@@ -36,6 +36,26 @@ struct SocketHome: View {
                         if !store.sockets.isEmpty { shortcutsCard }
                     } else { pairCard }
                     cloudCard
+                    if store.reachable && store.strip?.configured == true && store.strip?.ok != true {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Power strip LAN diagnostics", systemImage: "exclamationmark.triangle")
+                                .font(.headline)
+                            Text("Keystone is reachable, but its Tuya LAN connection is not. A changed device IP, rotated local key, firmware protocol or TCP 6668 blocking can cause this.")
+                                .font(.subheadline)
+                            if let strip = store.strip {
+                                if let ip = strip.ip, !ip.isEmpty {
+                                    LabeledContent("Last strip LAN IP", value: ip)
+                                }
+                                if let error = strip.error, !error.isEmpty {
+                                    Text(error).font(.caption.monospaced()).textSelection(.enabled)
+                                }
+                            }
+                            Button("Diagnose in Keystone") { openKeystoneStripSetup() }
+                                .buttonStyle(.bordered)
+                        }
+                        .padding(18)
+                        .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 20))
+                    }
                     if let message = store.message {
                         Text(message).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
                     }
