@@ -213,6 +213,7 @@ struct BridgeView: View {
                         pairingRow("Redshift", "IR remotes", i.paired?.redshift, app: "redshift")
                         pairingRow("Equinox", "air conditioner", i.paired?.equinox, app: "equinox")
                         if let n = i.paired?.nightjar { pairingRow("Nightjar", "camera", n, app: "nightjar") }
+                        if let s = i.paired?.socket { pairingRow("Socket", "power strip", s, app: "socket") }
                     } header: {
                         Text("Apps paired with the bridge")
                     } footer: {

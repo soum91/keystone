@@ -295,7 +295,7 @@ static uint32_t clearedAt = 0;
 static void clearAllPairings() {
   token = ""; prefs.remove("token");
   barToken = ""; prefs.remove("bartoken");
-  for (const char *k : {"keystone", "exhale", "redshift", "equinox", "nightjar"}) devClearAll(k);
+  for (const char *k : {"keystone", "exhale", "redshift", "equinox", "nightjar", "socket"}) devClearAll(k);
   logEvent("All app pairings cleared with the BOOT button");
   clearedAt = millis();
   if (!clearedAt) clearedAt = 1;
@@ -511,9 +511,10 @@ static void info(JsonDocument &d) {
   d["paired"]["redshift"] = devToken("redshift").length() > 0;
   d["paired"]["equinox"] = devToken("equinox").length() > 0;
   d["paired"]["nightjar"] = devToken("nightjar").length() > 0;
+  d["paired"]["socket"] = devToken("socket").length() > 0;
   JsonObject ph = d["phones"].to<JsonObject>();
   String asker = reqHeader("X-Device-Token");
-  for (const char *app : {"keystone", "exhale", "redshift", "equinox", "nightjar"})
+  for (const char *app : {"keystone", "exhale", "redshift", "equinox", "nightjar", "socket"})
     if (devCount(app)) devPhones(app, ph[app].to<JsonArray>(), asker);
 }
 

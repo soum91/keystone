@@ -38,7 +38,7 @@ struct BridgeInfo: Codable, Equatable {
     }
     struct TVTile: Codable, Equatable { var inHome: Bool?; var inputs: [String]? }
     struct Bar: Codable, Equatable { var claimed: Bool?; var configured: Bool?; var state: String?; var follow: Bool?; var events: [String]? }
-    struct Paired: Codable, Equatable { var afterglow: Bool?; var subwave: Bool?; var exhale: Bool?; var redshift: Bool?; var equinox: Bool?; var nightjar: Bool? }
+    struct Paired: Codable, Equatable { var afterglow: Bool?; var subwave: Bool?; var exhale: Bool?; var redshift: Bool?; var equinox: Bool?; var nightjar: Bool?; var socket: Bool? }
     struct Camera: Codable, Equatable {
         struct Rule: Codable, Equatable { var enabled: Bool?; var window: Bool?; var from: Int?; var to: Int?; var offAfter: Int?; var lights: [String]?; var offIn: Int? }
         var paired: Bool?; var configured: Bool?; var name: String?; var ok: Bool?; var error: String?
