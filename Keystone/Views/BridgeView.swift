@@ -50,11 +50,17 @@ struct BridgeView: View {
                             LabeledContent("Updates", value: "Up to date")
                         }
                         if let u = store.updating { Text(u).font(.footnote).foregroundStyle(.secondary) }
+                        if let o = i.remoteOta {
+                            LabeledContent("Internet OTA", value: o.supported == true ? (o.state ?? "Ready") : "Not supported")
+                            if let error = o.error, !error.isEmpty {
+                                Text(error).font(.footnote).foregroundStyle(.secondary)
+                            }
+                        }
                         Button("Check for updates") { Task { await store.checkFirmware() } }
                     } header: {
                         Text("Firmware")
                     } footer: {
-                        Text("Downloads from GitHub and goes to the bridge over Wi-Fi. Wi-Fi, pairings and the Home setup are kept.")
+                        Text("At home, firmware uploads over Wi-Fi. Away from home, firmware 1.11.9+ can fetch a verified release from GitHub via HTTPS after an encrypted relay command. Home pairing and settings are preserved.")
                     }
 
                     Section {
@@ -91,7 +97,7 @@ struct BridgeView: View {
                     } header: {
                         Text("Remote access")
                     } footer: {
-                        Text("Away from home, Keystone talks to the bridge through a public MQTT relay. Everything is encrypted end to end with a key that never leaves your home Wi-Fi, so the relay only sees noise. Firmware updates still need home Wi-Fi.")
+                        Text("Away from home, Keystone talks to the bridge through a public MQTT relay. Everything is encrypted end to end with a key that never leaves your home Wi-Fi, so the relay only sees noise. With internet OTA on the bridge, updates work remotely too.")
                     }
 
                     Section {
