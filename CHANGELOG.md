@@ -1,5 +1,17 @@
 # Changelog
 
+## [socket-build-8] - 2026-11-23
+
+## Verified changes since socket-build-7
+
+- Restore original neon Surge icon as app and FlareStore artwork ([`85e16745`](https://github.com/soum91/keystone/commit/85e16745e1b3bb3d78fb0f83e2810a89f196a53f); `SocketApp/Art/surge-neon-original.webp`, `SocketApp/CHANGELOG.md`, `SocketApp/README.md`, and 1 more)
+- Correct isolated OTA serial diagnostic newline ([`68aa98bb`](https://github.com/soum91/keystone/commit/68aa98bbde8307b0c3d95cecd497338e7d5c7a42); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Show actual remote OTA failure instead of assuming low memory ([`7de28302`](https://github.com/soum91/keystone/commit/7de28302612f9bc0e2ec28ed069f896954768aac); `Keystone/App/Store.swift`)
+- Run firmware maintenance OTA before normal ESP32/HomeKit initialization ([`818a1f31`](https://github.com/soum91/keystone/commit/818a1f31919c4488f6c837556ef197bb292869e0); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Boot into isolated Wi-Fi-only internet OTA before HomeSpan to free TLS memory ([`ee6ecdc1`](https://github.com/soum91/keystone/commit/ee6ecdc172f7034733f83528fdea45f0156c8275); `Bridge/KeystoneBridge/RemoteOTA.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/socket-build-7...socket-build-8)
+
 ## [firmware-build-179] - 2026-11-23
 
 ## Verified changes since firmware-build-175
