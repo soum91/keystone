@@ -1,5 +1,14 @@
 # Changelog
 
+## [firmware-build-165] - 2026-11-23
+
+## Verified changes since firmware-build-163
+
+- Publish build marker and SHA-256 sidecar for verified internet OTA ([`8a5ba7c1`](https://github.com/soum91/keystone/commit/8a5ba7c1393e4c9c7f40a81f1a93bf54bf45689a); `.github/workflows/bridge.yml`)
+- Keystone app: display HomeKit secure-session state and recovery diagnostics ([`df063c7d`](https://github.com/soum91/keystone/commit/df063c7d1844db889c1a641bde89274a9b20400f); `Bridge/README.md`, `Keystone/Views/BridgeView.swift`, `Shared/Bridge.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-163...firmware-build-165)
+
 ## [build-62] - 2026-11-23
 
 ## Verified changes since build-61
