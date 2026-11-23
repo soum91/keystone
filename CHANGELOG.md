@@ -1,5 +1,16 @@
 # Changelog
 
+## [build-85] - 2026-11-23
+
+## Verified changes since build-81
+
+- Auto-test Tuya LAN protocol in strip detector, refresh key, and require local bridge for setup ([`a8d672e1`](https://github.com/soum91/keystone/commit/a8d672e1cd87f20894c8aa524373389490d43c7d); `Keystone/Views/StripManualView.swift`, `Keystone/Views/StripSetupView.swift`)
+- Add Tuya Smart launch and safe guided outlet DP verification for Surge ([`160b038d`](https://github.com/soum91/keystone/commit/160b038daa903b332253beb296c0113ae56dc93d); `Bridge/KeystoneBridge/Strip.h`, `Keystone/Tuya/TuyaSmartApp.swift`, `Keystone/Views/HomeDevicesView.swift`, and 2 more)
+- Diagnose true Tuya strip LAN connectivity and show per-outlet setup failures inline ([`97c8b5f0`](https://github.com/soum91/keystone/commit/97c8b5f0e6802b9641ad0e71fbde29c8636c06c6); `Keystone/Views/HomeDevicesView.swift`)
+- Parse Tuya strip data point mappings robustly and reuse known device DP codes ([`2f558a02`](https://github.com/soum91/keystone/commit/2f558a029203b7944aa659c14c3faf3c84783449); `Keystone/Strip/TuyaCloud.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-81...build-85)
+
 ## [firmware-build-180] - 2026-11-23
 
 ## Verified changes since firmware-build-179
