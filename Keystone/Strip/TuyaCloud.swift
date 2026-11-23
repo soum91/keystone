@@ -216,14 +216,35 @@ actor TuyaClient {
         return map
     }
 
-    /// Local data point id -> cloud code.
+    /// Read actual numeric Tuya DP identifiers from response shapes seen across firmware/cloud versions.
+    /// Never manufacture DP numbers from the order of cloud status codes.
+    static func dpCodeMap(from response: Any?) -> [String: String] {
+        var values: [String: String] = [:]
+        func visit(_ raw: Any?) {
+            if let rows = raw as? [Any] {
+                for row in rows { visit(row) }
+                return
+            }
+            guard let obj = raw as? [String: Any] else { return }
+            let identifier = obj["dpId"] ?? obj["dp_id"] ?? obj["dpID"] ?? obj["dpid"]
+            let name = obj["statusCode"] ?? obj["status_code"] ?? obj["code"]
+            if let identifier, let name = name as? String,
+               let number = Int(String(describing: identifier)), (1...999).contains(number) {
+                values[String(number)] = name.lowercased()
+            }
+            for key in ["dpStatusRelationDTOS", "dpStatusRelationDtos", "dp_status_relation_dtos",
+                        "status", "functions", "data", "result"] {
+                if let nested = obj[key] { visit(nested) }
+            }
+        }
+        visit(response)
+        return values
+    }
+
+    /// Local DP ID to cloud switch code. Use the same parser as the strip screen.
     func dpCodes(id: String) async throws -> [String: String] {
         let result = try await request("GET", "/v1.0/m/life/devices/\(id)/status")
-        var out: [String: String] = [:]
-        for r in (result as? [String: Any])?["dpStatusRelationDTOS"] as? [[String: Any]] ?? [] {
-            if let dp = r["dpId"], let code = r["statusCode"] as? String { out["\(dp)"] = code }
-        }
-        return out
+        return Self.dpCodeMap(from: result)
     }
 
     /// Latest copy of one device, for a fresh local key after the strip was re-paired.
@@ -232,32 +253,36 @@ actor TuyaClient {
         return (result as? [[String: Any]] ?? []).compactMap(TuyaDevice.parse).first { $0.id == id }
     }
 
-    /// Outlets from the cloud's data point names: switch_1/2/3 and switch_usb*, in data point order.
-    func outlets(id: String) async throws -> [StripOutletGuess] {
-        let result = try await request("GET", "/v1.0/m/life/devices/\(id)/status")
-        var pairs: [(dp: Int, code: String)] = []
-        for r in (result as? [String: Any])?["dpStatusRelationDTOS"] as? [[String: Any]] ?? [] {
-            if let dp = r["dpId"], let n = Int("\(dp)"), let code = r["statusCode"] as? String { pairs.append((n, code)) }
+    /// Uses only authentic local DP IDs associated with switch codes; excludes master
+    /// switch when individual relays exist. No fabricated outlet numbers.
+    static func stripOutlets(from map: [String: String]) -> [StripOutletGuess] {
+        let pairs: [(Int, String)] = map.compactMap { entry in
+            guard let number = Int(entry.key), number > 0 else { return nil }
+            return (number, entry.value.lowercased())
+        }.sorted { $0.0 < $1.0 }
+        let ac = pairs.filter {
+            $0.1.hasPrefix("switch_") && Int($0.1.dropFirst("switch_".count)) != nil
         }
-        pairs.sort { $0.dp < $1.dp }
-        // A strip may expose "switch" as its master control alongside
-        // "switch_1"/"switch_2"/"switch_3". Never publish the master as an
-        // additional socket when individual AC switches exist: switching it
-        // could cut power to everything, including the Keystone bridge.
-        let numbered = pairs.filter {
-            $0.code.hasPrefix("switch_") && Int($0.code.dropFirst(7)) != nil
+        let usb = pairs.filter {
+            guard $0.1.hasPrefix("switch_usb") else { return false }
+            let tail = $0.1.dropFirst("switch_usb".count).trimmingCharacters(in: CharacterSet(charactersIn: "_-"))
+            return tail.isEmpty || Int(tail) != nil
         }
-        let ac = numbered.isEmpty ? pairs.filter { $0.code == "switch" } : numbered
-        let usb = pairs.filter { $0.code.hasPrefix("switch_usb") }
-        var seen = Set<Int>()
+        let mains = ac.isEmpty ? pairs.filter { $0.1 == "switch" } : []
+        var taken = Set<Int>()
         var outlets: [StripOutletGuess] = []
-        for p in ac where seen.insert(p.dp).inserted {
-            outlets.append(StripOutletGuess(name: "Outlet \(outlets.count + 1)", dp: "\(p.dp)"))
+        for item in ac + mains where taken.insert(item.0).inserted {
+            outlets.append(StripOutletGuess(name: "Outlet \(outlets.count + 1)", dp: String(item.0)))
         }
-        for (i, p) in usb.enumerated() where seen.insert(p.dp).inserted {
-            outlets.append(StripOutletGuess(name: usb.count > 1 ? "USB \(i + 1)" : "USB", dp: "\(p.dp)"))
+        for (index, item) in usb.enumerated() where taken.insert(item.0).inserted {
+            outlets.append(StripOutletGuess(name: usb.count == 1 ? "USB" : "USB \(index + 1)", dp: String(item.0)))
         }
         return outlets
+    }
+
+    func outlets(id: String) async throws -> [StripOutletGuess] {
+        let map = try await dpCodes(id: id)
+        return Self.stripOutlets(from: map)
     }
 
     /// Data point of the strip's own "when power comes back" setting (code relay_status), or nil if it has none.
