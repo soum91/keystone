@@ -379,7 +379,7 @@ final class Store: ObservableObject {
                         return
                     }
                     if info?.remoteOta?.state == "failed" {
-                        updating = "Internet OTA failed: \(info?.remoteOta?.error ?? "unknown error"). Use local OTA if the ESP32 is low on memory."
+                        updating = "Internet OTA failed: \(info?.remoteOta?.error ?? "unknown error"). The bridge has returned to normal mode; retry when the reported cause is resolved."
                         return
                     }
                 }
