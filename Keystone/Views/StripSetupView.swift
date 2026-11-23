@@ -9,6 +9,7 @@ struct StripSetupView: View {
 
     @AppStorage("tuyaUserCode") private var userCode = ""
     @State private var token = TuyaToken.stored
+    @State private var reconnecting = false
     @State private var devices: [TuyaDevice] = []
     @State private var loading = false
     @State private var qr: String?
@@ -33,7 +34,10 @@ struct StripSetupView: View {
                     }
                 }
             }
-            if token == nil { loginSections } else if strip == nil && !restarting { pickSections }
+            if token == nil || reconnecting {
+                loginSections
+                if reconnecting { Section { Button("Cancel reconnect") { reconnecting = false } } }
+            } else if strip == nil && !restarting { pickSections }
             if let message {
                 Section { Text(message).font(.footnote).foregroundStyle(Theme.bad) }
             }
@@ -70,6 +74,9 @@ struct StripSetupView: View {
             Button("Look for it on Wi-Fi again") { Task { await findAgain() } }
                 .disabled(s.scanning == true)
             if token != nil {
+                Button { reconnecting = true } label: {
+                    Label("Reconnect Tuya Smart", systemImage: "arrow.triangle.2.circlepath")
+                }
                 Button { Task { await updateKey(s) } } label: {
                     HStack { Text("Update key from Smart Life"); Spacer(); if working == "key" { ProgressView() } }
                 }
@@ -166,6 +173,7 @@ struct StripSetupView: View {
                 if let got = try? await TuyaLogin.poll(qr: t, userCode: code) {
                     TuyaToken.stored = got
                     token = got
+                    reconnecting = false
                     resetQR()
                     if strip == nil { await loadDevices() }
                     return
@@ -218,7 +226,8 @@ struct StripSetupView: View {
         }
         Section {
             Button("Refresh the list") { Task { await loadDevices() } }
-            Button("Sign out of Smart Life", role: .destructive) { signOut() }
+            Button("Reconnect Tuya Smart") { reconnecting = true }
+            Button("Sign out of Tuya Smart", role: .destructive) { signOut() }
             NavigationLink("Enter details by hand") { StripManualView().environmentObject(store) }
         }
     }

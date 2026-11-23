@@ -732,3 +732,8 @@ This log records verified, release-specific changes. The [Factual release change
 - Verify the strip's LAN protocol and key before advertising outlet setup as successful, and show the detailed failure directly beneath the plug with a Copy action.
 - Added manual read-only DP diffing to identify independently switched outlets; never treat every Boolean DP as a safe switch.
 - Expanded the bridge's read-only probe beyond DP 7 to capture USB channels with larger DP IDs.
+
+## Unreleased — Tuya QR session persistence
+- Refresh the latest stored Tuya Smart token rather than reusing a stale view snapshot; coalesce concurrent refresh attempts and preserve credentials on failures.
+- Add explicit Reconnect Tuya Smart (without clearing strip or Home devices) on the device-import and strip setup screens.
+- Keep the rotating token in App Group private storage; the system does not depend on Safari cookies.

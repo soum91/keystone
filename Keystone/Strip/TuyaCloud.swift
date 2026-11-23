@@ -29,7 +29,7 @@ struct TuyaToken: Codable, Equatable {
     var terminalId: String
 
     static var stored: TuyaToken? {
-        get { AppGroup.read(TuyaToken.self, "tuya-token.json") }
+        get { AppGroup.readAll(TuyaToken.self, "tuya-token.json").first }
         set { if let v = newValue { AppGroup.write(v, "tuya-token.json") } else { AppGroup.remove("tuya-token.json") } }
     }
 }
@@ -169,6 +169,7 @@ enum TuyaLogin {
 
 actor TuyaClient {
     private(set) var token: TuyaToken
+    private var refreshTask: Task<TuyaToken, Error>?
 
     init(token: TuyaToken) { self.token = token }
 
@@ -299,24 +300,50 @@ actor TuyaClient {
         return try await raw(method, path, query: query, body: body).result
     }
 
+    /// Refreshing rotates a shared credential. Coalesce concurrent requests and
+    /// prefer the newest App Group copy rather than declaring a session logged out.
     private func refreshIfNeeded() async throws {
-        guard token.expiresAt.timeIntervalSinceNow < 60 else { return }
-        let response: (result: Any?, t: Double?)
+        if let latest = TuyaToken.stored,
+           latest.refreshToken != token.refreshToken || latest.expiresAt > token.expiresAt {
+            token = latest
+        }
+        guard token.expiresAt.timeIntervalSinceNow < 120 else { return }
+        if let running = refreshTask {
+            token = try await running.value
+            return
+        }
+        let before = token
+        let task = Task<TuyaToken, Error> { try await self.rotateToken() }
+        refreshTask = task
+        defer { refreshTask = nil }
         do {
-            response = try await raw("GET", "/v1.0/m/token/\(token.refreshToken)")
-        } catch let e as TuyaError {
-            throw TuyaError(message: "Your Smart Life session expired. Sign in again. (\(e.message))", code: e.code, isAuth: true)
+            let renewed = try await task.value
+            token = renewed
+            TuyaToken.stored = renewed
+        } catch {
+            if let latest = TuyaToken.stored, latest.refreshToken != before.refreshToken {
+                token = latest
+                return
+            }
+            // Preserve credentials on network errors or a rejected QR session.
+            throw TuyaError(message: "Tuya Smart authorization could not refresh: \(error.localizedDescription). Reconnect the QR login to renew permission; your device configuration is preserved.", isAuth: true)
         }
-        guard let r = response.result as? [String: Any], let access = r["accessToken"] as? String,
-              let refresh = r["refreshToken"] as? String else {
-            throw TuyaError(message: "Your Smart Life session expired. Sign in again.", isAuth: true)
+    }
+
+    private func rotateToken() async throws -> TuyaToken {
+        let response = try await raw("GET", "/v1.0/m/token/\(token.refreshToken)")
+        guard let obj = response.result as? [String: Any],
+              let access = obj["accessToken"] as? String,
+              let refresh = obj["refreshToken"] as? String else {
+            throw TuyaError(message: "Tuya returned no replacement access/refresh pair.", isAuth: true)
         }
+        var next = token
         let t = response.t ?? Date().timeIntervalSince1970 * 1000
-        token.accessToken = access
-        token.refreshToken = refresh
-        if let uid = r["uid"] { token.uid = "\(uid)" }
-        token.expiresAt = Date(timeIntervalSince1970: t / 1000 + ((r["expireTime"] as? NSNumber)?.doubleValue ?? 7200))
-        TuyaToken.stored = token
+        next.accessToken = access
+        next.refreshToken = refresh
+        next.uid = obj["uid"].map { String(describing: $0) } ?? next.uid
+        next.expiresAt = Date(timeIntervalSince1970: t / 1000 + ((obj["expireTime"] as? NSNumber)?.doubleValue ?? 7200))
+        return next
     }
 
     private func raw(_ method: String, _ path: String, query: [String: Any]? = nil, body: [String: Any]? = nil) async throws -> (result: Any?, t: Double?) {

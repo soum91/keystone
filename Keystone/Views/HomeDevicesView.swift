@@ -7,6 +7,7 @@ struct HomeDevicesView: View {
     @StateObject private var model = HomeDevices.shared
     @AppStorage("tuyaUserCode") private var userCode = ""
     @State private var token = TuyaToken.stored
+    @State private var reconnecting = false
     @State private var qr: String?
     @State private var qrImage: UIImage?
     @State private var pollTask: Task<Void, Never>?
@@ -17,8 +18,11 @@ struct HomeDevicesView: View {
 
     var body: some View {
         Form {
-            if token == nil {
+            if token == nil || reconnecting {
                 loginSection
+                if reconnecting {
+                    Button("Cancel reconnect") { reconnecting = false }
+                }
             } else {
                 if let b = model.busy {
                     Section { HStack(spacing: 10) { ProgressView(); Text(b).font(.footnote) } }
@@ -51,7 +55,8 @@ struct HomeDevicesView: View {
                         }
                     }
                     .disabled(working != nil || model.busy != nil)
-                    Button("Sign out of Smart Life", role: .destructive) {
+                    Button("Reconnect Tuya Smart") { reconnecting = true }
+                    Button("Sign out of Tuya Smart", role: .destructive) {
                         TuyaToken.stored = nil; token = nil
                     }
                 } footer: {
@@ -324,7 +329,7 @@ struct HomeDevicesView: View {
                     try? await Task.sleep(nanoseconds: 2_000_000_000)
                     if let got = try? await TuyaLogin.poll(qr: t, userCode: code) {
                         TuyaToken.stored = got
-                        token = got; qr = nil; qrImage = nil
+                        token = got; qr = nil; qrImage = nil; reconnecting = false
                         await model.refresh(got)
                         return
                     }
