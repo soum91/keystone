@@ -186,7 +186,7 @@ static void earlyBoot() {
     return;
   }
   configTime(0, 0, "pool.ntp.org", "time.google.com");
-  Serial.printf("[keystone] Isolated OTA: heap=%lu, largest=%lu\\n",
+  Serial.printf("[keystone] Isolated OTA: heap=%lu, largest=%lu\n",
                 (unsigned long)ESP.getFreeHeap(),
                 (unsigned long)ESP.getMaxAllocHeap());
 
