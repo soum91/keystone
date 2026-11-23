@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.67",
+          "buildVersion": "67",
+          "date": "2026-11-23T16:57:41Z",
+          "localizedDescription": "- Display active Equinox, DewPoint, or bridge BLE Govee source in Keystone (c48ac8a)\n- Prefer Equinox Govee UDP feed over DewPoint with BLE fallback (baeabe9)\n- docs: record factual changes for firmware-build-170 [skip ci] (fb995e4)\n- docs: record factual changes for build-66 [skip ci] (2b44d3c)\n- docs: record factual changes for build-65 [skip ci] (21f64d7)\n- docs: record factual changes for firmware-build-169 [skip ci] (9969a0c)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-67/Keystone-1.0.0-build-67.ipa",
+          "size": 2054526,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.66",
           "buildVersion": "66",
           "date": "2026-11-23T00:53:59Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-40/Keystone-1.0.0-build-40.ipa",
           "size": 1740830,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.39",
-          "buildVersion": "39",
-          "date": "2026-11-11T03:57:34Z",
-          "localizedDescription": "- Power strip: set up from Smart Life, bridge finds the strip's IP itself (da7e4f0)\n- docs: record factual changes for firmware-build-133 [skip ci] (5757230)\n- docs: record factual changes for build-38 [skip ci] (034fe76)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-39/Keystone-1.0.0-build-39.ipa",
-          "size": 1739051,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.66",
-      "versionDate": "2026-11-23T00:53:59Z",
-      "versionDescription": "- Serialize Keystone IPA build publishing to avoid CI log branch conflicts (1c6a379)\n- Serialize firmware publish jobs and block stale release/Pages downgrades (e711972)\n- Select highest versioned firmware asset even when release jobs overlap (609f6b8)\n- docs: record factual changes for firmware-build-168 [skip ci] (b4f4671)\n- docs: record factual changes for firmware-build-166 [skip ci] (68ab6e2)\n- docs: record factual changes for firmware-build-167 [skip ci] (7e91767)\n- docs: record factual changes for build-64 [skip ci] (c96445d)\n- docs: record factual changes for firmware-build-165 [skip ci] (28910e1)\n- docs: record factual changes for build-62 [skip ci] (153060b)\n- Document safe verified internet OTA design and first local update requirement (9b1ae24)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-66/Keystone-1.0.0-build-66.ipa",
-      "size": 2054159,
+      "version": "1.0.0.67",
+      "versionDate": "2026-11-23T16:57:41Z",
+      "versionDescription": "- Display active Equinox, DewPoint, or bridge BLE Govee source in Keystone (c48ac8a)\n- Prefer Equinox Govee UDP feed over DewPoint with BLE fallback (baeabe9)\n- docs: record factual changes for firmware-build-170 [skip ci] (fb995e4)\n- docs: record factual changes for build-66 [skip ci] (2b44d3c)\n- docs: record factual changes for build-65 [skip ci] (21f64d7)\n- docs: record factual changes for firmware-build-169 [skip ci] (9969a0c)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-67/Keystone-1.0.0-build-67.ipa",
+      "size": 2054526,
       "appPermissions": {}
     }
   ],
