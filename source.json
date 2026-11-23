@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.76",
+          "buildVersion": "76",
+          "date": "2026-11-23T18:02:41Z",
+          "localizedDescription": "- Show actual remote OTA failure instead of assuming low memory (7de2830)\n- Bump bridge firmware to 1.11.11 for isolated OTA boot (d1bf350)\n- docs: record factual changes for socket-build-7 [skip ci] (1cab445)\n- Run firmware maintenance OTA before normal ESP32/HomeKit initialization (818a1f3)\n- Boot into isolated Wi-Fi-only internet OTA before HomeSpan to free TLS memory (ee6ecdc)\n- docs: record factual changes for socket-build-6 [skip ci] (5302ef0)\n- docs: record factual changes for build-75 [skip ci] (ce0a75f)\n- Generate branded Surge iOS icon, package release artwork and enforce compiled app icon (381e04f)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-76/Keystone-1.0.0-build-76.ipa",
+          "size": 2055806,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.75",
           "buildVersion": "75",
           "date": "2026-11-23T17:50:37Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-44/Keystone-1.0.0-build-44.ipa",
           "size": 1787263,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.43",
-          "buildVersion": "43",
-          "date": "2026-11-14T20:50:07Z",
-          "localizedDescription": "- Firmware updates on a low-memory bridge: upload from a fresh boot; bridge frees relay buffer at OTA start (a46b09a)\n- docs: record factual changes for firmware-build-138 [skip ci] (4466fde)\n- Bridge 1.10.4: breadcrumb helper as a macro so Arduino prototypes stay below the structs (3a91aae)\n- docs: record factual changes for build-42 [skip ci] (98784f4)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-43/Keystone-1.0.0-build-43.ipa",
-          "size": 1768586,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.75",
-      "versionDate": "2026-11-23T17:50:37Z",
-      "versionDescription": "- Rename Socket UI to Surge, discover Keystone via Bonjour and explain firmware pairing failures (4edcfcd)\n- docs: record factual changes for socket-build-5 [skip ci] (2fd7fcc)\n- docs: record factual changes for build-74 [skip ci] (dadc6c2)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-75/Keystone-1.0.0-build-75.ipa",
-      "size": 2055644,
+      "version": "1.0.0.76",
+      "versionDate": "2026-11-23T18:02:41Z",
+      "versionDescription": "- Show actual remote OTA failure instead of assuming low memory (7de2830)\n- Bump bridge firmware to 1.11.11 for isolated OTA boot (d1bf350)\n- docs: record factual changes for socket-build-7 [skip ci] (1cab445)\n- Run firmware maintenance OTA before normal ESP32/HomeKit initialization (818a1f3)\n- Boot into isolated Wi-Fi-only internet OTA before HomeSpan to free TLS memory (ee6ecdc)\n- docs: record factual changes for socket-build-6 [skip ci] (5302ef0)\n- docs: record factual changes for build-75 [skip ci] (ce0a75f)\n- Generate branded Surge iOS icon, package release artwork and enforce compiled app icon (381e04f)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-76/Keystone-1.0.0-build-76.ipa",
+      "size": 2055806,
       "appPermissions": {}
     },
     {
