@@ -11,3 +11,7 @@
 - Add branded app icon and automatic Keystone LAN discovery.
 - Diagnose outdated firmware and distinguish the bridge address from the strip IP.
 - Repair FlareStore publishing script's malformed URL validation.
+
+## Icon restored
+- Replaced the unrelated procedurally drawn icon with the original teal-neon smart power strip design.
+- Xcode and FlareStore publish the same icon asset through the Surge release workflow.
