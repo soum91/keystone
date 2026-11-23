@@ -1,5 +1,15 @@
 # Changelog
 
+## [firmware-build-175] - 2026-11-23
+
+## Verified changes since firmware-build-173
+
+- Restrict Socket pairing to outlet control and display its pairing in Keystone ([`5ac7c0dc`](https://github.com/soum91/keystone/commit/5ac7c0dc305cc2bf03b2171959702fbb587d67bd); `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/Screen.h`, `Keystone/Views/BridgeView.swift`, and 2 more)
+- Complete Socket iPhone UI, App Intents, scoped bridge authentication and IPA CI ([`15e730cc`](https://github.com/soum91/keystone/commit/15e730ccf1101a8901f8c12ee8f65c7d15b01074); `.github/workflows/socket-app.yml`, `Bridge/KeystoneBridge/Control.h`, `Bridge/KeystoneBridge/Extras.h`, and 6 more)
+- Start standalone Socket app project and Keystone client ([`3be5aacb`](https://github.com/soum91/keystone/commit/3be5aacb6aacec3382e1fcdc58a0290bcb0c5b14); `SocketApp/Sources/SocketCore.swift`, `SocketApp/project.yml`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-173...firmware-build-175)
+
 ## [socket-build-4] - 2026-11-23
 
 ## Verified changes since build-67
