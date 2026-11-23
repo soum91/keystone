@@ -1,5 +1,18 @@
 # Changelog
 
+## [firmware-build-169] - 2026-11-23
+
+## Verified changes since firmware-build-166
+
+- Document safe verified internet OTA design and first local update requirement ([`9b1ae24f`](https://github.com/soum91/keystone/commit/9b1ae24f7f3fd1b2d295e5dd1c014160b3e3e132); `Bridge/README.md`)
+- Show remote OTA capability and update state in Keystone firmware settings ([`6210a682`](https://github.com/soum91/keystone/commit/6210a6827c23480b1a8fd415bee4aefe022c875a); `Keystone/Views/BridgeView.swift`)
+- Allow internet firmware updates via encrypted relay; verify installed build after reboot ([`154b5923`](https://github.com/soum91/keystone/commit/154b5923cd919e316c1eda3b57f1c78f5a54ea93); `Keystone/App/Store.swift`)
+- Decode bridge internet OTA status in Keystone iOS app ([`53906b81`](https://github.com/soum91/keystone/commit/53906b816a00f694c805c32f18f6be8602b1cd00); `Shared/Bridge.swift`)
+- Allow only authenticated Keystone remote OTA command through encrypted MQTT relay ([`aeb95e78`](https://github.com/soum91/keystone/commit/aeb95e78a88d0e55c4f3a530a702d0609f37d7c3); `Bridge/KeystoneBridge/Relay.h`)
+- Integrate internet OTA maintenance boot into Keystone worker and status ([`7a8f5b81`](https://github.com/soum91/keystone/commit/7a8f5b819d49e066d5296044fef8ff6fc84c40b0); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-166...firmware-build-169)
+
 ## [firmware-build-168] - 2026-11-23
 
 ## Verified changes since firmware-build-167
