@@ -49,7 +49,7 @@ entry = {
 
 p = Path(src_path)
 old = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
-old_versions = (old.get("apps") or [{}])[0].get("versions", [])
+old_versions = next((a.get("versions", []) for a in old.get("apps", []) if a.get("bundleIdentifier") == info["CFBundleIdentifier"]), [])
 versions = [entry] + [v for v in old_versions if v.get("buildVersion") != entry["buildVersion"]]
 versions = versions[:KEEP]
 
@@ -82,7 +82,7 @@ source = {
     "website": meta["website"],
     "sourceURL": meta["sourceURL"],
     "tintColor": app["tintColor"],
-    "apps": [app],
+    "apps": [app] + [a for a in old.get("apps", []) if a.get("bundleIdentifier") != app["bundleIdentifier"]],
     "news": [],
 }
 

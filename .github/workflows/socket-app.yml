@@ -72,3 +72,35 @@ jobs:
           body_path: SocketApp/release-notes.md
           files: SocketApp/Socket-*.ipa
           make_latest: false
+
+      - name: Update existing Keystone FlareStore source with Socket IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          IPA=$(find SocketApp -maxdepth 1 -name 'Socket-*.ipa' -print -quit)
+          test -s "$IPA"
+          TAG="socket-build-$GITHUB_RUN_NUMBER"
+          URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$(basename "$IPA")"
+          success=0
+          for attempt in 1 2 3 4 5; do
+            rm -rf "$RUNNER_TEMP/socket-source"
+            git fetch -q origin source
+            git worktree add -q -f --detach "$RUNNER_TEMP/socket-source" FETCH_HEAD
+            python3 .github/scripts/update-socket-source.py \
+              "$RUNNER_TEMP/socket-source/source.json" "$IPA" "$URL" SocketApp/release-notes.md
+            git -C "$RUNNER_TEMP/socket-source" add source.json
+            if git -C "$RUNNER_TEMP/socket-source" diff --cached --quiet; then
+              success=1
+              break
+            fi
+            git -C "$RUNNER_TEMP/socket-source" commit -qm "FlareStore: Socket build $GITHUB_RUN_NUMBER"
+            if git -C "$RUNNER_TEMP/socket-source" push -q origin HEAD:refs/heads/source; then
+              success=1
+              break
+            fi
+            git worktree remove -f "$RUNNER_TEMP/socket-source" || true
+            sleep 3
+          done
+          test "$success" -eq 1

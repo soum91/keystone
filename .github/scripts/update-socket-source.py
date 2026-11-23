@@ -1,0 +1,68 @@
+"""Keep Socket IPA releases in Keystone's existing FlareStore/AltStore feed.
+
+Inputs: <source.json> <Socket IPA> <GitHub download URL> <release-notes.md>
+Do not replace or reorder Keystone's own app entry. Read package metadata, not a guessed version.
+"""
+import json
+import plistlib
+import sys
+import zipfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+source_file, ipa_file, url, notes_file = map(Path, sys.argv[1:5])
+url = str(url)
+if not url.startswith("https://github.com/soum91/keystone/releases/download/socket-build-"):
+    raise SystemExit("Refusing unexpected release URL")
+with zipfile.ZipFile(ipa_file) as ipa:
+    name = next(n for n in ipa.namelist()
+                if n.startswith("Payload/") and n.count("/") == 2 and n.endswith(".app/Info.plist"))
+    info = plistlib.loads(ipa.read(name))
+if info.get("CFBundleIdentifier") != "com.soum91.socket":
+    raise SystemExit("IPA bundle identifier is not Socket")
+
+raw = json.loads(source_file.read_text(encoding="utf-8"))
+apps = raw.setdefault("apps", [])
+if not any(a.get("bundleIdentifier") == "com.soum91.keystone" for a in apps):
+    raise SystemExit("Keystone entry missing; refusing to replace source")
+
+notes_lines = Path(notes_file).read_text(encoding="utf-8").splitlines()
+notes = "\n".join(x.strip() for x in notes_lines
+                  if x.strip().startswith("- ") or "require real-device verification" in x.lower()).strip()
+if not notes:
+    notes = "Socket iOS app: standalone per-outlet control and native Shortcuts support; verify the power strip's hardware datapoints."
+
+new_entry = {
+    "version": info["CFBundleShortVersionString"],
+    "buildVersion": str(info["CFBundleVersion"]),
+    "date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "localizedDescription": notes,
+    "downloadURL": url,
+    "size": ipa_file.stat().st_size,
+    "minOSVersion": info.get("MinimumOSVersion", "17.0"),
+}
+old_app = next((app for app in apps if app.get("bundleIdentifier") == "com.soum91.socket"), {})
+previous = old_app.get("versions", [])
+versions = [new_entry] + [v for v in previous if v.get("buildVersion") != new_entry["buildVersion"]]
+versions = sorted(versions, key=lambda v: tuple(int(n) for n in v["version"].split(".") if n.isdigit()), reverse=True)[:25]
+app = {
+    "name": "Socket",
+    "bundleIdentifier": "com.soum91.socket",
+    "developerName": "soum91",
+    "subtitle": "Power strip controls & Shortcuts",
+    "localizedDescription": "Individually control the Joly Joy-compatible power strip through an existing Keystone ESP32 bridge, with Apple Shortcuts actions and Apple Home integration through Keystone. Requires a compatible Tuya LAN strip and configured Keystone bridge.",
+    "iconURL": old_app.get("iconURL") or raw.get("iconURL", ""),
+    "tintColor": "34D399",
+    "category": "utilities",
+    "screenshotURLs": old_app.get("screenshotURLs", []),
+    "versions": versions,
+    "version": versions[0]["version"],
+    "versionDate": versions[0]["date"],
+    "versionDescription": versions[0]["localizedDescription"],
+    "downloadURL": versions[0]["downloadURL"],
+    "size": versions[0]["size"],
+    "appPermissions": {},
+}
+raw["apps"] = [a for a in apps if a.get("bundleIdentifier") != "com.soum91.socket"] + [app]
+source_file.write_text(json.dumps(raw, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+print(f"FlareStore source: Socket {new_entry['version']} build {new_entry['buildVersion']}; Keystone retained.")
