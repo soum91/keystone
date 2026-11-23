@@ -83,10 +83,11 @@ jobs:
           # Stamp the build number into the app and widget before signing.
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" Payload/Keystone.app/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" Payload/Keystone.app/PlugIns/KeystoneWidget.appex/Info.plist
-          VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Payload/Keystone.app/Info.plist)
-          # Sideloaders (FlareStore etc.) only compare the version string, so make it <version>.<build>.
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION.$BUILD" Payload/Keystone.app/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION.$BUILD" Payload/Keystone.app/PlugIns/KeystoneWidget.appex/Info.plist
+          BASE_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Payload/Keystone.app/Info.plist)
+          # Apple and sideloaders expect three numeric components, not 1.0.0.<build>.
+          VERSION="${BASE_VERSION%.*}.$BUILD"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Payload/Keystone.app/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Payload/Keystone.app/PlugIns/KeystoneWidget.appex/Info.plist
           # Ad-hoc sign with the App Group entitlement so AltStore/Sideloadly keep it for the widget.
           codesign --force --sign - --timestamp=none --entitlements KeystoneWidget/KeystoneWidget.entitlements Payload/Keystone.app/PlugIns/KeystoneWidget.appex
           codesign --force --sign - --timestamp=none --entitlements Keystone/Keystone.entitlements Payload/Keystone.app
@@ -119,10 +120,12 @@ jobs:
 
       - name: Update sideloading source (FlareStore / AltStore / SideStore)
         run: |
+          set -euo pipefail
           git config user.name "ci"
           git config user.email "ci@users.noreply.github.com"
           URL="https://github.com/${{ github.repository }}/releases/download/$TAG/$IPA"
-          for attempt in 1 2 3; do
+          published=0
+          for attempt in 1 2 3 4 5; do
             rm -rf "$RUNNER_TEMP/source"
             if git fetch -q origin source; then
               git worktree add -q -f --detach "$RUNNER_TEMP/source" FETCH_HEAD
@@ -134,7 +137,24 @@ jobs:
             python3 .github/scripts/update-source.py "$RUNNER_TEMP/source/source.json" "$IPA" "$URL" "release-notes.md"
             git -C "$RUNNER_TEMP/source" add source.json
             git -C "$RUNNER_TEMP/source" commit -qm "Source: $APP build $BUILD"
-            git -C "$RUNNER_TEMP/source" push -q origin HEAD:refs/heads/source && break
+            if git -C "$RUNNER_TEMP/source" push -q origin HEAD:refs/heads/source; then
+              published=1
+              break
+            fi
             git worktree remove -f "$RUNNER_TEMP/source"
             sleep 5
           done
+          test "$published" -eq 1 || { echo "ERROR: FlareStore source push failed" >&2; exit 1; }
+          git fetch -q origin source
+          python3 - "$VERSION" "$BUILD" "$URL" <<'PY'
+          import json,subprocess,sys
+          expected_version, expected_build, expected_url=sys.argv[1:]
+          feed=json.loads(subprocess.check_output(["git","show","FETCH_HEAD:source.json"]))
+          app=next((x for x in feed.get("apps", []) if x.get("name")=="Keystone"),None)
+          assert app, "Keystone missing from published FlareStore source"
+          assert app.get("version")==expected_version, (app.get("version"),expected_version)
+          assert str(app.get("versions",[{}])[0].get("buildVersion"))==expected_build
+          assert app.get("downloadURL")==expected_url
+          assert any(x.get("bundleIdentifier")=="com.soum91.socket" for x in feed.get("apps",[])), "Surge was lost from the shared feed"
+          print("Verified FlareStore published:", expected_version, "build", expected_build)
+          PY
