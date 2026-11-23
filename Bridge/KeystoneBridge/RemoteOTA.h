@@ -125,13 +125,75 @@ static void download() {
   updater.setFollowRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS);
   HTTPUpdateResult result = updater.update(client, IMAGE_URL);
   if (result != HTTP_UPDATE_OK) {
-    fail(result == HTTP_UPDATE_NO_UPDATES ? "No new firmware available"
-         : "Verified HTTPS update failed: " + updater.getLastErrorString());
+    // HTTPUpdate can return FAILED without populating an error string. Keep the
+    // numeric code and heap diagnostics so a low-memory/TLS problem is visible
+    // through Keystone after the bridge returns to normal operation.
+    String detail = updater.getLastErrorString();
+    const int code = updater.getLastError();
+    if (!detail.length()) detail = "no detail from HTTPUpdate";
+    fail(result == HTTP_UPDATE_NO_UPDATES ? "No new firmware available" :
+         "Verified HTTPS update failed (" + String(code) + "): " + detail +
+         "; heap " + String(ESP.getFreeHeap()) +
+         ", largest " + String(ESP.getMaxAllocHeap()));
     return;
   }
   prefs.putString("roState", "installed");
   prefs.remove("roError"); prefs.remove("roTarget"); prefs.remove("roTries");
   logEvent("Internet OTA verified; starting new firmware");
+  delay(200);
+  ESP.restart();
+}
+
+// Dedicated reduced-memory boot for queued OTA. Called from setup() immediately
+// after Preferences and the log mutex initialize, BEFORE parsing device configs,
+// constructing the HomeSpan accessory tree, or starting the large network worker.
+// HomeSpan 2.1.8 persists WIFI/WIFIDATA as char ssid[33], pwd[65]. Read only;
+// never update/erase NVS, HomeKit pairing, saved accessories, or relay credentials.
+static void earlyBoot() {
+  if (!maintenanceBoot) return;
+  Serial.println("[keystone] Internet OTA: isolated Wi-Fi-only maintenance boot");
+  state = "connecting"; prefs.putString("roState", state);
+
+  struct SavedWifi { char ssid[33]; char pwd[65]; } credentials = {};
+  nvs_handle_t wifi = 0;
+  size_t size = sizeof(credentials);
+  esp_err_t err = nvs_open("WIFI", NVS_READONLY, &wifi);
+  if (err == ESP_OK) {
+    err = nvs_get_blob(wifi, "WIFIDATA", &credentials, &size);
+    nvs_close(wifi);
+  }
+  credentials.ssid[32] = 0;
+  credentials.pwd[64] = 0;
+  if (err != ESP_OK || size != sizeof(credentials) || !credentials.ssid[0]) {
+    fail("Isolated OTA: saved HomeSpan Wi-Fi credentials unavailable");
+    delay(150); ESP.restart();
+    return;
+  }
+
+  WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);
+  WiFi.begin(credentials.ssid, credentials.pwd);
+  // Do not retain a second copy of the password after Wi-Fi is configured.
+  memset(&credentials, 0, sizeof(credentials));
+
+  uint32_t started = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - started < 60000UL) {
+    delay(250);
+  }
+  if (WiFi.status() != WL_CONNECTED) {
+    fail("Isolated OTA: couldn't reconnect to saved Wi-Fi within 60 seconds");
+    delay(150); ESP.restart();
+    return;
+  }
+  configTime(0, 0, "pool.ntp.org", "time.google.com");
+  Serial.printf("[keystone] Isolated OTA: heap=%lu, largest=%lu\\n",
+                (unsigned long)ESP.getFreeHeap(),
+                (unsigned long)ESP.getMaxAllocHeap());
+
+  // Validated build URL and SHA-256 verification are unchanged. Successful
+  // update restarts into normal HomeSpan; failed update records the real error
+  // and restarts normally instead of getting stuck in maintenance mode.
+  download();
   delay(200);
   ESP.restart();
 }
