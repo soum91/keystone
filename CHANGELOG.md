@@ -1,5 +1,14 @@
 # Changelog
 
+## [firmware-build-170] - 2026-11-23
+
+## Verified changes since firmware-build-169
+
+- Serialize firmware publish jobs and block stale release/Pages downgrades ([`e7119724`](https://github.com/soum91/keystone/commit/e71197244478a0b2499a51249bfc16b76cb0b9e1); `.github/workflows/bridge.yml`)
+- Select highest versioned firmware asset even when release jobs overlap ([`609f6b82`](https://github.com/soum91/keystone/commit/609f6b82f89a2598402daa5baed73a75bb80bb74); `Keystone/App/Store.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-169...firmware-build-170)
+
 ## [build-66] - 2026-11-23
 
 ## Verified changes since build-65
