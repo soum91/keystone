@@ -6,6 +6,11 @@ on:
     paths-ignore: ["Bridge/**", ".github/workflows/bridge.yml", "**.md"]
   workflow_dispatch:
 
+# Avoid overlapping IPA builds racing to update the same CI log and source branches.
+concurrency:
+  group: keystone-ios-release
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
