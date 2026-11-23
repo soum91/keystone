@@ -250,16 +250,29 @@ struct BridgeView: View {
                             LabeledContent("Thermometer", value: i.govee?.name ?? "not picked yet")
                             if let g = i.govee {
                                 if let source = g.source {
-                                    LabeledContent("Reading source", value: source == "dewpoint" ? "DewPoint iPhone" : source == "localBLE" ? "Bridge Bluetooth" : "Stale")
+                                    let label = source == "equinox" ? "Equinox iPhone" :
+                                                source == "dewpoint" ? "DewPoint iPhone" :
+                                                source == "localBLE" ? "Keystone Bluetooth" :
+                                                source == "stale" ? "Stale" : source
+                                    LabeledContent("Reading source", value: label)
                                 }
-                                if let count = g.feedPackets, count > 0 {
-                                    LabeledContent("DewPoint readings", value: "\(count) received")
+                                if let count = g.feedPackets {
+                                    LabeledContent("Phone readings accepted", value: "\(count)")
                                 }
-                                if let age = g.feedAge, age >= 0 {
-                                    LabeledContent("Last iPhone feed", value: "\(age) s ago")
+                                if let active = g.feedActive {
+                                    LabeledContent("Phone feed", value: active ? "Fresh" : "Not active")
                                 }
-                                if let rejected = g.feedRejected, rejected > 0 {
+                                if let age = g.feedAge {
+                                    LabeledContent("Last iPhone feed", value: age >= 0 ? "\(age) s ago" : "Never received")
+                                }
+                                if let rejected = g.feedRejected {
                                     LabeledContent("Rejected feed packets", value: "\(rejected)")
+                                }
+                                if let deferred = g.feedDeferred, deferred > 0 {
+                                    LabeledContent("DewPoint packets deferred", value: "\(deferred) (Equinox preferred)")
+                                }
+                                if let host = g.feedHost, !host.isEmpty {
+                                    LabeledContent("Last feeder (LAN)", value: host)
                                 }
                                 if let n = g.lowMem { LabeledContent("BLE blocked by RAM", value: "\(n) attempts") }
                                 if let n = g.borrowedRelay { LabeledContent("Relay memory borrowed", value: "\(n) times") }
@@ -270,7 +283,7 @@ struct BridgeView: View {
                             }
                             Button("Pick a different Govee sensor") { confirm = .govee }
                         } footer: {
-                            Text("DewPoint on an iPhone can forward fresh Govee readings while running. Keystone handles firmware, bridge pairing and Apple Home. If DewPoint stops reporting, the bridge tries its own memory-guarded Bluetooth scans. Picking another Govee restarts the bridge.")
+                            Text("Equinox is the preferred sensor feed, then DewPoint, then Keystone's BLE scanner. Equinox/DewPoint must be receiving fresh Govee Bluetooth broadcasts and be on the same trusted Wi-Fi as Keystone. iOS may suspend scanning in the background. If the accepted count is zero, check the iPhone feed before retrying the memory-limited bridge BLE scanner. Picking another sensor restarts the bridge.")
                         }
                     }
 
