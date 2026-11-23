@@ -30,6 +30,9 @@ targets:
         NSBonjourServices: [_afterglow._tcp]
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        CFBundleURLTypes:
+          - CFBundleURLName: com.soum91.socket
+            CFBundleURLSchemes: [surge]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.soum91.socket
