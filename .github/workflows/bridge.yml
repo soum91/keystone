@@ -6,6 +6,11 @@ on:
     paths: ["Bridge/**", ".github/workflows/bridge.yml"]
   workflow_dispatch:
 
+# Prevent concurrent firmware release jobs from overwriting each other.
+concurrency:
+  group: keystone-bridge-release
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -120,6 +125,12 @@ jobs:
           } > fw-notes.md
           cat fw-notes.md
           gh release create "$TAG" rel/*.bin --target "$GITHUB_SHA" --title "Bridge firmware build $BUILD" --notes-file fw-notes.md --latest=false
+          # Preserve an already-published newer build if an old job finishes late.
+          NEWEST=$(gh release view firmware-latest --json assets --jq '.assets[].name' 2>/dev/null | sed -nE 's/^KeystoneBridge-esp32-build-([0-9]+)-app\.bin$/\1/p' | sort -n | tail -1 || true)
+          if [ -n "$NEWEST" ] && [ "$NEWEST" -gt "$BUILD" ]; then
+            echo "Newer build $NEWEST already published; not moving firmware-latest backwards."
+            exit 0
+          fi
           # Moving pointer the app links to.
           git tag -f firmware-latest "$GITHUB_SHA"
           git push -f origin firmware-latest
@@ -134,6 +145,13 @@ jobs:
       - name: Publish web installer (GitHub Pages, gh-pages branch)
         if: success()
         run: |
+          # Keep GitHub Pages at the highest published build as well.
+          git fetch -q origin gh-pages || true
+          OLD=$(git show FETCH_HEAD:fw/build.txt 2>/dev/null | tr -cd '0-9' || true)
+          if [[ "$OLD" =~ ^[0-9]+$ ]] && [ "$OLD" -gt "$BUILD" ]; then
+            echo "Pages already has newer build $OLD; not overwriting it."
+            exit 0
+          fi
           FW=$(grep -oP '#define FW_VERSION "\K[^"]+' Bridge/KeystoneBridge/KeystoneBridge.ino)
           rm -rf site && mkdir -p site/fw
           cp Bridge/web/index.html site/
