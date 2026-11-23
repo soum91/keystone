@@ -437,14 +437,17 @@ enum Firmware {
         let (data, _) = try await URLSession.shared.data(for: req)
         guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let assets = obj["assets"] as? [[String: Any]] else { return nil }
+        // Concurrent release jobs can briefly leave multiple assets in firmware-latest.
+        // Always choose the highest valid build, not the first asset returned by GitHub.
+        var newest: Latest?
         for a in assets {
             guard let name = a["name"] as? String, name.hasSuffix("-app.bin"),
                   let prefix = ["KeystoneBridge-\(chip)-build-", "AfterglowBridge-\(chip)-build-"].first(where: { name.hasPrefix($0) }),
                   let n = Int(name.dropFirst(prefix.count).dropLast("-app.bin".count)),
                   let s = a["browser_download_url"] as? String, let u = URL(string: s) else { continue }
-            return Latest(build: n, url: u)
+            if newest == nil || n > newest!.build { newest = Latest(build: n, url: u) }
         }
-        return nil
+        return newest
     }
 
     static func install(_ latest: Latest, link: BridgeLink, header: String = "X-Device-Token", progress: @escaping (String) -> Void) async throws {
