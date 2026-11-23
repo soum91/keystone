@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.87",
+          "buildVersion": "87",
+          "date": "2026-11-23T20:21:39Z",
+          "localizedDescription": "- Preserve Tuya Smart QR sessions and allow reauthorization without clearing home device setup (c01210c)\n- Use valid three-part Keystone app versions and verify FlareStore feed after publishing (97f6886)\n- docs: record factual changes for build-85 [skip ci] (5be5ace)\n- docs: record factual changes for firmware-build-180 [skip ci] (1a818d5)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-87/Keystone-1.0.87-build-87.ipa",
+          "size": 2119809,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.85",
           "buildVersion": "85",
           "date": "2026-11-23T19:35:38Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-49/Keystone-1.0.0-build-49.ipa",
           "size": 1976381,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.47",
-          "buildVersion": "47",
-          "date": "2026-11-17T20:43:42Z",
-          "localizedDescription": "- Relay: second broker (HiveMQ) as fallback; bridge 1.10.13 switches brokers on failure, Keystone asks through both (b52bd87)\n- docs: record factual changes for firmware-build-147 [skip ci] (d678924)\n- CI: pin ESP32 Arduino core to 3.3.12 (3.3.13 overflows IRAM by 1664 bytes) (da8bf23)\n- docs: record factual changes for build-46 [skip ci] (52e27f5)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-47/Keystone-1.0.0-build-47.ipa",
-          "size": 1816679,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.85",
-      "versionDate": "2026-11-23T19:35:38Z",
-      "versionDescription": "- Auto-test Tuya LAN protocol in strip detector, refresh key, and require local bridge for setup (a8d672e)\n- Add Tuya Smart launch and safe guided outlet DP verification for Surge (160b038)\n- Diagnose true Tuya strip LAN connectivity and show per-outlet setup failures inline (97c8b5f)\n- Parse Tuya strip data point mappings robustly and reuse known device DP codes (2f558a0)\n- docs: record factual changes for socket-build-9 [skip ci] (a108c28)\n- docs: record factual changes for build-81 [skip ci] (ce88a67)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-85/Keystone-1.0.0-build-85.ipa",
-      "size": 2108999,
+      "version": "1.0.87",
+      "versionDate": "2026-11-23T20:21:39Z",
+      "versionDescription": "- Preserve Tuya Smart QR sessions and allow reauthorization without clearing home device setup (c01210c)\n- Use valid three-part Keystone app versions and verify FlareStore feed after publishing (97f6886)\n- docs: record factual changes for build-85 [skip ci] (5be5ace)\n- docs: record factual changes for firmware-build-180 [skip ci] (1a818d5)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-87/Keystone-1.0.87-build-87.ipa",
+      "size": 2119809,
       "appPermissions": {}
     },
     {
