@@ -138,7 +138,7 @@ static void handle(const String &sealed) {
     r["c"] = 403; r["b"] = "{\"error\":\"not over the relay\"}";
   } else if (path.startsWith("/api/info") || path.startsWith("/api/control") || path.startsWith("/api/display") ||
              path.startsWith("/api/admin") || path.startsWith("/api/identify") || path.startsWith("/api/ks/lights") ||
-             path.startsWith("/api/tuya/seen")) {
+             path.startsWith("/api/tuya/seen") || path == "/api/ota/remote") {
     // Answered in place (no loopback through the web server, which could fail or be busy). Settings work
     // here too, so a change still lands when the phone's direct Wi-Fi request times out and falls back.
     relayTask = xTaskGetCurrentTaskHandle(); relayFlag = true; relayCode = 500; relayOut = "{\"error\":\"no answer\"}";
@@ -149,6 +149,7 @@ static void handle(const String &sealed) {
     else if (path.startsWith("/api/admin")) screen::handleAdmin();
     else if (path.startsWith("/api/identify")) screen::handleIdentify();
     else if (path.startsWith("/api/ks/lights")) handleKsLights();
+    else if (path == "/api/ota/remote") remoteota::handle();
     else handleTuyaSeen();
     relayFlag = false;
     r["c"] = relayCode; r["b"] = relayOut;
