@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-168] - 2026-11-23
+
+## Verified changes since firmware-build-167
+
+- Allow only authenticated Keystone remote OTA command through encrypted MQTT relay ([`aeb95e78`](https://github.com/soum91/keystone/commit/aeb95e78a88d0e55c4f3a530a702d0609f37d7c3); `Bridge/KeystoneBridge/Relay.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-167...firmware-build-168)
+
 ## [firmware-build-166] - 2026-11-23
 
 ## Verified changes since firmware-build-165
