@@ -163,10 +163,13 @@ static void airco(JsonDocument &d) {
 }
 
 static void handle() {
-  if (!anyAppOK()) return reply(401, "unauthorized");
+  const bool allDevices = anyAppOK();
+  const bool socketOnly = devTokenOK("socket", reqHeader("X-Device-Token"));
+  if (!allDevices && !socketOnly) return reply(401, "unauthorized");
   JsonDocument d;
   if (deserializeJson(d, reqBody())) return reply(400, "bad json");
   String dev = d["device"] | "";
+  if (socketOnly && !allDevices && dev != "strip") return reply(403, "Socket token only controls the strip");
   if (dev == "light") return light(d);
   if (dev == "tv") return tv(d);
   if (dev == "bar") {

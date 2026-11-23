@@ -659,7 +659,7 @@ static void devPhones(const String &app, JsonArray out, const String &askerTok) 
   }
 }
 
-static bool devAppOK(const String &app) { return app == "exhale" || app == "redshift" || app == "keystone" || app == "equinox" || app == "nightjar"; }
+static bool devAppOK(const String &app) { return app == "exhale" || app == "redshift" || app == "keystone" || app == "equinox" || app == "nightjar" || app == "socket"; }
 
 static void handleDevClaim() {
   String app = server.arg("app");
