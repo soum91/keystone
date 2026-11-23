@@ -28,7 +28,7 @@ struct BridgeInfo: Codable, Equatable {
         var borrowedRelay: Int?; var freeHeap: Int?; var maxBlock: Int?
         var lastSkippedFree: Int?; var lastSkippedBlock: Int?
         var source: String?; var feedActive: Bool?; var feedAge: Int?; var feedHost: String?
-        var feedPackets: Int?; var feedRejected: Int? }
+        var feedPackets: Int?; var feedRejected: Int?; var feedDeferred: Int? }
     struct Strip: Codable, Equatable {
         struct Outlet: Codable, Equatable { var name: String; var dp: String; var on: Bool? }
         var configured: Bool?; var name: String?; var id: String?; var ip: String?; var ver: Double?
