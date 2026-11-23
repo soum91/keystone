@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.81",
+          "buildVersion": "81",
+          "date": "2026-11-23T18:47:31Z",
+          "localizedDescription": "- Explain memory-blocked Govee and phone-feed fallback on Home dashboard (b0e2d79)\n- Decode deferred DewPoint Govee packet telemetry in Keystone (8d8488a)\n- Show Equinox/DewPoint Govee feed diagnostics and correct stale source label (641193e)\n- docs: record factual changes for build-78 [skip ci] (7660a72)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-81/Keystone-1.0.0-build-81.ipa",
+          "size": 2079731,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.78",
           "buildVersion": "78",
           "date": "2026-11-23T18:35:04Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-46/Keystone-1.0.0-build-46.ipa",
           "size": 1803460,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.45",
-          "buildVersion": "45",
-          "date": "2026-11-15T07:57:56Z",
-          "localizedDescription": "- Bridge 1.10.10: release the classic-Bluetooth RAM reserve at boot, relay waits for 16 KB block; Keystone shows Free before Apple Home and Freed at boot (a55e4ea)\n- docs: record factual changes for firmware-build-143 [skip ci] (835c556)\n- Bridge 1.10.9: sound bar secure link waits for memory instead of crashing the bridge (crash during bar poll at 7 KB free) (d5922e8)\n- docs: record factual changes for firmware-build-142 [skip ci] (755d571)\n- Bridge 1.10.8: plain relays and plugs get a Switch tile in Apple Home (kind=switch from Afterglow) (f41b032)\n- docs: record factual changes for firmware-build-141 [skip ci] (2a02cc0)\n- docs: record factual changes for build-44 [skip ci] (e2b14b7)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-45/Keystone-1.0.0-build-45.ipa",
-          "size": 1784235,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.78",
-      "versionDate": "2026-11-23T18:35:04Z",
-      "versionDescription": "- Avoid treating Tuya master switch as an extra strip outlet when individual relays exist (129a5bc)\n- Let Keystone promote existing Smart Life plugs to Surge multi-outlet controls; deep-link setup (4f15be7)\n- docs: record factual changes for build-76 [skip ci] (b6f21c4)\n- docs: record factual changes for socket-build-8 [skip ci] (a7584f9)\n- docs: record factual changes for firmware-build-179 [skip ci] (a7e7883)\n- Restore original neon Surge icon as app and FlareStore artwork (85e1674)\n- Correct isolated OTA serial diagnostic newline (68aa98b)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-78/Keystone-1.0.0-build-78.ipa",
-      "size": 2079105,
+      "version": "1.0.0.81",
+      "versionDate": "2026-11-23T18:47:31Z",
+      "versionDescription": "- Explain memory-blocked Govee and phone-feed fallback on Home dashboard (b0e2d79)\n- Decode deferred DewPoint Govee packet telemetry in Keystone (8d8488a)\n- Show Equinox/DewPoint Govee feed diagnostics and correct stale source label (641193e)\n- docs: record factual changes for build-78 [skip ci] (7660a72)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-81/Keystone-1.0.0-build-81.ipa",
+      "size": 2079731,
       "appPermissions": {}
     },
     {
