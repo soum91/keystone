@@ -65,7 +65,7 @@ struct SocketShortcuts: AppShortcutsProvider {
             AppShortcut(intent: ControlSocketIntent(),
                         phrases: ["Control a socket using \(.applicationName)",
                                   "Switch an outlet using \(.applicationName)"],
-                        shortTitle: "Control Socket", systemImageName: "poweroutlet.type.b"),
+                        shortTitle: "Control Socket", systemImageName: "poweroutlet.type.b")
             AppShortcut(intent: AllSocketsIntent(),
                         phrases: ["Set all sockets using \(.applicationName)",
                                   "Switch all sockets using \(.applicationName)"],
