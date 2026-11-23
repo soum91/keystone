@@ -1,5 +1,15 @@
 # Changelog
 
+## [build-81] - 2026-11-23
+
+## Verified changes since build-78
+
+- Explain memory-blocked Govee and phone-feed fallback on Home dashboard ([`b0e2d792`](https://github.com/soum91/keystone/commit/b0e2d792bb4521a0edd09cb246b234756731265a); `Keystone/Views/DashboardView.swift`)
+- Decode deferred DewPoint Govee packet telemetry in Keystone ([`8d8488a4`](https://github.com/soum91/keystone/commit/8d8488a45765b81445016cc1d13091d58a60f018); `Shared/Bridge.swift`)
+- Show Equinox/DewPoint Govee feed diagnostics and correct stale source label ([`641193e3`](https://github.com/soum91/keystone/commit/641193e31373435ae00f0a1ee623fe2f1db8c898); `Keystone/Views/BridgeView.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-78...build-81)
+
 ## [build-78] - 2026-11-23
 
 ## Verified changes since build-76
