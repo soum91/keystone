@@ -198,6 +198,61 @@ final class HomeDevices: ObservableObject {
     @Published var busy: String?
     @Published var message: String?
     @Published var syncFailure: String?  // Selections are local until the bridge acknowledges and verifies them.
+    /// Actual Boolean states from Tuya's cloud; never infer power state from a
+    /// successful command. These are transient and are not saved to disk.
+    @Published private(set) var cloudStates: [String: [String: Bool]] = [:]
+    @Published private(set) var cloudPending: Set<String> = []
+    @Published private(set) var cloudMessage: [String: String] = [:]
+
+    private static func booleanStatuses(_ raw: [String: Any]) -> [String: Bool] {
+        var out: [String: Bool] = [:]
+        if let statuses = raw["status"] as? [[String: Any]] {
+            for entry in statuses {
+                guard let code = entry["code"] as? String,
+                      let num = entry["value"] as? NSNumber,
+                      CFGetTypeID(num) == CFBooleanGetTypeID() else { continue }
+                out[code] = num.boolValue
+            }
+        } else if let statuses = raw["status"] as? [String: Any] {
+            for (code, value) in statuses {
+                guard let num = value as? NSNumber,
+                      CFGetTypeID(num) == CFBooleanGetTypeID() else { continue }
+                out[code] = num.boolValue
+            }
+        }
+        return out
+    }
+
+    /// Submit a cloud command through the saved QR session. Afterward query
+    /// the cloud again; a 200 response alone never updates displayed state.
+    func cloudSwitch(_ id: String, code: String, on: Bool, token: TuyaToken) async {
+        let key = id + "/" + code
+        guard let device = devices.first(where: { $0.id == id }),
+              device.online, device.cloudControlChannels.contains(where: { $0.code == code }),
+              !cloudPending.contains(key) else { return }
+        cloudPending.insert(key)
+        cloudMessage[key] = nil
+        defer { cloudPending.remove(key) }
+        let client = TuyaClient(token: TuyaToken.stored ?? token)
+        do {
+            try await client.sendCloudSwitch(deviceID: id, code: code, on: on)
+            try? await Task.sleep(nanoseconds: 1_250_000_000)
+            let raw = try await client.allDevicesRaw()
+            guard let current = raw.first(where: { ($0["id"] as? String) == id }) else {
+                cloudMessage[key] = "Sent to Tuya; device status unavailable."
+                return
+            }
+            let states = Self.booleanStatuses(current)
+            if !states.isEmpty { cloudStates[id] = states }
+            if let actual = states[code], actual == on {
+                cloudMessage[key] = nil
+            } else {
+                cloudMessage[key] = "Tuya accepted command; new state not confirmed."
+            }
+        } catch {
+            cloudMessage[key] = error.localizedDescription
+        }
+    }
 
     private func save() { AppGroup.write(devices, "home-devices.json") }
 
@@ -207,7 +262,8 @@ final class HomeDevices: ObservableObject {
         defer { busy = nil }
         let client = TuyaClient(token: token)
         do {
-            let fresh = try await client.allDevicesRaw().compactMap(HomeDevice.parse).filter(\.supported)
+            let rawDevices = try await client.allDevicesRaw()
+            let fresh = rawDevices.compactMap(HomeDevice.parse).filter(\.supported)
             var merged: [HomeDevice] = []
             for var d in fresh {
                 if let old = devices.first(where: { $0.id == d.id }) {
@@ -238,6 +294,10 @@ final class HomeDevices: ObservableObject {
                 }
             }
             devices = merged.sorted { ($0.isLight ? 0 : 1, $0.name) < ($1.isLight ? 0 : 1, $1.name) }
+            cloudStates = Dictionary(uniqueKeysWithValues: rawDevices.compactMap { raw in
+                guard let id = raw["id"] as? String else { return nil }
+                return (id, Self.booleanStatuses(raw))
+            })
             save()
         } catch {
             message = error.localizedDescription
