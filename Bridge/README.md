@@ -109,29 +109,42 @@ Since firmware 1.1 the bridge also switches a Vizio sound bar with the TV, set u
 - Many bulbs accept only one local connection. The bridge never holds one open (connect, send, close), and polls each light every 15 s, so the app and Smart Life still work.
 - Adding or removing lights restarts the bridge (about 20 s) so Home sees the change. Accessory IDs come from the Tuya device ID, so rooms you assigned in Home stick.
 
-## DewPoint iOS sensor feed (Keystone is the only bridge firmware)
+## Govee iOS sensor feeds (Keystone is the only bridge firmware)
 
-DewPoint is an **iPhone app**, not an extra ESP32. While its iOS app is able
-to scan the Govee in Bluetooth range, it can forward its saved Govee's raw
-temperature, humidity and battery values to the existing Keystone bridge over
-the local Wi-Fi using DPG2 unicast UDP on port 8092. The **Keystone iOS app**
-continues to manage the bridge, its firmware, pairing, devices and Apple Home.
+Equinox and DewPoint are iPhone apps, not extra ESP32 firmware. Both can forward
+**actual Govee Bluetooth observations** to Keystone over the trusted local Wi-Fi
+using UDP port `8092`. Equinox is the **preferred** feed because it also uses the
+sensor for the AC's Smart temperature control. DewPoint remains a backup and
+keeps its own history/widgets. Keystone still manages the ESP32 firmware, pairing,
+devices and Apple Home.
 
-- The Keystone iOS app shows Govee source as `dewpoint`, `localBLE` or `stale`,
-  along with the feed's age, accepted packet count and any rejected packets.
-- The iPhone cannot reliably listen to Govee advertisements indefinitely while
-  suspended; **Keystone's own BLE scanning remains the fallback**, subject to
-  its existing internal-memory safety checks.
-- The receiver pins a Govee by its advertised name because CoreBluetooth
-  does not expose its BLE MAC. Existing HomeKit Govee identity is preserved;
-  a first-time sensor requires one settings-preserving restart.
-- DewPoint discovers the bridge using the existing Bonjour service and can
-  also use the bridge host already saved in DewPoint.
-- Only send to a bridge on a trusted LAN. UDP packets are not cryptographically
-  authenticated; do not forward port 8092 to the internet.
-- Keep the Govee feature enabled in the Keystone iOS app. No other bridge
-  firmware, extra flash procedure or hardware is necessary.
+Source priority:
+1. **Equinox** (`EQG2`) while its latest packet is fresh (up to 90 seconds).
+2. **DewPoint** (`DPG2`) if Equinox has stopped supplying new readings.
+3. **Keystone local NimBLE** when no iOS feed is fresh; the existing memory safety
+   checks remain active. Smart AC control can still use the AC's sensor if its
+   configured Govee measurement is unavailable.
 
+Both feed packets carry `type,name,tempC,humidity,battery,ageMs,sequence`,
+with the exact original advertised Govee name, not an iOS device UUID.
+Keystone refuses a different sensor when one is already pinned for HomeKit.
+The Keystone iOS Room card displays which source supplied the last valid reading:
+Equinox, DewPoint, or Keystone Bluetooth. The `/api/info` Govee diagnostics also
+expose source, packet counts, rejected packets and deferred secondary packets.
+
+Equinox must already be paired with Keystone and its Govee linked to the AC;
+it uses that existing bridge host instead of adding another setup flow.
+DewPoint continues to discover Keystone over Bonjour or use its saved address.
+
+**iOS does not guarantee continuous BLE advertisement delivery while suspended.**
+The feed only runs when iOS supplies fresh observations; the ESP32 must remain
+independent for unattended Apple Home and AC control. This change does not
+create a persistent Bluetooth connection or any DewPoint firmware.
+
+The UDP feed is restricted to Keystone's subnet but has no cryptographic
+authentication. Use a trusted LAN only; **never forward UDP 8092 to the internet**.
+A new/unpinned sensor may cause a single settings-preserving restart to register
+its HomeKit accessory, but existing HomeKit identities and settings are retained.
 
 ## HomeKit bridge-wide "No Response" recovery
 
