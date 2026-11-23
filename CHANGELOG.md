@@ -1,5 +1,16 @@
 # Changelog
 
+## [firmware-build-173] - 2026-11-23
+
+## Verified changes since firmware-build-170
+
+- Document Equinox-primary Govee feed and DewPoint/BLE fallback ([`ab78c1da`](https://github.com/soum91/keystone/commit/ab78c1da57d3bd916a5c96357826cf979cd76a27); `Bridge/README.md`)
+- Display active Equinox, DewPoint, or bridge BLE Govee source in Keystone ([`c48ac8a8`](https://github.com/soum91/keystone/commit/c48ac8a8a37a87705610162105c11371ac6eab20); `Keystone/Views/DashboardView.swift`)
+- Prefer Equinox Govee UDP feed over DewPoint with BLE fallback ([`baeabe99`](https://github.com/soum91/keystone/commit/baeabe99dbe7d3d888fbaa412e2addd8a0949aee); `Bridge/KeystoneBridge/Govee.h`)
+- Serialize Keystone IPA build publishing to avoid CI log branch conflicts ([`1c6a379d`](https://github.com/soum91/keystone/commit/1c6a379d3b8d726f40f5f527cdd4ba3bb1fccceb); `.github/workflows/build.yml`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-170...firmware-build-173)
+
 ## [firmware-build-170] - 2026-11-23
 
 ## Verified changes since firmware-build-169
