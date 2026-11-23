@@ -60,7 +60,7 @@ struct HomeDevicesView: View {
                         TuyaToken.stored = nil; token = nil
                     }
                 } footer: {
-                    Text("The bridge controls these over your Wi-Fi with each device's local key, so they keep working when the internet is down. Lights Afterglow already sent stay as they are; if you add the same one here, Keystone's copy is used.")
+                    Text("Apple Home requires a verified local Tuya connection. Cloud-only devices can now be switched in Keystone directly through your QR-authorized Tuya Smart account while this app is open. Cloud controls require internet and are separate from Apple Home; the bridge's existing local devices remain unchanged.")
                 }
             }
             if let m = model.message {
@@ -225,6 +225,47 @@ struct HomeDevicesView: View {
                 }
             }
             .disabled(working != nil || model.busy != nil)
+
+            // Tuya's cloud-only devices cannot be bridged through a local key.
+            // Their QR login can still control verified switch codes right here.
+            // Keep these visibly distinct from the Apple Home membership toggle.
+            if !d.cloudControlChannels.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Tuya cloud control", systemImage: "cloud")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    ForEach(d.cloudControlChannels.map { $0.code }, id: \.self) { code in
+                        let title = d.cloudControlChannels.first(where: { $0.code == code })?.name ?? code
+                        let state = model.cloudStates[d.id]?[code]
+                        let key = d.id + "/" + code
+                        HStack(spacing: 8) {
+                            Text(title).font(.subheadline)
+                            Spacer()
+                            if model.cloudPending.contains(key) {
+                                ProgressView().controlSize(.small)
+                            } else if let on = state {
+                                Button(on ? "Turn off" : "Turn on") {
+                                    Task { await setCloud(d.id, code: code, on: !on) }
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(!d.online || model.busy != nil)
+                            } else {
+                                Button("On") { Task { await setCloud(d.id, code: code, on: true) } }
+                                    .buttonStyle(.bordered)
+                                Button("Off") { Task { await setCloud(d.id, code: code, on: false) } }
+                                    .buttonStyle(.bordered)
+                            }
+                        }
+                        .disabled(!d.online || model.cloudPending.contains(key) || model.busy != nil)
+                        if let m = model.cloudMessage[key] {
+                            Text(m).font(.caption2).foregroundStyle(Theme.bad).textSelection(.enabled)
+                        }
+                    }
+                    Text("Cloud controls work with Tuya Smart authorization, not Keystone's BLE or LAN connection.")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                .padding(.top, 7)
+            }
             if working == d.id {
                 Text("Working…").font(.caption).foregroundStyle(.secondary)
             } else if d.inHome, let why = d.problem {
@@ -275,6 +316,14 @@ struct HomeDevicesView: View {
                 }
             }
         }
+    }
+
+    private func setCloud(_ id: String, code: String, on: Bool) async {
+        guard let session = TuyaToken.stored ?? token else {
+            model.message = "Reconnect Tuya Smart to use cloud controls."
+            return
+        }
+        await model.cloudSwitch(id, code: code, on: on, token: session)
     }
 
     // MARK: Sign in (same Smart Life login as the power strip)
