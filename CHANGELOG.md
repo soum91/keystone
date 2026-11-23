@@ -1,5 +1,16 @@
 # Changelog
 
+## [build-76] - 2026-11-23
+
+## Verified changes since build-75
+
+- Show actual remote OTA failure instead of assuming low memory ([`7de28302`](https://github.com/soum91/keystone/commit/7de28302612f9bc0e2ec28ed069f896954768aac); `Keystone/App/Store.swift`)
+- Run firmware maintenance OTA before normal ESP32/HomeKit initialization ([`818a1f31`](https://github.com/soum91/keystone/commit/818a1f31919c4488f6c837556ef197bb292869e0); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Boot into isolated Wi-Fi-only internet OTA before HomeSpan to free TLS memory ([`ee6ecdc1`](https://github.com/soum91/keystone/commit/ee6ecdc172f7034733f83528fdea45f0156c8275); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Generate branded Surge iOS icon, package release artwork and enforce compiled app icon ([`381e04f8`](https://github.com/soum91/keystone/commit/381e04f8d6dfe592e370836ef6297bc053988702); `.github/workflows/socket-app.yml`, `SocketApp/README.md`, `SocketApp/scripts/make_surge_icon.py`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-75...build-76)
+
 ## [socket-build-8] - 2026-11-23
 
 ## Verified changes since socket-build-7
