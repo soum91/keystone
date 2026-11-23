@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.78",
+          "buildVersion": "78",
+          "date": "2026-11-23T18:35:04Z",
+          "localizedDescription": "- Avoid treating Tuya master switch as an extra strip outlet when individual relays exist (129a5bc)\n- Let Keystone promote existing Smart Life plugs to Surge multi-outlet controls; deep-link setup (4f15be7)\n- docs: record factual changes for build-76 [skip ci] (b6f21c4)\n- docs: record factual changes for socket-build-8 [skip ci] (a7584f9)\n- docs: record factual changes for firmware-build-179 [skip ci] (a7e7883)\n- Restore original neon Surge icon as app and FlareStore artwork (85e1674)\n- Correct isolated OTA serial diagnostic newline (68aa98b)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-78/Keystone-1.0.0-build-78.ipa",
+          "size": 2079105,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.76",
           "buildVersion": "76",
           "date": "2026-11-23T18:02:41Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-45/Keystone-1.0.0-build-45.ipa",
           "size": 1784235,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.44",
-          "buildVersion": "44",
-          "date": "2026-11-14T21:46:21Z",
-          "localizedDescription": "- Power strip: 'When power comes back' setting (relay_status) via Smart Life detection; bridge 1.10.7 (7c6dc15)\n- docs: record factual changes for firmware-build-140 [skip ci] (9bcb8bd)\n- Bridge 1.10.6: breadcrumbs no longer walk the heap (bridge went unreachable on 1.10.4/1.10.5) (446e7ae)\n- docs: record factual changes for firmware-build-139 [skip ci] (caa9ffc)\n- docs: record factual changes for build-43 [skip ci] (ef3d0b4)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-44/Keystone-1.0.0-build-44.ipa",
-          "size": 1787263,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.76",
-      "versionDate": "2026-11-23T18:02:41Z",
-      "versionDescription": "- Show actual remote OTA failure instead of assuming low memory (7de2830)\n- Bump bridge firmware to 1.11.11 for isolated OTA boot (d1bf350)\n- docs: record factual changes for socket-build-7 [skip ci] (1cab445)\n- Run firmware maintenance OTA before normal ESP32/HomeKit initialization (818a1f3)\n- Boot into isolated Wi-Fi-only internet OTA before HomeSpan to free TLS memory (ee6ecdc)\n- docs: record factual changes for socket-build-6 [skip ci] (5302ef0)\n- docs: record factual changes for build-75 [skip ci] (ce0a75f)\n- Generate branded Surge iOS icon, package release artwork and enforce compiled app icon (381e04f)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-76/Keystone-1.0.0-build-76.ipa",
-      "size": 2055806,
+      "version": "1.0.0.78",
+      "versionDate": "2026-11-23T18:35:04Z",
+      "versionDescription": "- Avoid treating Tuya master switch as an extra strip outlet when individual relays exist (129a5bc)\n- Let Keystone promote existing Smart Life plugs to Surge multi-outlet controls; deep-link setup (4f15be7)\n- docs: record factual changes for build-76 [skip ci] (b6f21c4)\n- docs: record factual changes for socket-build-8 [skip ci] (a7584f9)\n- docs: record factual changes for firmware-build-179 [skip ci] (a7e7883)\n- Restore original neon Surge icon as app and FlareStore artwork (85e1674)\n- Correct isolated OTA serial diagnostic newline (68aa98b)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-78/Keystone-1.0.0-build-78.ipa",
+      "size": 2079105,
       "appPermissions": {}
     },
     {
