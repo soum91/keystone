@@ -258,7 +258,7 @@
       "developerName": "soum91",
       "subtitle": "Power strip control and Shortcuts",
       "localizedDescription": "Control your Joly Joy-compatible smart power strip through the existing Keystone ESP32 bridge, with Apple Shortcuts and Apple Home integration. Compatible Tuya LAN strip and current Keystone firmware required.",
-      "iconURL": "https://github.com/soum91/keystone/releases/download/socket-build-11/surge-icon.png",
+      "iconURL": "https://github.com/soum91/keystone/releases/download/socket-build-10/surge-icon.png",
       "tintColor": "34D399",
       "category": "utilities",
       "screenshotURLs": [],
@@ -270,6 +270,15 @@
           "localizedDescription": "Hardware protocol and HomeKit USB mappings require real-device verification. Local Wi-Fi is needed for app Shortcuts.",
           "downloadURL": "https://github.com/soum91/keystone/releases/download/socket-build-11/Surge-1.0.11-build-11.ipa",
           "size": 1362710,
+          "minOSVersion": "17.0"
+        },
+        {
+          "version": "1.0.10",
+          "buildVersion": "10",
+          "date": "2026-11-23T21:22:51Z",
+          "localizedDescription": "Hardware protocol and HomeKit USB mappings require real-device verification. Local Wi-Fi is needed for app Shortcuts.",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/socket-build-10/Surge-1.0.10-build-10.ipa",
+          "size": 1357976,
           "minOSVersion": "17.0"
         },
         {
