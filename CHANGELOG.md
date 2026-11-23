@@ -1,5 +1,17 @@
 # Changelog
 
+## [socket-build-9] - 2026-11-23
+
+## Verified changes since socket-build-8
+
+- Explain memory-blocked Govee and phone-feed fallback on Home dashboard ([`b0e2d792`](https://github.com/soum91/keystone/commit/b0e2d792bb4521a0edd09cb246b234756731265a); `Keystone/Views/DashboardView.swift`)
+- Decode deferred DewPoint Govee packet telemetry in Keystone ([`8d8488a4`](https://github.com/soum91/keystone/commit/8d8488a45765b81445016cc1d13091d58a60f018); `Shared/Bridge.swift`)
+- Show Equinox/DewPoint Govee feed diagnostics and correct stale source label ([`641193e3`](https://github.com/soum91/keystone/commit/641193e31373435ae00f0a1ee623fe2f1db8c898); `Keystone/Views/BridgeView.swift`)
+- Avoid treating Tuya master switch as an extra strip outlet when individual relays exist ([`129a5bc7`](https://github.com/soum91/keystone/commit/129a5bc7a29038f35cfe5b080bce186f0ddd1f92); `Keystone/Strip/TuyaCloud.swift`)
+- Let Keystone promote existing Smart Life plugs to Surge multi-outlet controls; deep-link setup ([`4f15be72`](https://github.com/soum91/keystone/commit/4f15be726cfd453cdbc19665d7563fe68804e61e); `Keystone/App/KeystoneApp.swift`, `Keystone/Views/BridgeView.swift`, `Keystone/Views/HomeDevicesView.swift`, and 4 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/socket-build-8...socket-build-9)
+
 ## [build-81] - 2026-11-23
 
 ## Verified changes since build-78
