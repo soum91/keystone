@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.62",
+          "buildVersion": "62",
+          "date": "2026-11-23T00:48:25Z",
+          "localizedDescription": "- Decode bridge internet OTA status in Keystone iOS app (53906b8)\n- Allow only authenticated Keystone remote OTA command through encrypted MQTT relay (aeb95e7)\n- Integrate internet OTA maintenance boot into Keystone worker and status (7a8f5b8)\n- Introduce verified HTTPS pull OTA handler for remote bridge maintenance (891553f)\n- Publish build marker and SHA-256 sidecar for verified internet OTA (8a5ba7c)\n- docs: record factual changes for firmware-build-164 [skip ci] (e731db0)\n- docs: record factual changes for firmware-build-163 [skip ci] (365e3f2)\n- docs: record factual changes for build-61 [skip ci] (a16bfa7)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-62/Keystone-1.0.0-build-62.ipa",
+          "size": 2048142,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.61",
           "buildVersion": "61",
           "date": "2026-11-22T18:27:07Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-36/Keystone-1.0.0-build-36.ipa",
           "size": 1549887,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.34",
-          "buildVersion": "34",
-          "date": "2026-11-06T20:27:18Z",
-          "localizedDescription": "- Show actual installed app version and build in UI (26f61c7)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-34/Keystone-1.0.0-build-34.ipa",
-          "size": 1549928,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.61",
-      "versionDate": "2026-11-22T18:27:07Z",
-      "versionDescription": "- Keystone app: display HomeKit secure-session state and recovery diagnostics (df063c7)\n- HomeSpan: recover one prolonged HomeKit session loss; disable Wi-Fi modem sleep and expose diagnostics (f936543)\n- docs: record factual changes for firmware-build-162 [skip ci] (4790cc8)\n- docs: record factual changes for firmware-build-161 [skip ci] (41447b3)\n- docs: record factual changes for firmware-build-160 [skip ci] (c0ed1c0)\n- Govee fallback: remember named BLE address for iOS-pinned sensor (c34dd45)\n- docs: record factual changes for build-60 [skip ci] (8554ff2)\n- Fix DewPoint feed expiry: never reuse older local BLE validity for stale phone data (4d8aff4)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-61/Keystone-1.0.0-build-61.ipa",
-      "size": 2036141,
+      "version": "1.0.0.62",
+      "versionDate": "2026-11-23T00:48:25Z",
+      "versionDescription": "- Decode bridge internet OTA status in Keystone iOS app (53906b8)\n- Allow only authenticated Keystone remote OTA command through encrypted MQTT relay (aeb95e7)\n- Integrate internet OTA maintenance boot into Keystone worker and status (7a8f5b8)\n- Introduce verified HTTPS pull OTA handler for remote bridge maintenance (891553f)\n- Publish build marker and SHA-256 sidecar for verified internet OTA (8a5ba7c)\n- docs: record factual changes for firmware-build-164 [skip ci] (e731db0)\n- docs: record factual changes for firmware-build-163 [skip ci] (365e3f2)\n- docs: record factual changes for build-61 [skip ci] (a16bfa7)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-62/Keystone-1.0.0-build-62.ipa",
+      "size": 2048142,
       "appPermissions": {}
     }
   ],
