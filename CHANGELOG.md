@@ -1,5 +1,13 @@
 # Changelog
 
+## [socket-build-13] - 2026-11-23
+
+## Verified changes since socket-build-10
+
+- Register surge:// app link for Afterglow native Home integration panel ([`67b6b961`](https://github.com/soum91/keystone/commit/67b6b96165ac80bb42df2542ee78d3f756b0ca76); `SocketApp/project.yml`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/socket-build-10...socket-build-13)
+
 ## [socket-build-11] - 2026-11-23
 
 ## Verified changes since socket-build-9
