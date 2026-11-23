@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-65] - 2026-11-23
+
+## Verified changes since build-64
+
+- Select highest versioned firmware asset even when release jobs overlap ([`609f6b82`](https://github.com/soum91/keystone/commit/609f6b82f89a2598402daa5baed73a75bb80bb74); `Keystone/App/Store.swift`)
+- Document safe verified internet OTA design and first local update requirement ([`9b1ae24f`](https://github.com/soum91/keystone/commit/9b1ae24f7f3fd1b2d295e5dd1c014160b3e3e132); `Bridge/README.md`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-64...build-65)
+
 ## [firmware-build-169] - 2026-11-23
 
 ## Verified changes since firmware-build-166
