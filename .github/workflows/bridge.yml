@@ -138,6 +138,10 @@ jobs:
           rm -rf site && mkdir -p site/fw
           cp Bridge/web/index.html site/
           cp dist/*-full.bin dist/*-app.bin dist/boot-*.bin dist/parts-*.bin site/fw/
+          # Secure internet OTA: the ESP32 fetches the current binary over HTTPS
+          # and validates this independently published SHA-256 before rebooting.
+          sha256sum site/fw/KeystoneBridge-esp32-app.bin | cut -d' ' -f1 > site/fw/KeystoneBridge-esp32-app.bin.sha256
+          printf '%s\n' "$BUILD" > site/fw/build.txt
           for c in esp32; do mv "site/fw/KeystoneBridge-$c-build-$BUILD-app.bin" "site/fw/KeystoneBridge-$c-app.bin" 2>/dev/null || true; done
           head -c 8192 /dev/zero | tr '\0' '\377' > site/fw/otadata-blank.bin
           # Repair: bootloader, partition table, blank boot selector and app. NVS (0x9000: Wi-Fi, Apple Home and
