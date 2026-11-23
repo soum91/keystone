@@ -1,5 +1,13 @@
 # Changelog
 
+## [socket-build-7] - 2026-11-23
+
+## Verified changes since socket-build-6
+
+- Generate branded Surge iOS icon, package release artwork and enforce compiled app icon ([`381e04f8`](https://github.com/soum91/keystone/commit/381e04f8d6dfe592e370836ef6297bc053988702); `.github/workflows/socket-app.yml`, `SocketApp/README.md`, `SocketApp/scripts/make_surge_icon.py`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/socket-build-6...socket-build-7)
+
 ## [socket-build-6] - 2026-11-23
 
 ## Verified changes since socket-build-5
