@@ -1,5 +1,22 @@
 # Changelog
 
+## [firmware-build-179] - 2026-11-23
+
+## Verified changes since firmware-build-175
+
+- Correct isolated OTA serial diagnostic newline ([`68aa98bb`](https://github.com/soum91/keystone/commit/68aa98bbde8307b0c3d95cecd497338e7d5c7a42); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Show actual remote OTA failure instead of assuming low memory ([`7de28302`](https://github.com/soum91/keystone/commit/7de28302612f9bc0e2ec28ed069f896954768aac); `Keystone/App/Store.swift`)
+- Run firmware maintenance OTA before normal ESP32/HomeKit initialization ([`818a1f31`](https://github.com/soum91/keystone/commit/818a1f31919c4488f6c837556ef197bb292869e0); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Boot into isolated Wi-Fi-only internet OTA before HomeSpan to free TLS memory ([`ee6ecdc1`](https://github.com/soum91/keystone/commit/ee6ecdc172f7034733f83528fdea45f0156c8275); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Generate branded Surge iOS icon, package release artwork and enforce compiled app icon ([`381e04f8`](https://github.com/soum91/keystone/commit/381e04f8d6dfe592e370836ef6297bc053988702); `.github/workflows/socket-app.yml`, `SocketApp/README.md`, `SocketApp/scripts/make_surge_icon.py`)
+- Rename Socket UI to Surge, discover Keystone via Bonjour and explain firmware pairing failures ([`4edcfcda`](https://github.com/soum91/keystone/commit/4edcfcda05b03b8112b66defb23cdd8435d4051c); `.github/scripts/update-socket-source.py`, `SocketApp/CHANGELOG.md`, `SocketApp/README.md`, and 7 more)
+- Publish Socket IPA in shared FlareStore feed and preserve multi-app source entries ([`e3d09369`](https://github.com/soum91/keystone/commit/e3d0936927e03050f527cfba8460fdadf960ab7e); `.github/scripts/update-socket-source.py`, `.github/scripts/update-source.py`, `.github/workflows/socket-app.yml`)
+- Avoid redundant Keystone IPA builds for standalone Socket changes ([`ef469920`](https://github.com/soum91/keystone/commit/ef469920cc6815cdd9da7ed758dcd39245027222); `.github/workflows/build.yml`)
+- Separate AppShortcutsBuilder expressions without array comma ([`ecf64602`](https://github.com/soum91/keystone/commit/ecf646025c12d564a3cefed252c446405a6ad22c); `SocketApp/Sources/SocketIntents.swift`)
+- Fix AppShortcutsBuilder syntax for Socket iOS compilation ([`c329f0c2`](https://github.com/soum91/keystone/commit/c329f0c2307524ba206094d90d60b84e6ee95254); `SocketApp/Sources/SocketIntents.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-175...firmware-build-179)
+
 ## [socket-build-7] - 2026-11-23
 
 ## Verified changes since socket-build-6
