@@ -201,6 +201,12 @@ struct DashboardView: View {
                     if let b = g.battery { Label("\(b)%", systemImage: b <= 15 ? "battery.25" : "battery.75") }
                 }
                 .font(.caption).foregroundStyle(.secondary)
+                if let source = g.source, source != "stale" {
+                    Text("Sensor feed: " + (source == "equinox" ? "Equinox" :
+                                            source == "dewpoint" ? "DewPoint" :
+                                            source == "localBLE" ? "Keystone Bluetooth" : source))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             } else if i.govee?.locked == true {
                 Text("Not heard lately").foregroundStyle(.secondary)
                 Text(roomWhy(i.govee)).font(.caption).foregroundStyle(.secondary)
