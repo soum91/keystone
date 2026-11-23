@@ -24,7 +24,7 @@ static void begin() {
   // Don't display an old HTTPS failure forever after a NEW build is installed.
   uint32_t lastBootBuild = prefs.getUInt("roSeenBuild", 0);
   prefs.putUInt("roSeenBuild", FW_BUILD);
-  if (!target && lastBootBuild && lastBootBuild != FW_BUILD) {
+  if (!target && lastBootBuild != FW_BUILD) {
     state = "idle"; lastError = ""; tries = 0;
     prefs.putString("roState", state);
     prefs.remove("roError"); prefs.remove("roTries");
