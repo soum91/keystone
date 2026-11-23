@@ -62,7 +62,6 @@ struct AllSocketsIntent: AppIntent {
 
 struct SocketShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
-        [
             AppShortcut(intent: ControlSocketIntent(),
                         phrases: ["Control a socket using \(.applicationName)",
                                   "Switch an outlet using \(.applicationName)"],
@@ -71,6 +70,5 @@ struct SocketShortcuts: AppShortcutsProvider {
                         phrases: ["Set all sockets using \(.applicationName)",
                                   "Switch all sockets using \(.applicationName)"],
                         shortTitle: "Set All Sockets", systemImageName: "poweroutlet.strip")
-        ]
     }
 }
