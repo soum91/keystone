@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-66] - 2026-11-23
+
+## Verified changes since build-65
+
+- Serialize Keystone IPA build publishing to avoid CI log branch conflicts ([`1c6a379d`](https://github.com/soum91/keystone/commit/1c6a379d3b8d726f40f5f527cdd4ba3bb1fccceb); `.github/workflows/build.yml`)
+- Serialize firmware publish jobs and block stale release/Pages downgrades ([`e7119724`](https://github.com/soum91/keystone/commit/e71197244478a0b2499a51249bfc16b76cb0b9e1); `.github/workflows/bridge.yml`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-65...build-66)
+
 ## [build-65] - 2026-11-23
 
 ## Verified changes since build-64
