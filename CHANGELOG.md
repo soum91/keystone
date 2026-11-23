@@ -1,5 +1,19 @@
 # Changelog
 
+## [socket-build-4] - 2026-11-23
+
+## Verified changes since build-67
+
+- Avoid redundant Keystone IPA builds for standalone Socket changes ([`ef469920`](https://github.com/soum91/keystone/commit/ef469920cc6815cdd9da7ed758dcd39245027222); `.github/workflows/build.yml`)
+- Separate AppShortcutsBuilder expressions without array comma ([`ecf64602`](https://github.com/soum91/keystone/commit/ecf646025c12d564a3cefed252c446405a6ad22c); `SocketApp/Sources/SocketIntents.swift`)
+- Fix AppShortcutsBuilder syntax for Socket iOS compilation ([`c329f0c2`](https://github.com/soum91/keystone/commit/c329f0c2307524ba206094d90d60b84e6ee95254); `SocketApp/Sources/SocketIntents.swift`)
+- Restrict Socket pairing to outlet control and display its pairing in Keystone ([`5ac7c0dc`](https://github.com/soum91/keystone/commit/5ac7c0dc305cc2bf03b2171959702fbb587d67bd); `Bridge/KeystoneBridge/Extras.h`, `Bridge/KeystoneBridge/Screen.h`, `Keystone/Views/BridgeView.swift`, and 2 more)
+- Complete Socket iPhone UI, App Intents, scoped bridge authentication and IPA CI ([`15e730cc`](https://github.com/soum91/keystone/commit/15e730ccf1101a8901f8c12ee8f65c7d15b01074); `.github/workflows/socket-app.yml`, `Bridge/KeystoneBridge/Control.h`, `Bridge/KeystoneBridge/Extras.h`, and 6 more)
+- Start standalone Socket app project and Keystone client ([`3be5aacb`](https://github.com/soum91/keystone/commit/3be5aacb6aacec3382e1fcdc58a0290bcb0c5b14); `SocketApp/Sources/SocketCore.swift`, `SocketApp/project.yml`)
+- Document Equinox-primary Govee feed and DewPoint/BLE fallback ([`ab78c1da`](https://github.com/soum91/keystone/commit/ab78c1da57d3bd916a5c96357826cf979cd76a27); `Bridge/README.md`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-67...socket-build-4)
+
 ## [build-67] - 2026-11-23
 
 ## Verified changes since build-66
