@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.8"
+#define FW_VERSION "1.11.9"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -987,6 +987,7 @@ namespace provision { static String status; }   // Wi-Fi setup progress, drawn b
 #include "TuyaApply.h"
 static void handleInfo();
 namespace control { static void handle(); }
+#include "RemoteOTA.h"
 #include "Relay.h"
 #include "Provision.h"
 #include "Router.h"
@@ -1150,6 +1151,7 @@ static void handleInfo() {
 #endif
   if (safeMode && d["ac"].is<JsonObject>()) d["ac"]["error"] = "paused: bridge was crash-looping (safe mode)";
   relay::info(d);
+  remoteota::info(d);
   router::info(d);
   d["auth"] = screen::adminOK();
   d["features"]["ac"] = acEnabled; d["features"]["cam"] = camEnabled;
@@ -1439,6 +1441,7 @@ static void worker(void *) {
 #ifdef HAS_GOVEE
     mark("govee feed"); if (enGovee) govee::pollFeed();
 #endif
+    mark("remote ota"); if (remoteota::poll()) { vTaskDelay(pdMS_TO_TICKS(200)); continue; }
     mark("relay"); relay::poll();
     mark("router"); router::follow();
     mark("tuya announce"); tuyadisc::poll();
@@ -1580,6 +1583,7 @@ void setup() {
   sceneauto::loadEquinox(readFile("/equinox.json"));
   cam::load();
   relay::begin();
+  remoteota::begin();
   router::begin();
   applyFeatures();
 #ifdef HAS_GOVEE
