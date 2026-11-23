@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.64",
+          "buildVersion": "64",
+          "date": "2026-11-23T00:49:30Z",
+          "localizedDescription": "- Show remote OTA capability and update state in Keystone firmware settings (6210a68)\n- Allow internet firmware updates via encrypted relay; verify installed build after reboot (154b592)\n- Decode bridge internet OTA status in Keystone iOS app (53906b8)\n- Allow only authenticated Keystone remote OTA command through encrypted MQTT relay (aeb95e7)\n- Integrate internet OTA maintenance boot into Keystone worker and status (7a8f5b8)\n- Introduce verified HTTPS pull OTA handler for remote bridge maintenance (891553f)\n- Publish build marker and SHA-256 sidecar for verified internet OTA (8a5ba7c)\n- docs: record factual changes for firmware-build-164 [skip ci] (e731db0)\n- docs: record factual changes for firmware-build-163 [skip ci] (365e3f2)\n- docs: record factual changes for build-61 [skip ci] (a16bfa7)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-64/Keystone-1.0.0-build-64.ipa",
+          "size": 2053999,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.62",
           "buildVersion": "62",
           "date": "2026-11-23T00:48:25Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-37/Keystone-1.0.0-build-37.ipa",
           "size": 1551768,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.36",
-          "buildVersion": "36",
-          "date": "2026-11-06T20:58:47Z",
-          "localizedDescription": "- Enforce visible installed version/build across app releases (36674d2)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-36/Keystone-1.0.0-build-36.ipa",
-          "size": 1549887,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.62",
-      "versionDate": "2026-11-23T00:48:25Z",
-      "versionDescription": "- Decode bridge internet OTA status in Keystone iOS app (53906b8)\n- Allow only authenticated Keystone remote OTA command through encrypted MQTT relay (aeb95e7)\n- Integrate internet OTA maintenance boot into Keystone worker and status (7a8f5b8)\n- Introduce verified HTTPS pull OTA handler for remote bridge maintenance (891553f)\n- Publish build marker and SHA-256 sidecar for verified internet OTA (8a5ba7c)\n- docs: record factual changes for firmware-build-164 [skip ci] (e731db0)\n- docs: record factual changes for firmware-build-163 [skip ci] (365e3f2)\n- docs: record factual changes for build-61 [skip ci] (a16bfa7)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-62/Keystone-1.0.0-build-62.ipa",
-      "size": 2048142,
+      "version": "1.0.0.64",
+      "versionDate": "2026-11-23T00:49:30Z",
+      "versionDescription": "- Show remote OTA capability and update state in Keystone firmware settings (6210a68)\n- Allow internet firmware updates via encrypted relay; verify installed build after reboot (154b592)\n- Decode bridge internet OTA status in Keystone iOS app (53906b8)\n- Allow only authenticated Keystone remote OTA command through encrypted MQTT relay (aeb95e7)\n- Integrate internet OTA maintenance boot into Keystone worker and status (7a8f5b8)\n- Introduce verified HTTPS pull OTA handler for remote bridge maintenance (891553f)\n- Publish build marker and SHA-256 sidecar for verified internet OTA (8a5ba7c)\n- docs: record factual changes for firmware-build-164 [skip ci] (e731db0)\n- docs: record factual changes for firmware-build-163 [skip ci] (365e3f2)\n- docs: record factual changes for build-61 [skip ci] (a16bfa7)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-64/Keystone-1.0.0-build-64.ipa",
+      "size": 2053999,
       "appPermissions": {}
     }
   ],
