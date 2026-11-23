@@ -1,5 +1,13 @@
 # Changelog
 
+## [build-75] - 2026-11-23
+
+## Verified changes since build-74
+
+- Rename Socket UI to Surge, discover Keystone via Bonjour and explain firmware pairing failures ([`4edcfcda`](https://github.com/soum91/keystone/commit/4edcfcda05b03b8112b66defb23cdd8435d4051c); `.github/scripts/update-socket-source.py`, `SocketApp/CHANGELOG.md`, `SocketApp/README.md`, and 7 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-74...build-75)
+
 ## [socket-build-5] - 2026-11-23
 
 ## Verified changes since socket-build-4
