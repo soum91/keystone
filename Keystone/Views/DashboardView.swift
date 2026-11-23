@@ -186,7 +186,9 @@ struct DashboardView: View {
     private func roomWhy(_ g: BridgeInfo.Govee?) -> String {
         guard let g, let b = g.bursts else { return "Is the Govee within a room of the bridge?" }
         let low = g.lowMem ?? 0
-        if b == 0 && low > 0 { return "The bridge is too low on memory to turn Bluetooth on (\(low) tries). Turn the AC or camera off under Bridge." }
+        if b == 0 && low > 0 {
+            return "Bluetooth cannot start (\(low) memory-blocked attempts). Open Equinox or DewPoint on an iPhone on your home Wi-Fi to send the Govee reading. If you need bridge-only Bluetooth, disable unneeded cloud devices under Bridge."
+        }
         if (g.burstsHeard ?? 0) == 0 { return "Listened \(b)× and heard nothing. Close the Govee app (it can hold the sensor's connection) and keep the sensor near the bridge." }
         return "Heard it in \(g.burstsHeard ?? 0) of \(b) listens. It retries every 20 s after a miss."
     }
