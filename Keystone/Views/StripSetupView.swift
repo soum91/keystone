@@ -276,7 +276,7 @@ struct StripSetupView: View {
         guard let w = Self.powerWords.first(where: { [$0.off, $0.on, $0.last].contains(cur) }) else { return }
         let value = choice == "off" ? w.off : choice == "on" ? w.on : w.last
         do {
-            try await BridgeAPI.post("/api/strip", ["action": "power", "value": value], store.link, timeout: 8)
+            try await BridgeAPI.postLocal("/api/strip", ["action": "power", "value": value], store.link, timeout: 8)
             await store.refresh()
         } catch {
             message = "Couldn't change it: \(error.localizedDescription)"
@@ -293,7 +293,7 @@ struct StripSetupView: View {
                 message = "Smart Life doesn't list a power-on setting for this strip, so it may not have one."
                 return
             }
-            try await BridgeAPI.post("/api/strip", ["action": "power", "dp": dp], store.link, timeout: 8)
+            try await BridgeAPI.postLocal("/api/strip", ["action": "power", "dp": dp], store.link, timeout: 8)
             store.show("Found it. The bridge reads the current setting in a few seconds.")
             await store.refresh()
         } catch {
@@ -350,7 +350,7 @@ struct StripSetupView: View {
                 "outlets": outlets.map { ["name": $0.name, "dp": $0.dp] },
             ]
             if let dp = try? await c.powerOnDp(id: d.id) { body["pwDp"] = dp }
-            let r = try await BridgeAPI.post("/api/strip", body, store.link, timeout: 10)
+            let r = try await BridgeAPI.postLocal("/api/strip", body, store.link, timeout: 10)
             let restart = (r["restart"] as? Bool) == true
             restarting = restart
             store.show(restart ? "Added. The bridge is restarting so Home gets the outlets." : "Added.")
@@ -365,7 +365,7 @@ struct StripSetupView: View {
 
     private func findAgain() async {
         do {
-            try await BridgeAPI.post("/api/strip", ["action": "find"], store.link, timeout: 8)
+            try await BridgeAPI.postLocal("/api/strip", ["action": "find"], store.link, timeout: 8)
             await store.refresh()
         } catch {
             message = error.localizedDescription
@@ -387,8 +387,8 @@ struct StripSetupView: View {
                 "action": "config", "name": s.name ?? "Power Strip", "id": id, "key": key, "ip": "", "ver": s.ver ?? 3.3,
                 "outlets": (s.outlets ?? []).map { ["name": $0.name, "dp": $0.dp] },
             ]
-            try await BridgeAPI.post("/api/strip", body, store.link, timeout: 10)
-            try await BridgeAPI.post("/api/strip", ["action": "find"], store.link, timeout: 8)
+            try await BridgeAPI.postLocal("/api/strip", body, store.link, timeout: 10)
+            try await BridgeAPI.postLocal("/api/strip", ["action": "find"], store.link, timeout: 8)
             store.show("Key updated. Looking for the strip on Wi-Fi.")
             await store.refresh()
         } catch {
@@ -398,7 +398,7 @@ struct StripSetupView: View {
 
     private func remove() async {
         do {
-            try await BridgeAPI.post("/api/strip", ["action": "remove"], store.link, timeout: 10)
+            try await BridgeAPI.postLocal("/api/strip", ["action": "remove"], store.link, timeout: 10)
             store.show("Power strip removed. The bridge is restarting.")
             await store.refresh()
         } catch {

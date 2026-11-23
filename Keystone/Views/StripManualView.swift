@@ -104,6 +104,16 @@ struct StripManualView: View {
         .background(Theme.background)
         .navigationTitle("Enter by hand")
         .onAppear(perform: load)
+        .task {
+            // A device re-pair changes its local key. Refresh it without asking the user
+            // to copy credentials; keep the previously saved key when offline.
+            guard let preset, let token = TuyaToken.stored else { return }
+            let client = TuyaClient(token: token)
+            if let latest = try? await client.device(id: preset.id),
+               let freshKey = latest.localKey, freshKey.count == 16 {
+                key = freshKey
+            }
+        }
         .confirmationDialog("Remove the power strip from the bridge and Apple Home?", isPresented: $confirmRemove, titleVisibility: .visible) {
             Button("Remove", role: .destructive) { Task { await remove() } }
         }
@@ -136,33 +146,47 @@ struct StripManualView: View {
     private func detect() async {
         busy = true
         defer { busy = false }
-        do {
+        var versions = [ver]
+        for candidate in [3.3, 3.4, 3.5] where !versions.contains(candidate) { versions.append(candidate) }
+        var errors: [String] = []
+        for candidate in versions {
             var body = creds
             body["action"] = "probe"
-            let r = try await BridgeAPI.post("/api/strip", body, store.link, timeout: 10)
-            guard r["ok"] as? Bool == true, let dps = r["dps"] as? [String: Any] else {
-                probe = "No answer: \(r["error"] as? String ?? "unknown"). Check the IP, key and protocol."
-                return
-            }
-            let keys = dps.keys.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
-            probe = keys.map { k in "DP \(k): \(isBool(dps[k]) ? ((dps[k] as? Bool) == true ? "true" : "false") : String(describing: dps[k] ?? ""))" }.joined(separator: "\n")
-            let states: [String: Bool] = dps.reduce(into: [:]) { acc, item in
-                if isBool(item.value), let state = item.value as? Bool {
-                    acc[item.key] = state
+            body["ver"] = candidate
+            do {
+                let reply = try await BridgeAPI.postLocal("/api/strip", body, store.link, timeout: 10)
+                guard let dps = reply["dps"] as? [String: Any] else {
+                    errors.append("\(candidate): device returned no DP status")
+                    continue
                 }
+                ver = candidate
+                let keys = dps.keys.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
+                probe = "Tuya LAN protocol \(candidate) confirmed\n" +
+                    keys.map { key in
+                        "DP \(key): \(isBool(dps[key]) ? ((dps[key] as? Bool) == true ? "true" : "false") : String(describing: dps[key] ?? ""))"
+                    }.joined(separator: "\n")
+                let states: [String: Bool] = dps.reduce(into: [:]) { values, item in
+                    if isBool(item.value), let state = item.value as? Bool {
+                        values[item.key] = state
+                    }
+                }
+                detectedDataPoints = states.keys.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
+                changedDataPoints = states.keys.filter {
+                    guard let before = lastBooleanStates[$0] else { return false }
+                    return before != states[$0]
+                }.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
+                lastBooleanStates = states
+                if !changedDataPoints.isEmpty {
+                    probe = "Changed Boolean DP(s): \(changedDataPoints.joined(separator: ", "))\n" + (probe ?? "")
+                }
+                return
+            } catch {
+                errors.append("\(candidate): \(error.localizedDescription)")
             }
-            detectedDataPoints = states.keys.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
-            changedDataPoints = states.keys.filter {
-                guard let before = lastBooleanStates[$0] else { return false }
-                return before != states[$0]
-            }.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
-            lastBooleanStates = states
-            if !changedDataPoints.isEmpty {
-                probe = "Changed Boolean DP(s): \(changedDataPoints.joined(separator: ", "))\n" + (probe ?? "")
-            }
-        } catch {
-            probe = "Couldn't reach the bridge on your Wi-Fi: \(error.localizedDescription)"
         }
+        probe = "No authenticated Tuya LAN status at \(ip.trimmed) for protocols 3.3/3.4/3.5.\n" +
+            errors.joined(separator: "\n") +
+            "\nNo outlet was added. Confirm the private strip IP and a current 16-character local key in Tuya Smart."
     }
 
     /// JSONSerialization hands back NSNumber for both; only a real boolean is an outlet.
@@ -179,7 +203,7 @@ struct StripManualView: View {
         body["name"] = name.trimmed.isEmpty ? "Power Strip" : name.trimmed
         body["outlets"] = rows.filter { !$0.dp.trimmed.isEmpty }.map { ["name": $0.name.trimmed, "dp": $0.dp.trimmed] }
         do {
-            let r = try await BridgeAPI.post("/api/strip", body, store.link, timeout: 10)
+            let r = try await BridgeAPI.postLocal("/api/strip", body, store.link, timeout: 10)
             store.show((r["restart"] as? Bool) == true ? "Saved. The bridge is restarting so Home gets the outlets." : "Saved.")
             await store.refresh()
             dismiss()
@@ -190,7 +214,7 @@ struct StripManualView: View {
 
     private func remove() async {
         do {
-            try await BridgeAPI.post("/api/strip", ["action": "remove"], store.link, timeout: 10)
+            try await BridgeAPI.postLocal("/api/strip", ["action": "remove"], store.link, timeout: 10)
             store.show("Power strip removed. The bridge is restarting.")
             await store.refresh()
             dismiss()
