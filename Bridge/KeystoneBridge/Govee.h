@@ -30,12 +30,14 @@ static char bestAddr[18] = "", bestName[32] = "";
 static volatile int bestRssi = -127;
 static uint32_t bootMs = 0;
 static bool inHome = false;
-// DewPoint's iPhone app forwards BLE observations while iOS keeps it running.
-// If the feed expires, the existing memory-gated local NimBLE scanner is the fallback.
+// Equinox (primary) or DewPoint (secondary) forward real Govee BLE observations from iOS.
+// If both feeds expire, the existing memory-gated local NimBLE scanner is the fallback.
 static WiFiUDP feedUdp;
 static bool feedOpen = false;
 static volatile uint32_t remotePacketMs = 0, remoteHeardMs = 0;
-static uint32_t feedAccepted = 0, feedRejected = 0;
+static uint32_t feedAccepted = 0, feedRejected = 0, feedDeferred = 0;
+static uint32_t lastEquinoxPacketMs = 0;
+static bool latestFromEquinox = false;
 static char feedHost[16] = "";
 static uint32_t pickStartedMs = 0;  // delay local BLE selection while awaiting DewPoint
 static volatile uint32_t localHeardMs = 0;
@@ -119,14 +121,16 @@ static bool validMac(const char *mac) {
 static bool acceptFeed(char *message, const IPAddress &sender) {
   if (!sameSubnet(sender)) return false;
 
-  // DewPoint is an iOS app. CoreBluetooth intentionally hides BLE MAC addresses,
-  // so a DPG2 packet identifies its Govee by the advertised sensor name instead.
+  // iOS hides BLE MACs; both EQG2 (Equinox) and DPG2 (DewPoint) identify
+  // the selected Govee by its original advertised sensor name.
   char *fields[7] = {};
   char *context = nullptr;
   char *p = strtok_r(message, ",", &context);
   int count = 0;
   while (p && count < 7) { fields[count++] = p; p = strtok_r(nullptr, ",", &context); }
-  if (count != 7 || p || strcmp(fields[0], "DPG2") != 0) return false;
+  if (count != 7 || p) return false;
+  const bool fromEquinox = strcmp(fields[0], "EQG2") == 0;
+  if (!fromEquinox && strcmp(fields[0], "DPG2") != 0) return false;
 
   const char *name = fields[1];
   size_t nameLen = strlen(name);
@@ -145,6 +149,15 @@ static bool acceptFeed(char *message, const IPAddress &sender) {
   // Never let a different Govee override the accessory already paired in Home.
   if (locked && strcasecmp(name, lockedName)) return false;
 
+  uint32_t now = millis();
+  // Equinox wins while its actual BLE observations are arriving. A valid
+  // DewPoint packet is deferred rather than resetting the primary's freshness.
+  if (!fromEquinox && lastEquinoxPacketMs != 0 &&
+      now - lastEquinoxPacketMs <= GOVEE_FEED_TIMEOUT_MS) {
+    feedDeferred++;
+    return true;
+  }
+
   if (!locked) {
     // Use the advertised name for a stable HomeKit identity. iOS does not
     // expose the real BLE MAC, and we must not assume the UUID is a MAC.
@@ -160,13 +173,14 @@ static bool acceptFeed(char *message, const IPAddress &sender) {
     prefs.putString("gv_name", lockedName);
     // HomeSpan accessories are created only at boot. One settings-preserving
     // restart adds the first discovered sensor without changing other pairings.
-    Serial.printf("[keystone] pinned Govee %s from DewPoint iOS; restarting once\n", lockedName);
+    Serial.printf("[keystone] pinned Govee %s from %s iOS; restarting once\n", lockedName, fromEquinox ? "Equinox" : "DewPoint");
     delay(150);
     ESP.restart();
     return true;
   }
 
-  uint32_t now = millis();
+  if (fromEquinox) lastEquinoxPacketMs = now;
+  latestFromEquinox = fromEquinox;
   portENTER_CRITICAL(&mux);
   temp = t; hum = h; batt = (int)battery;
   lastHeard = now - age;  // preserve measurement age, not just network receipt time
@@ -436,7 +450,8 @@ static void forget(const char *) {
 static void info(JsonDocument &d) {
   JsonObject g = d["govee"].to<JsonObject>();
   g["locked"] = (bool)locked;
-  g["source"] = !stale() ? (latestFromPhone ? "dewpoint" : "localBLE") : "stale";
+  g["source"] = !stale() ? (latestFromPhone ? (latestFromEquinox ? "equinox" : "dewpoint") : "localBLE") : "stale";
+  g["feedDeferred"] = feedDeferred;
   g["feedPackets"] = feedAccepted;
   g["feedRejected"] = feedRejected;
   g["feedHost"] = feedHost;
