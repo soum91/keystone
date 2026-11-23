@@ -240,14 +240,21 @@ actor TuyaClient {
             if let dp = r["dpId"], let n = Int("\(dp)"), let code = r["statusCode"] as? String { pairs.append((n, code)) }
         }
         pairs.sort { $0.dp < $1.dp }
-        var outlets: [StripOutletGuess] = []
-        let usb = pairs.filter { $0.code.hasPrefix("switch_usb") }
-        for p in pairs {
-            if p.code == "switch" || (p.code.hasPrefix("switch_") && Int(p.code.dropFirst(7)) != nil) {
-                outlets.append(StripOutletGuess(name: "Outlet \(outlets.count + 1)", dp: "\(p.dp)"))
-            }
+        // A strip may expose "switch" as its master control alongside
+        // "switch_1"/"switch_2"/"switch_3". Never publish the master as an
+        // additional socket when individual AC switches exist: switching it
+        // could cut power to everything, including the Keystone bridge.
+        let numbered = pairs.filter {
+            $0.code.hasPrefix("switch_") && Int($0.code.dropFirst(7)) != nil
         }
-        for (i, p) in usb.enumerated() {
+        let ac = numbered.isEmpty ? pairs.filter { $0.code == "switch" } : numbered
+        let usb = pairs.filter { $0.code.hasPrefix("switch_usb") }
+        var seen = Set<Int>()
+        var outlets: [StripOutletGuess] = []
+        for p in ac where seen.insert(p.dp).inserted {
+            outlets.append(StripOutletGuess(name: "Outlet \(outlets.count + 1)", dp: "\(p.dp)"))
+        }
+        for (i, p) in usb.enumerated() where seen.insert(p.dp).inserted {
             outlets.append(StripOutletGuess(name: usb.count > 1 ? "USB \(i + 1)" : "USB", dp: "\(p.dp)"))
         }
         return outlets
