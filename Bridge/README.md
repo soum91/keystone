@@ -157,3 +157,36 @@ This does not erase NVS, Wi-Fi credentials, HomeKit pairings or device IDs.
 If the issue recurs, inspect Bridge > Health, Bridge > Network, and
 Bridge > Apple Home connection for the actual reason. Also check whether
 Keystone itself reaches the ESP32 when Apple Home cannot.
+
+## Remote OTA via Keystone's encrypted relay (firmware 1.11.9+)
+
+Keystone iOS remains the only app managing ESP32 firmware. Existing local
+OTA is unchanged. Install this capability ONCE through home Wi-Fi; thereafter,
+updates can be initiated from anywhere using the existing AES-256-GCM MQTT relay.
+
+- Keystone iOS checks the GitHub firmware release and sends a small authenticated
+  POST /api/ota/remote request with the approved build number. Only the paired
+  Keystone device token can authorize the action; it cannot specify an
+  arbitrary firmware URL, payload, or rollback version.
+- The ESP32 acknowledges the request, stores the target build in NVS and
+  restarts once into update mode. The update boot uses minimal network
+  workloads and fetches the fixed build.txt URL from GitHub Pages over
+  certificate-validated HTTPS. It requires an exact build number match.
+- It downloads KeystoneBridge-esp32-app.bin from a fixed HTTPS URL and
+  requires a matching SHA-256 checksum sidecar published by GitHub Actions.
+  Missing or mismatched checksums fail the update; no unverified firmware is
+  installed. The inactive OTA app partition is used, leaving NVS, Wi-Fi,
+  HomeKit pairing, device pairing and Tuya settings intact.
+- If there is insufficient internal RAM for TLS, the update is refused rather
+  than risking a partial flash. At most two update-boot attempts are permitted.
+- The ESP32 reports remoteOta.state, targetBuild, installedBuild, attempt and
+  error through the existing /api/info endpoint; Keystone iOS displays status
+  under Bridge > Firmware. A queued acknowledgment is not evidence the
+  firmware installed; verify the new build after the bridge reconnects.
+- Remote OTA requires the bridge to be powered on, connected to home Wi-Fi,
+  and reachable through its MQTT relay when the command is sent. It cannot
+  revive a frozen or offline ESP32. No port forwarding or second ESP32 needed.
+- Remote flash installation is not hardware-verified until tested on a board.
+
+The existing direct multipart /api/update LAN upload remains blocked over the
+relay. Remote OTA uses a separate restricted command and HTTPS pull instead.
