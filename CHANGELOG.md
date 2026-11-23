@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-64] - 2026-11-23
+
+## Verified changes since build-62
+
+- Show remote OTA capability and update state in Keystone firmware settings ([`6210a682`](https://github.com/soum91/keystone/commit/6210a6827c23480b1a8fd415bee4aefe022c875a); `Keystone/Views/BridgeView.swift`)
+- Allow internet firmware updates via encrypted relay; verify installed build after reboot ([`154b5923`](https://github.com/soum91/keystone/commit/154b5923cd919e316c1eda3b57f1c78f5a54ea93); `Keystone/App/Store.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-62...build-64)
+
 ## [firmware-build-165] - 2026-11-23
 
 ## Verified changes since firmware-build-163
