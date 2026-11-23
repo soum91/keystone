@@ -24,6 +24,16 @@ jobs:
         run: |
           sudo xcode-select -s /Applications/Xcode_16.4.app || true
           brew install xcodegen
+      - name: Python for original Surge icon
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate Surge icon
+        run: |
+          python3 -m pip install 'Pillow==11.3.0'
+          python3 SocketApp/scripts/make_surge_icon.py
+          test -s SocketApp/Sources/Assets.xcassets/AppIcon.appiconset/surge.png
+          file SocketApp/Sources/Assets.xcassets/AppIcon.appiconset/surge.png
       - name: Verify installed version UI contract
         run: |
           grep -q 'CFBundleShortVersionString' SocketApp/Sources/SocketApp.swift
@@ -39,6 +49,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             CURRENT_PROJECT_VERSION=$GITHUB_RUN_NUMBER build | tee build.log
           test -d build/Build/Products/Release-iphoneos/Socket.app
+          test -s build/Build/Products/Release-iphoneos/Socket.app/Assets.car
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' build/Build/Products/Release-iphoneos/Socket.app/Info.plist
       - name: Package IPA and factual release notes
         working-directory: SocketApp
         shell: bash
@@ -51,10 +63,11 @@ jobs:
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Payload/Socket.app/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" Payload/Socket.app/Info.plist
           codesign --force --sign - --timestamp=none Payload/Socket.app
-          IPA="Socket-$VERSION-build-$BUILD.ipa"
+          IPA="Surge-$VERSION-build-$BUILD.ipa"
           zip -qr "$IPA" Payload
-          echo "## Socket $VERSION" > release-notes.md
-          echo "Standalone iPhone app for Keystone's power-strip controller." >> release-notes.md
+          cp Sources/Assets.xcassets/AppIcon.appiconset/surge.png surge-icon.png
+          echo "## Surge $VERSION" > release-notes.md
+          echo "Surge: independent iPhone controls for the Keystone power strip and Siri Shortcuts." >> release-notes.md
           echo "### Actual code changes" >> release-notes.md
           PREV=$(git tag -l 'socket-build-*' --sort=-v:refname | head -1 || true)
           if [ -n "$PREV" ]; then
@@ -68,9 +81,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: socket-build-${{ github.run_number }}
-          name: Socket build ${{ github.run_number }}
+          name: Surge build ${{ github.run_number }}
           body_path: SocketApp/release-notes.md
-          files: SocketApp/Socket-*.ipa
+          files: |
+            SocketApp/Surge-*.ipa
+            SocketApp/surge-icon.png
           make_latest: false
 
       - name: Update existing Keystone FlareStore source with Socket IPA
@@ -79,7 +94,7 @@ jobs:
           set -euo pipefail
           git config user.name "ci"
           git config user.email "ci@users.noreply.github.com"
-          IPA=$(find SocketApp -maxdepth 1 -name 'Socket-*.ipa' -print -quit)
+          IPA=$(find SocketApp -maxdepth 1 -name 'Surge-*.ipa' -print -quit)
           test -s "$IPA"
           TAG="socket-build-$GITHUB_RUN_NUMBER"
           URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$(basename "$IPA")"
