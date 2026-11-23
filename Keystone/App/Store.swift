@@ -351,11 +351,44 @@ final class Store: ObservableObject {
 
     func installUpdate() async {
         guard !updateRunning else { return }
-        if viaRelay { show("Firmware updates only go over your home Wi-Fi."); return }
         // Always ask GitHub again first: a newer build replaces the old download link.
         if let chip = info?.chip, let fresh = try? await Firmware.latest(chip: chip) { latest = fresh }
         guard let l = latest else { updating = "Couldn't reach GitHub to find the firmware. Check your internet and try again."; return }
         if l.build <= (info?.build ?? 0) { updating = "Already up to date (build \(info?.build ?? 0))."; return }
+        if viaRelay {
+            guard info?.remoteOta?.supported == true else {
+                updating = "Update the bridge once while on home Wi-Fi to enable future internet OTA."
+                return
+            }
+            updateRunning = true
+            defer { updateRunning = false }
+            updating = "Requesting internet OTA for build \(l.build)…"
+            do {
+                let response = try await BridgeAPI.post("/api/ota/remote", ["build": l.build], link, timeout: 15)
+                guard response["queued"] as? Bool == true else {
+                    throw BridgeError.message("Bridge did not confirm remote OTA request.")
+                }
+                updating = "Queued build \(l.build). ESP32 will restart, download from GitHub and verify SHA-256."
+                // Relay disconnects while flashing. Only announce completion
+                // once status reports the new installed build after reboot.
+                for _ in 0..<36 {
+                    try? await Task.sleep(nanoseconds: 5_000_000_000)
+                    await refresh()
+                    if (info?.build ?? 0) >= l.build {
+                        updating = "Verified: bridge updated to build \(l.build)."
+                        return
+                    }
+                    if info?.remoteOta?.state == "failed" {
+                        updating = "Internet OTA failed: \(info?.remoteOta?.error ?? "unknown error"). Use local OTA if the ESP32 is low on memory."
+                        return
+                    }
+                }
+                updating = "Request queued, but the bridge has not confirmed installation. Check again when the relay reconnects."
+            } catch {
+                updating = "Remote update request failed: \(error.localizedDescription)"
+            }
+            return
+        }
         updateRunning = true
         defer { updateRunning = false }
         updating = "Starting…"
