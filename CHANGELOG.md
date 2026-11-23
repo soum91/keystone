@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-87] - 2026-11-23
+
+## Verified changes since build-85
+
+- Preserve Tuya Smart QR sessions and allow reauthorization without clearing home device setup ([`c01210cc`](https://github.com/soum91/keystone/commit/c01210ccb2560113d9552b751c1f750fd11f8946); `Keystone/Strip/TuyaCloud.swift`, `Keystone/Views/HomeDevicesView.swift`, `Keystone/Views/StripSetupView.swift`)
+- Use valid three-part Keystone app versions and verify FlareStore feed after publishing ([`97f6886c`](https://github.com/soum91/keystone/commit/97f6886c8f1db1cf18e55361251cd10d67365072); `.github/workflows/build.yml`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-85...build-87)
+
 ## [build-85] - 2026-11-23
 
 ## Verified changes since build-81
