@@ -11,6 +11,8 @@ struct HomeDevicesView: View {
     @State private var qrImage: UIImage?
     @State private var pollTask: Task<Void, Never>?
     @State private var working: String?
+    @State private var surgeCandidate: HomeDevice?
+    @State private var surgeMessage: String?
 
     var body: some View {
         Form {
@@ -58,6 +60,12 @@ struct HomeDevicesView: View {
             if let m = model.message {
                 Section { Text(m).font(.footnote).foregroundStyle(Theme.bad) }
             }
+            if let surgeMessage {
+                Section {
+                    Text(surgeMessage).font(.footnote).foregroundStyle(surgeMessage.hasPrefix("Added") ? .green : Theme.bad)
+                        .textSelection(.enabled)
+                } header: { Text("Surge power strip") }
+            }
             if let failure = model.syncFailure {
                 Section {
                     Text(failure).font(.footnote).foregroundStyle(Theme.bad)
@@ -72,6 +80,71 @@ struct HomeDevicesView: View {
         .onDisappear { pollTask?.cancel() }
         .task { if let t = token, model.devices.isEmpty { await model.refresh(t) } }
         .refreshable { await reload() }
+        .confirmationDialog("Expose this strip's individual outlets?", isPresented: Binding(
+            get: { surgeCandidate != nil },
+            set: { if !$0 { surgeCandidate = nil } }),
+            titleVisibility: .visible) {
+            if let device = surgeCandidate {
+                Button("Configure for Surge") {
+                    let selected = device
+                    surgeCandidate = nil
+                    Task { await configureForSurge(selected) }
+                }
+            }
+            Button("Cancel", role: .cancel) { surgeCandidate = nil }
+        } message: {
+            Text("Keystone will read the actual power switches and their Tuya data points using the Smart Life login already on this phone. It will add individual outlet services to Apple Home and Surge. Your existing single plug stays until you remove it yourself, so you can verify the new controls safely.")
+        }
+    }
+
+    private func configureForSurge(_ device: HomeDevice) async {
+        guard let token = TuyaToken.stored ?? token else {
+            surgeMessage = "Sign in to Smart Life in Keystone first."
+            return
+        }
+        guard store.info?.features?.strip != false else {
+            surgeMessage = "Power strip is switched off in Keystone → Bridge → Devices on the bridge. Enable it before setting up outlets."
+            return
+        }
+        if store.info?.strip?.configured == true, store.info?.strip?.id != device.id {
+            surgeMessage = "Another power strip is already configured. Open Keystone → Bridge → Power strip to review it before changing anything."
+            return
+        }
+        working = device.id
+        surgeMessage = nil
+        defer { working = nil }
+        do {
+            let client = TuyaClient(token: token)
+            let fresh = try await client.device(id: device.id)
+            guard let key = fresh?.localKey ?? device.localKey, key.count == 16 else {
+                surgeMessage = "Smart Life has not provided the device's 16-character local key. Open Keystone → Bridge → Power strip for manual setup."
+                return
+            }
+            let outlets = try await client.outlets(id: device.id)
+            guard outlets.count >= 2 else {
+                surgeMessage = "Smart Life reports only \(outlets.count) separately controllable channel(s), so Keystone cannot safely create individual outlets from this entry. Check Keystone → Bridge → Power strip → Enter details by hand for a LAN data point probe."
+                return
+            }
+            let body: [String: Any] = [
+                "action": "config",
+                "name": fresh?.name ?? device.name,
+                "id": device.id,
+                "key": key,
+                "ip": device.host ?? "",
+                "ver": device.version ?? 3.3,
+                "outlets": outlets.map { ["name": $0.name, "dp": $0.dp] },
+            ]
+            let response = try await BridgeAPI.post("/api/strip", body, store.link, timeout: 10)
+            if response["restart"] as? Bool == true {
+                surgeMessage = "Added \(outlets.count) individually addressable outlets. Keystone is restarting to publish them in Apple Home. Reopen Surge after the bridge reconnects."
+            } else {
+                surgeMessage = "Added \(outlets.count) outlets to Keystone. Reopen Surge to load their controls."
+            }
+            // The generic single switch remains in Home until explicitly removed.
+            await store.refresh()
+        } catch {
+            surgeMessage = "Couldn't configure the separate outlets: \(error.localizedDescription)"
+        }
     }
 
     private func reload() async {
@@ -125,6 +198,19 @@ struct HomeDevicesView: View {
                     .font(.caption).foregroundStyle(model.syncFailure != nil ? Theme.bad : .secondary)
             } else if onBridge {
                 Text("Already configured through \(d.isPurifier ? "Exhale" : "Afterglow")").font(.caption).foregroundStyle(.secondary)
+            }
+            if d.isSwitch && (d.category == "cz" || d.category == "pc" || d.name.localizedCaseInsensitiveContains("Power Outlet")) {
+                Button {
+                    surgeCandidate = d
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "poweroutlet.strip")
+                        Text("Configure individual outlets for Surge")
+                    }
+                    .font(.subheadline.weight(.medium))
+                }
+                .disabled(working != nil || model.busy != nil)
+                .padding(.top, 5)
             }
         }
     }

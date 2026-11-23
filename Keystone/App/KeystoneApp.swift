@@ -24,15 +24,17 @@ struct KeystoneApp: App {
 
 struct RootView: View {
     @EnvironmentObject var store: Store
+    @State private var selectedTab = 0
+    @State private var showStripSetup = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
             if store.isPaired {
-                TabView {
-                    DashboardView().tabItem { Label("Home", systemImage: "square.grid.2x2.fill") }
-                    DisplayView().tabItem { Label("Display", systemImage: "rectangle.inset.filled") }
-                    RouterTab().tabItem { Label("Router", systemImage: "wifi.router") }
-                    BridgeView().tabItem { Label("Bridge", systemImage: "cpu") }
+                TabView(selection: $selectedTab) {
+                    DashboardView().tabItem { Label("Home", systemImage: "square.grid.2x2.fill") }.tag(0)
+                    DisplayView().tabItem { Label("Display", systemImage: "rectangle.inset.filled") }.tag(1)
+                    RouterTab().tabItem { Label("Router", systemImage: "wifi.router") }.tag(2)
+                    BridgeView(showStripSetup: $showStripSetup).tabItem { Label("Bridge", systemImage: "cpu") }.tag(3)
                 }
             } else {
                 PairView()
@@ -51,5 +53,10 @@ struct RootView: View {
         }
         .animation(.spring(duration: 0.3), value: store.toast)
         .animation(.easeInOut, value: store.isPaired)
+        .onOpenURL { url in
+            guard url.scheme?.lowercased() == "keystone", url.host == "power-strip" else { return }
+            selectedTab = 3
+            showStripSetup = true
+        }
     }
 }

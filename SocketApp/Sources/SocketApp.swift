@@ -26,7 +26,10 @@ struct SocketHome: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
-                    if store.paired { socketsCard; shortcutsCard } else { pairCard }
+                    if store.paired {
+                        socketsCard
+                        if store.strip?.configured == true { shortcutsCard }
+                    } else { pairCard }
                     if let message = store.message {
                         Text(message).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
                     }
@@ -69,7 +72,7 @@ struct SocketHome: View {
                 .background(.mint.opacity(0.12), in: RoundedRectangle(cornerRadius: 16))
             VStack(alignment: .leading, spacing: 4) {
                 Text(store.strip?.name ?? "Power strip").font(.title2.bold())
-                Label(store.reachable ? (store.strip?.ok == true ? "Online" : "Strip unavailable") : "Not connected",
+                Label(store.reachable ? (store.strip?.configured != true ? "Bridge connected · outlets not set up" : store.strip?.ok == true ? "Online" : "Strip unavailable") : "Bridge offline",
                       systemImage: store.reachable ? "wifi" : "wifi.slash")
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -89,8 +92,25 @@ struct SocketHome: View {
             .font(.caption)
             .disabled(store.busy != nil || !store.reachable || store.strip?.ok != true)
             .padding(.bottom, 8)
-            if store.sockets.isEmpty {
-                Text("Set up the strip in Keystone → Bridge → Power strip first.")
+            if store.strip?.configured != true {
+                VStack(alignment: .leading, spacing: 12) {
+                    Label("No outlet mappings on Keystone yet", systemImage: "exclamationmark.circle")
+                        .font(.subheadline.weight(.semibold))
+                    Text("You connected the Surge app to the Keystone bridge, but the power strip was added in Apple Home as one generic plug. To get separate switches here, Keystone must register the strip's actual outlet data points.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    Button {
+                        openKeystoneStripSetup()
+                    } label: {
+                        Label("Set up outlets in Keystone", systemImage: "arrow.up.forward.app")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Text("In Keystone's Power strip screen, choose the same Joly Joy device from your existing Smart Life account. Or use Devices in Apple Home → the plug → Configure individual outlets for Surge.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 10)
+            } else if store.sockets.isEmpty {
+                Text("The bridge has a strip configuration but reported no outlets. Open Keystone's Power strip setup and check its data point mapping.")
                     .font(.subheadline).foregroundStyle(.secondary).padding(.vertical, 14)
             }
             ForEach(store.sockets) { socket in
@@ -123,6 +143,17 @@ struct SocketHome: View {
         }
         .padding(18)
         .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private func openKeystoneStripSetup() {
+        guard let url = URL(string: "keystone://power-strip") else { return }
+        UIApplication.shared.open(url, options: [:]) { opened in
+            if !opened {
+                Task { @MainActor in
+                    store.message = "Open the Keystone app manually: Bridge → Power strip. Keystone's updated app supports opening that page directly."
+                }
+            }
+        }
     }
 
     private var pairCard: some View {

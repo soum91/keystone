@@ -15,3 +15,10 @@
 ## Icon restored
 - Replaced the unrelated procedurally drawn icon with the original teal-neon smart power strip design.
 - Xcode and FlareStore publish the same icon asset through the Surge release workflow.
+
+
+## Unreleased — setup handoff
+- Diagnose missing strip mapping without confusing it with Wi-Fi loss.
+- Open Keystone's power strip setup from Surge and hide unusable Shortcuts until configured.
+- Add one-tap multi-outlet setup beside the existing Smart Life plug in Keystone, using its existing Tuya login.
+- Reject single-channel guesses and leave generic Apple Home controls untouched until the user decides otherwise.

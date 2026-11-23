@@ -166,7 +166,12 @@ enum SocketAPI {
             guard info.app == "afterglow-bridge" else { throw SocketFailure(message: "Not a Keystone bridge.") }
             strip = info.strip
             reachable = true
-            if let strip, strip.configured == true { SocketCache.write(strip.sockets) }
+            if let strip, strip.configured == true {
+                SocketCache.write(strip.sockets)
+                if message?.hasPrefix("Surge paired.") == true { message = nil }
+            } else {
+                SocketCache.write([])
+            }
         } catch {
             reachable = false
             message = error.localizedDescription

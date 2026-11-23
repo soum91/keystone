@@ -3,6 +3,7 @@ import SwiftUI
 
 struct BridgeView: View {
     @EnvironmentObject var store: Store
+    @Binding var showStripSetup: Bool
     @State private var name = ""
     @State private var confirm: Confirm?
 
@@ -305,6 +306,9 @@ struct BridgeView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.background)
             .navigationTitle("Bridge")
+            .navigationDestination(isPresented: $showStripSetup) {
+                StripSetupView().environmentObject(store)
+            }
             .confirmationDialog(title, isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }), titleVisibility: .visible) {
                 switch confirm {
                 case .restart: Button("Restart") { Task { await store.admin("restart", done: "Restarting.") } }
