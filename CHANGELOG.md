@@ -1,5 +1,23 @@
 # Changelog
 
+## [build-93] - 2026-11-23
+
+## Verified changes since build-87
+
+- Treat relay OTA ACK timeout as uncertain; verify fresh bridge status before reporting failure ([`90703e60`](https://github.com/soum91/keystone/commit/90703e6005ebe24f98659cd7deb44cf4983837fa); `Keystone/App/Store.swift`)
+- Clear legacy persisted OTA error on first boot into new firmware too ([`e43d6ebd`](https://github.com/soum91/keystone/commit/e43d6ebdd03ac2100d5de14521c17f75d915203b); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Clear stale HTTPS OTA error when firmware was updated through another path ([`0ed6b5b8`](https://github.com/soum91/keystone/commit/0ed6b5b8079b811885e01f392a9552e66f783fb6); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Prefer isolated local OTA preparation and verify upload server readiness before sending firmware ([`458705d7`](https://github.com/soum91/keystone/commit/458705d7403bd47a4d2b39112ec69b6f5c121321); `Keystone/App/Store.swift`)
+- Wire isolated local OTA server into early boot; bump firmware 1.11.12 ([`38e90f18`](https://github.com/soum91/keystone/commit/38e90f18b07f32189c51d9851bcf760c665b6e6c); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Add minimal Wi-Fi-only authenticated local OTA upload boot with automatic recovery ([`3fbe3982`](https://github.com/soum91/keystone/commit/3fbe398267887ee0bec13a2778b8b8e344d1a1c7); `Bridge/KeystoneBridge/LocalOTA.h`)
+- Add authenticated local-only request to reboot into isolated firmware-upload mode ([`90a4998f`](https://github.com/soum91/keystone/commit/90a4998ff617cacbf3fa0d556c21ed084fedcb0b); `Bridge/KeystoneBridge/Screen.h`)
+- Add direct Tuya-cloud on/off controls for cloud-only outlets and switches in Keystone ([`9fc81a90`](https://github.com/soum91/keystone/commit/9fc81a90632a845074e884ed42d444e65167bbc3); `Keystone/Views/HomeDevicesView.swift`)
+- Track Tuya cloud switch states and confirm cloud commands using existing QR session ([`0b9aa900`](https://github.com/soum91/keystone/commit/0b9aa900b3b466ba400e7481faf42f47465fe7a0); `Keystone/Tuya/HomeDevices.swift`)
+- Expose actual Tuya cloud switch channels, including cloud-only power strips ([`735948fb`](https://github.com/soum91/keystone/commit/735948fb45f5eb0da442eb02d435e4d39e38ef9d); `Keystone/Tuya/HomeDevices.swift`)
+- Support QR-authorized Tuya cloud power commands without a local device connection ([`6a1d0185`](https://github.com/soum91/keystone/commit/6a1d0185860910d5fb948211c59f30618fe347ff); `Keystone/Strip/TuyaCloud.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-87...build-93)
+
 ## [firmware-build-185] - 2026-11-23
 
 ## Verified changes since firmware-build-180
