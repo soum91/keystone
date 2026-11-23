@@ -450,6 +450,19 @@ static void handleAdmin() {
       prefs.putBool((String("en_") + f.key).c_str(), v);
       if (v != *f.flag) { logEvent(String(f.key) + (v ? " on" : " off") + ", restarting"); pendingAction = 1; }
     }
+  } else if (a == "prepareUpdate") {
+    // A LAN-only, paired Keystone phone may request the next boot run a tiny
+    // upload-only HTTP service. Never accept this over the remote relay:
+    // otherwise the bridge would intentionally disconnect its only control link.
+    if (viaRelay || !devTokenOK("keystone", reqHeader("X-Device-Token"))) {
+      respond(403, "{\"error\":\"Local firmware upload preparation requires a paired Keystone on home Wi-Fi\"}");
+      return;
+    }
+    if (!prefs.putBool("loReady", true)) {
+      respond(507, "{\"error\":\"Could not persist local OTA boot request\"}");
+      return;
+    }
+    pendingAction = 1;
   } else if (a == "restart" || a == "normal") {
     prefs.putInt("crashes", 0);   // a deliberate restart always comes back in normal mode
     pendingAction = 1;
