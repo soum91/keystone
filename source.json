@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.85",
+          "buildVersion": "85",
+          "date": "2026-11-23T19:35:38Z",
+          "localizedDescription": "- Auto-test Tuya LAN protocol in strip detector, refresh key, and require local bridge for setup (a8d672e)\n- Add Tuya Smart launch and safe guided outlet DP verification for Surge (160b038)\n- Diagnose true Tuya strip LAN connectivity and show per-outlet setup failures inline (97c8b5f)\n- Parse Tuya strip data point mappings robustly and reuse known device DP codes (2f558a0)\n- docs: record factual changes for socket-build-9 [skip ci] (a108c28)\n- docs: record factual changes for build-81 [skip ci] (ce88a67)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-85/Keystone-1.0.0-build-85.ipa",
+          "size": 2108999,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.81",
           "buildVersion": "81",
           "date": "2026-11-23T18:47:31Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-47/Keystone-1.0.0-build-47.ipa",
           "size": 1816679,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.46",
-          "buildVersion": "46",
-          "date": "2026-11-17T19:46:41Z",
-          "localizedDescription": "- Bridge 1.10.12: switch off any device (lights, TV, sound bar, purifier, IR, strip, router, Govee); relay diagnostics (f5be051)\n- docs: record factual changes for firmware-build-145 [skip ci] (9e5bb9f)\n- Bridge 1.10.11: IR remotes show only their power switch in Apple Home (buttons stay in the apps) to save RAM (ebf4363)\n- docs: record factual changes for firmware-build-144 [skip ci] (f377db5)\n- docs: record factual changes for build-45 [skip ci] (576a4d0)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-46/Keystone-1.0.0-build-46.ipa",
-          "size": 1803460,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.81",
-      "versionDate": "2026-11-23T18:47:31Z",
-      "versionDescription": "- Explain memory-blocked Govee and phone-feed fallback on Home dashboard (b0e2d79)\n- Decode deferred DewPoint Govee packet telemetry in Keystone (8d8488a)\n- Show Equinox/DewPoint Govee feed diagnostics and correct stale source label (641193e)\n- docs: record factual changes for build-78 [skip ci] (7660a72)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-81/Keystone-1.0.0-build-81.ipa",
-      "size": 2079731,
+      "version": "1.0.0.85",
+      "versionDate": "2026-11-23T19:35:38Z",
+      "versionDescription": "- Auto-test Tuya LAN protocol in strip detector, refresh key, and require local bridge for setup (a8d672e)\n- Add Tuya Smart launch and safe guided outlet DP verification for Surge (160b038)\n- Diagnose true Tuya strip LAN connectivity and show per-outlet setup failures inline (97c8b5f)\n- Parse Tuya strip data point mappings robustly and reuse known device DP codes (2f558a0)\n- docs: record factual changes for socket-build-9 [skip ci] (a108c28)\n- docs: record factual changes for build-81 [skip ci] (ce88a67)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-85/Keystone-1.0.0-build-85.ipa",
+      "size": 2108999,
       "appPermissions": {}
     },
     {
