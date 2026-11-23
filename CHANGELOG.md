@@ -1,5 +1,32 @@
 # Changelog
 
+## [socket-build-11] - 2026-11-23
+
+## Verified changes since socket-build-9
+
+- Prevent stale Surge releases overwriting FlareStore and verify published source ([`dbea04af`](https://github.com/soum91/keystone/commit/dbea04af05f201bc7b30e0ee37ff76566031f0bd); `.github/scripts/update-socket-source.py`, `.github/workflows/socket-app.yml`)
+- Preserve unknown Tuya outlet statuses and show bridge-side LAN diagnostics in Surge ([`15ce3a6e`](https://github.com/soum91/keystone/commit/15ce3a6eed7223f1b1c7a6ed297ad83a2237ff92); `SocketApp/Sources/SocketApp.swift`, `SocketApp/Sources/SurgeCloudStore.swift`)
+- Add Surge Tuya Smart cloud fallback, real outlet codes and Keystone DHCP rediscovery ([`3c05588e`](https://github.com/soum91/keystone/commit/3c05588e188e5ba01fcf803d1dc2421d22d5ddf1); `SocketApp/CHANGELOG.md`, `SocketApp/README.md`, `SocketApp/Sources/SocketApp.swift`, and 3 more)
+- Treat relay OTA ACK timeout as uncertain; verify fresh bridge status before reporting failure ([`90703e60`](https://github.com/soum91/keystone/commit/90703e6005ebe24f98659cd7deb44cf4983837fa); `Keystone/App/Store.swift`)
+- Clear legacy persisted OTA error on first boot into new firmware too ([`e43d6ebd`](https://github.com/soum91/keystone/commit/e43d6ebdd03ac2100d5de14521c17f75d915203b); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Clear stale HTTPS OTA error when firmware was updated through another path ([`0ed6b5b8`](https://github.com/soum91/keystone/commit/0ed6b5b8079b811885e01f392a9552e66f783fb6); `Bridge/KeystoneBridge/RemoteOTA.h`)
+- Prefer isolated local OTA preparation and verify upload server readiness before sending firmware ([`458705d7`](https://github.com/soum91/keystone/commit/458705d7403bd47a4d2b39112ec69b6f5c121321); `Keystone/App/Store.swift`)
+- Wire isolated local OTA server into early boot; bump firmware 1.11.12 ([`38e90f18`](https://github.com/soum91/keystone/commit/38e90f18b07f32189c51d9851bcf760c665b6e6c); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Add minimal Wi-Fi-only authenticated local OTA upload boot with automatic recovery ([`3fbe3982`](https://github.com/soum91/keystone/commit/3fbe398267887ee0bec13a2778b8b8e344d1a1c7); `Bridge/KeystoneBridge/LocalOTA.h`)
+- Add authenticated local-only request to reboot into isolated firmware-upload mode ([`90a4998f`](https://github.com/soum91/keystone/commit/90a4998ff617cacbf3fa0d556c21ed084fedcb0b); `Bridge/KeystoneBridge/Screen.h`)
+- Add direct Tuya-cloud on/off controls for cloud-only outlets and switches in Keystone ([`9fc81a90`](https://github.com/soum91/keystone/commit/9fc81a90632a845074e884ed42d444e65167bbc3); `Keystone/Views/HomeDevicesView.swift`)
+- Track Tuya cloud switch states and confirm cloud commands using existing QR session ([`0b9aa900`](https://github.com/soum91/keystone/commit/0b9aa900b3b466ba400e7481faf42f47465fe7a0); `Keystone/Tuya/HomeDevices.swift`)
+- Expose actual Tuya cloud switch channels, including cloud-only power strips ([`735948fb`](https://github.com/soum91/keystone/commit/735948fb45f5eb0da442eb02d435e4d39e38ef9d); `Keystone/Tuya/HomeDevices.swift`)
+- Support QR-authorized Tuya cloud power commands without a local device connection ([`6a1d0185`](https://github.com/soum91/keystone/commit/6a1d0185860910d5fb948211c59f30618fe347ff); `Keystone/Strip/TuyaCloud.swift`)
+- Preserve Tuya Smart QR sessions and allow reauthorization without clearing home device setup ([`c01210cc`](https://github.com/soum91/keystone/commit/c01210ccb2560113d9552b751c1f750fd11f8946); `Keystone/Strip/TuyaCloud.swift`, `Keystone/Views/HomeDevicesView.swift`, `Keystone/Views/StripSetupView.swift`)
+- Use valid three-part Keystone app versions and verify FlareStore feed after publishing ([`97f6886c`](https://github.com/soum91/keystone/commit/97f6886c8f1db1cf18e55361251cd10d67365072); `.github/workflows/build.yml`)
+- Auto-test Tuya LAN protocol in strip detector, refresh key, and require local bridge for setup ([`a8d672e1`](https://github.com/soum91/keystone/commit/a8d672e1cd87f20894c8aa524373389490d43c7d); `Keystone/Views/StripManualView.swift`, `Keystone/Views/StripSetupView.swift`)
+- Add Tuya Smart launch and safe guided outlet DP verification for Surge ([`160b038d`](https://github.com/soum91/keystone/commit/160b038daa903b332253beb296c0113ae56dc93d); `Bridge/KeystoneBridge/Strip.h`, `Keystone/Tuya/TuyaSmartApp.swift`, `Keystone/Views/HomeDevicesView.swift`, and 2 more)
+- Diagnose true Tuya strip LAN connectivity and show per-outlet setup failures inline ([`97c8b5f0`](https://github.com/soum91/keystone/commit/97c8b5f0e6802b9641ad0e71fbde29c8636c06c6); `Keystone/Views/HomeDevicesView.swift`)
+- Parse Tuya strip data point mappings robustly and reuse known device DP codes ([`2f558a02`](https://github.com/soum91/keystone/commit/2f558a029203b7944aa659c14c3faf3c84783449); `Keystone/Strip/TuyaCloud.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/socket-build-9...socket-build-11)
+
 ## [build-93] - 2026-11-23
 
 ## Verified changes since build-87
