@@ -1,5 +1,14 @@
 # Changelog
 
+## [build-67] - 2026-11-23
+
+## Verified changes since build-66
+
+- Display active Equinox, DewPoint, or bridge BLE Govee source in Keystone ([`c48ac8a8`](https://github.com/soum91/keystone/commit/c48ac8a8a37a87705610162105c11371ac6eab20); `Keystone/Views/DashboardView.swift`)
+- Prefer Equinox Govee UDP feed over DewPoint with BLE fallback ([`baeabe99`](https://github.com/soum91/keystone/commit/baeabe99dbe7d3d888fbaa412e2addd8a0949aee); `Bridge/KeystoneBridge/Govee.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-66...build-67)
+
 ## [firmware-build-173] - 2026-11-23
 
 ## Verified changes since firmware-build-170
