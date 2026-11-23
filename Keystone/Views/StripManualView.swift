@@ -1,8 +1,11 @@
 import SwiftUI
+import UIKit
 
 /// Manual fallback for the power strip: type the device ID, local key and IP yourself. The normal path is StripSetupView. Each outlet becomes its own Outlet tile in
 /// Apple Home and a toggle on Keystone's home screen. Setup goes over the home Wi-Fi only (the key travels).
 struct StripManualView: View {
+    private let preset: HomeDevice?
+    init(preset: HomeDevice? = nil) { self.preset = preset }
     @EnvironmentObject var store: Store
     @Environment(\.dismiss) private var dismiss
 
@@ -13,8 +16,11 @@ struct StripManualView: View {
     @State private var key = ""
     @State private var ip = ""
     @State private var ver = 3.3
-    @State private var rows: [Row] = [Row(name: "Outlet 1", dp: "1"), Row(name: "Outlet 2", dp: "2"),
-                                     Row(name: "Outlet 3", dp: "3"), Row(name: "USB", dp: "7")]
+    @State private var rows: [Row] = []
+    @State private var lastBooleanStates: [String: Bool] = [:]
+    @State private var changedDataPoints: [String] = []
+    @State private var detectedDataPoints: [String] = []
+    @State private var confirmedMapping = false
     @State private var probe: String?
     @State private var busy = false
     @State private var loaded = false
@@ -23,7 +29,7 @@ struct StripManualView: View {
     private var existing: BridgeInfo.Strip? { store.info?.strip?.configured == true ? store.info?.strip : nil }
     private var keyOK: Bool { key.count == 16 || (key.isEmpty && existing != nil && existing?.id == devId) }
     private var canSave: Bool {
-        !devId.trimmed.isEmpty && keyOK && rows.contains { !$0.dp.trimmed.isEmpty } && !busy
+        !devId.trimmed.isEmpty && keyOK && rows.contains { !$0.dp.trimmed.isEmpty } && !busy && (existing != nil || confirmedMapping)
     }
 
     var body: some View {
@@ -44,9 +50,29 @@ struct StripManualView: View {
             Section {
                 Button(busy ? "Asking the strip…" : "Detect outlets") { Task { await detect() } }
                     .disabled(busy || devId.trimmed.isEmpty || ip.trimmed.isEmpty || !keyOK)
-                if let probe { Text(probe).font(.caption.monospaced()).textSelection(.enabled) }
+                if let probe {
+                    Text(probe).font(.caption.monospaced()).textSelection(.enabled)
+                    Button {
+                        UIPasteboard.general.string = probe
+                        store.show("Read-only Tuya DP report copied.")
+                    } label: { Label("Copy DP report", systemImage: "doc.on.doc") }
+                }
+                if !changedDataPoints.isEmpty {
+                    Text("These values changed since the last scan. Select only the one you physically switched:")
+                        .font(.caption).foregroundStyle(.secondary)
+                    ForEach(changedDataPoints, id: \.self) { dp in
+                        Button("Add changed DP \(dp)") {
+                            if !rows.contains(where: { $0.dp == dp }) {
+                                rows.append(Row(name: "Outlet \(rows.count + 1)", dp: dp))
+                            }
+                        }
+                    }
+                }
+                Button { TuyaSmartApp.open() } label: {
+                    Label("Open Tuya Smart to toggle one outlet", systemImage: "arrow.up.forward.app")
+                }
             } footer: {
-                Text("Reads the strip's status through the bridge. On/off values (true/false) are the outlets: flip one in Smart Life and detect again to see which number moves.")
+                Text("Read-only: first detect, toggle exactly ONE outlet in Tuya Smart, then detect again. The changed DP identifies that control. Not every Boolean DP is an outlet: master power and child lock may also appear.")
             }
 
             Section {
@@ -59,10 +85,13 @@ struct StripManualView: View {
                 .onDelete { rows.remove(atOffsets: $0) }
                 if rows.count < 6 { Button("Add outlet") { rows.append(Row(name: "Outlet \(rows.count + 1)", dp: "")) } }
             } header: { Text("Outlets") } footer: {
-                Text("Each row is one tile in Apple Home. Name them after what's plugged in. Typical strips use DP 1–3 for the outlets and 7 for USB.")
+                Text("Each row is an Apple Home outlet. Add only DPs you have confirmed by flipping one actual socket at a time. Do not include master power, child lock, or other Boolean settings.")
             }
 
             Section {
+                if existing == nil {
+                    Toggle("I verified these DP numbers correspond to individual sockets", isOn: $confirmedMapping)
+                }
                 Button(existing == nil ? "Add to the bridge" : "Save") { Task { await save() } }.disabled(!canSave)
                 if existing != nil {
                     Button("Remove the power strip", role: .destructive) { confirmRemove = true }
@@ -83,12 +112,21 @@ struct StripManualView: View {
     private func load() {
         guard !loaded else { return }
         loaded = true
-        guard let s = existing else { return }
-        name = s.name ?? name
-        devId = s.id ?? ""
-        ip = s.ip ?? ""
-        ver = s.ver ?? 3.3
-        if let o = s.outlets, !o.isEmpty { rows = o.map { Row(name: $0.name, dp: $0.dp) } }
+        if let s = existing {
+            name = s.name ?? name
+            devId = s.id ?? ""
+            ip = s.ip ?? ""
+            ver = s.ver ?? 3.3
+            if let o = s.outlets, !o.isEmpty { rows = o.map { Row(name: $0.name, dp: $0.dp) } }
+            return
+        }
+        guard let preset else { return }
+        name = preset.name
+        devId = preset.id
+        key = preset.localKey ?? ""
+        ip = preset.host ?? ""
+        ver = preset.version ?? 3.3
+        rows = TuyaClient.stripOutlets(from: preset.dpMap).map { Row(name: $0.name, dp: $0.dp) }
     }
 
     private var creds: [String: Any] {
@@ -108,11 +146,19 @@ struct StripManualView: View {
             }
             let keys = dps.keys.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
             probe = keys.map { k in "DP \(k): \(isBool(dps[k]) ? ((dps[k] as? Bool) == true ? "true" : "false") : String(describing: dps[k] ?? ""))" }.joined(separator: "\n")
-            let switches = keys.filter { isBool(dps[$0]) && (Int($0) ?? 0) < 20 }
-            if !switches.isEmpty, existing == nil {
-                rows = switches.enumerated().map { i, dp in
-                    Row(name: i == switches.count - 1 && switches.count > 3 ? "USB" : "Outlet \(i + 1)", dp: dp)
+            let states: [String: Bool] = dps.reduce(into: [:]) { acc, item in
+                if isBool(item.value), let state = item.value as? Bool {
+                    acc[item.key] = state
                 }
+            }
+            detectedDataPoints = states.keys.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
+            changedDataPoints = states.keys.filter {
+                guard let before = lastBooleanStates[$0] else { return false }
+                return before != states[$0]
+            }.sorted { (Int($0) ?? 999) < (Int($1) ?? 999) }
+            lastBooleanStates = states
+            if !changedDataPoints.isEmpty {
+                probe = "Changed Boolean DP(s): \(changedDataPoints.joined(separator: ", "))\n" + (probe ?? "")
             }
         } catch {
             probe = "Couldn't reach the bridge on your Wi-Fi: \(error.localizedDescription)"

@@ -94,26 +94,26 @@ struct StripSetupView: View {
     @ViewBuilder private var loginSections: some View {
         Section {
             if let qrImage, qr != nil {
-                Text("Scan this in Smart Life").font(.headline)
+                Text("Scan this in Tuya Smart").font(.headline)
                 Image(uiImage: qrImage)
                     .interpolation(.none).resizable().scaledToFit()
                     .padding(12)
                     .background(Color.white, in: RoundedRectangle(cornerRadius: 16))
                     .frame(maxWidth: 260).frame(maxWidth: .infinity)
-                ShareLink(item: Image(uiImage: qrImage), preview: SharePreview("Smart Life login", image: Image(uiImage: qrImage))) {
+                ShareLink(item: Image(uiImage: qrImage), preview: SharePreview("Tuya Smart login", image: Image(uiImage: qrImage))) {
                     Label("Share or save the QR", systemImage: "square.and.arrow.up")
                 }
-                if let url = URL(string: "smartlife://") {
-                    Link(destination: url) { Label("Open Smart Life", systemImage: "arrow.up.forward.app") }
+                Button { TuyaSmartApp.open() } label: {
+                    Label("Open Tuya Smart", systemImage: "arrow.up.forward.app")
                 }
                 HStack {
                     ProgressView().controlSize(.small)
-                    Text("Waiting for you to confirm in Smart Life…").font(.footnote).foregroundStyle(.secondary)
+                    Text("Waiting for you to confirm in Tuya Smart…").font(.footnote).foregroundStyle(.secondary)
                     Spacer()
                     Button("Start over") { resetQR() }.font(.footnote)
                 }
             } else {
-                TextField("Smart Life user code", text: $userCode)
+                TextField("Tuya Smart user code", text: $userCode)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                     .font(.system(.body, design: .monospaced))
                 Button { Task { await getQR() } } label: {
@@ -122,12 +122,12 @@ struct StripSetupView: View {
                 .disabled(working != nil || userCode.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         } header: {
-            Text(strip == nil ? "Sign in to Smart Life" : "Sign in to Smart Life (to update the key)")
+            Text(strip == nil ? "Sign in to Tuya Smart" : "Sign in to Tuya Smart (to update the key)")
         } footer: {
             if qr == nil {
-                Text("Once. In Smart Life: Me › ⚙︎ Settings › Account and Security › User Code. Paste it, get the QR, then in Smart Life tap + › Scan (pick the saved photo, or scan the screen from another device) and confirm. Keystone only reads the strip's ID, key and outlet names.")
+                Text("Once. In Tuya Smart: Me › ⚙︎ Settings › Account and Security › User Code. Paste it, get the QR, then in Tuya Smart tap + › Scan (pick the saved photo, or scan the screen from another device) and confirm. Keystone only reads the strip's ID, key and outlet names.")
             } else {
-                Text("On this phone: share the QR and save it to Photos, open Smart Life, tap + › Scan, tap the photo icon and pick it. Confirm the login and come back here.")
+                Text("On this phone: share the QR and save it to Photos, open Tuya Smart, tap + › Scan, tap the photo icon and pick it. Confirm the login and come back here.")
             }
         }
         if strip == nil {
@@ -266,7 +266,7 @@ struct StripSetupView: View {
             } else if token != nil {
                 Text("Asks Smart Life whether this strip has the setting. Smart Life hides it on some strips.")
             } else {
-                Text("Sign in to Smart Life below to check whether this strip has a power-on setting.")
+                Text("Sign in to Tuya Smart below to check whether this strip has a power-on setting.")
             }
         }
     }

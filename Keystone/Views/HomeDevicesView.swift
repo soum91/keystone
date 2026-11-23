@@ -88,7 +88,7 @@ struct HomeDevicesView: View {
             }
             Button("Cancel", role: .cancel) { surgeCandidate = nil }
         } message: {
-            Text("Keystone will read the actual power switches and their Tuya data points using the Smart Life login already on this phone. It will add individual outlet services to Apple Home and Surge. Your existing single plug stays until you remove it yourself, so you can verify the new controls safely.")
+            Text("Keystone will check the device's actual Tuya data-point IDs and authenticate to it over local Wi-Fi before registering individual switches. If verification fails, the reason and raw DP options will be shown under this plug. Nothing will be deleted from Apple Home.")
         }
     }
 
@@ -277,24 +277,24 @@ struct HomeDevicesView: View {
     @ViewBuilder private var loginSection: some View {
         Section {
             if let qrImage, qr != nil {
-                Text("Scan this in Smart Life").font(.headline)
+                Text("Scan this in Tuya Smart").font(.headline)
                 Image(uiImage: qrImage).interpolation(.none).resizable().scaledToFit()
                     .padding(12).background(Color.white, in: RoundedRectangle(cornerRadius: 16))
                     .frame(maxWidth: 260).frame(maxWidth: .infinity)
-                ShareLink(item: Image(uiImage: qrImage), preview: SharePreview("Smart Life login", image: Image(uiImage: qrImage))) {
+                ShareLink(item: Image(uiImage: qrImage), preview: SharePreview("Tuya Smart login", image: Image(uiImage: qrImage))) {
                     Label("Share or save the QR", systemImage: "square.and.arrow.up")
                 }
-                if let url = URL(string: "smartlife://") {
-                    Link(destination: url) { Label("Open Smart Life", systemImage: "arrow.up.forward.app") }
+                Button { TuyaSmartApp.open() } label: {
+                    Label("Open Tuya Smart", systemImage: "arrow.up.forward.app")
                 }
                 HStack {
                     ProgressView().controlSize(.small)
-                    Text("Waiting for you to confirm in Smart Life…").font(.footnote).foregroundStyle(.secondary)
+                    Text("Waiting for you to confirm in Tuya Smart…").font(.footnote).foregroundStyle(.secondary)
                     Spacer()
                     Button("Start over") { pollTask?.cancel(); qr = nil; self.qrImage = nil }.font(.footnote)
                 }
             } else {
-                TextField("Smart Life user code", text: $userCode)
+                TextField("Tuya Smart user code", text: $userCode)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                     .font(.system(.body, design: .monospaced))
                 Button { Task { await getQR() } } label: {
@@ -302,10 +302,10 @@ struct HomeDevicesView: View {
                 }
                 .disabled(working != nil || userCode.trimmingCharacters(in: .whitespaces).isEmpty)
             }
-        } header: { Text("Sign in to Smart Life") } footer: {
+        } header: { Text("Sign in to Tuya Smart") } footer: {
             Text(qr == nil
-                 ? "Once. In Smart Life: Me › ⚙︎ Settings › Account and Security › User Code. Paste it, get the QR, then in Smart Life tap + › Scan and confirm. Keystone reads your devices' names, IDs and local keys."
-                 : "On this phone: share the QR and save it to Photos, open Smart Life, tap + › Scan, tap the photo icon and pick it. Confirm and come back.")
+                 ? "Once. In Tuya Smart: Me › ⚙︎ Settings › Account and Security › User Code. Paste it, get the QR, then in Tuya Smart tap + › Scan and confirm. Keystone reads your devices' names, IDs and local keys."
+                 : "On this phone: share the QR and save it to Photos, open Tuya Smart, tap + › Scan, tap the photo icon and pick it. Confirm and come back.")
         }
     }
 

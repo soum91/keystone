@@ -698,3 +698,10 @@
 
 This log records verified, release-specific changes. The [Factual release changelog](.github/workflows/release-changelog.yml) GitHub Action adds entries based on the actual commits between published releases. Entries are not fabricated for older versions that have not been audited.
 
+
+## Unreleased — Tuya Smart / Surge setup diagnostics
+- Open Tuya Smart instead of Smart Life from Keystone's QR login screens (with App Store fallback).
+- Parse actual numeric Tuya DP mappings from more documented response shapes; retain cached DP codes.
+- Verify the strip's LAN protocol and key before advertising outlet setup as successful, and show the detailed failure directly beneath the plug with a Copy action.
+- Added manual read-only DP diffing to identify independently switched outlets; never treat every Boolean DP as a safe switch.
+- Expanded the bridge's read-only probe beyond DP 7 to capture USB channels with larger DP IDs.

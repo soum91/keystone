@@ -327,7 +327,7 @@ static void handleApi() {
     if (key.length() != 16) return reply(400, "{\"error\":\"the local key must be 16 characters\"}");
     tuya::Conn conn;
     String dps;
-    if (conn.open(ip, id, key, ver, 2500)) { dps = conn.query({"1", "2", "3", "4", "5", "6", "7"}); conn.close(); }
+    if (conn.open(ip, id, key, ver, 2500)) { dps = conn.query({"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "101", "102"}); conn.close(); }
     if (!dps.length()) return reply(200, "{\"ok\":false,\"error\":\"" + (conn.lastError.length() ? conn.lastError : String("no status")) + "\"}");
     return reply(200, "{\"ok\":true,\"dps\":" + dps + "}");
   }
