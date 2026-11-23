@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.93",
+          "buildVersion": "93",
+          "date": "2026-11-23T21:04:52Z",
+          "localizedDescription": "- Treat relay OTA ACK timeout as uncertain; verify fresh bridge status before reporting failure (90703e6)\n- Clear legacy persisted OTA error on first boot into new firmware too (e43d6eb)\n- Clear stale HTTPS OTA error when firmware was updated through another path (0ed6b5b)\n- Prefer isolated local OTA preparation and verify upload server readiness before sending firmware (458705d)\n- Wire isolated local OTA server into early boot; bump firmware 1.11.12 (38e90f1)\n- Add minimal Wi-Fi-only authenticated local OTA upload boot with automatic recovery (3fbe398)\n- Add authenticated local-only request to reboot into isolated firmware-upload mode (90a4998)\n- Add direct Tuya-cloud on/off controls for cloud-only outlets and switches in Keystone (9fc81a9)\n- Track Tuya cloud switch states and confirm cloud commands using existing QR session (0b9aa90)\n- Expose actual Tuya cloud switch channels, including cloud-only power strips (735948f)\n- Support QR-authorized Tuya cloud power commands without a local device connection (6a1d018)\n- docs: record factual changes for build-87 [skip ci] (34d4b72)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-93/Keystone-1.0.93-build-93.ipa",
+          "size": 2159954,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.87",
           "buildVersion": "87",
           "date": "2026-11-23T20:21:39Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-50/Keystone-1.0.0-build-50.ipa",
           "size": 1985850,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.49",
-          "buildVersion": "49",
-          "date": "2026-11-18T06:13:34Z",
-          "localizedDescription": "- Fix build: qrImage shadowing, screen::adminOK (93ec637)\n- Keystone puts Smart Life lights, switches and plugs in Apple Home itself (bridge 1.11.0) (437cfef)\n- docs: record factual changes for build-47 [skip ci] (cd46bbe)\n- docs: record factual changes for firmware-build-148 [skip ci] (6dbd9fd)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-49/Keystone-1.0.0-build-49.ipa",
-          "size": 1976381,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.87",
-      "versionDate": "2026-11-23T20:21:39Z",
-      "versionDescription": "- Preserve Tuya Smart QR sessions and allow reauthorization without clearing home device setup (c01210c)\n- Use valid three-part Keystone app versions and verify FlareStore feed after publishing (97f6886)\n- docs: record factual changes for build-85 [skip ci] (5be5ace)\n- docs: record factual changes for firmware-build-180 [skip ci] (1a818d5)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-87/Keystone-1.0.87-build-87.ipa",
-      "size": 2119809,
+      "version": "1.0.93",
+      "versionDate": "2026-11-23T21:04:52Z",
+      "versionDescription": "- Treat relay OTA ACK timeout as uncertain; verify fresh bridge status before reporting failure (90703e6)\n- Clear legacy persisted OTA error on first boot into new firmware too (e43d6eb)\n- Clear stale HTTPS OTA error when firmware was updated through another path (0ed6b5b)\n- Prefer isolated local OTA preparation and verify upload server readiness before sending firmware (458705d)\n- Wire isolated local OTA server into early boot; bump firmware 1.11.12 (38e90f1)\n- Add minimal Wi-Fi-only authenticated local OTA upload boot with automatic recovery (3fbe398)\n- Add authenticated local-only request to reboot into isolated firmware-upload mode (90a4998)\n- Add direct Tuya-cloud on/off controls for cloud-only outlets and switches in Keystone (9fc81a9)\n- Track Tuya cloud switch states and confirm cloud commands using existing QR session (0b9aa90)\n- Expose actual Tuya cloud switch channels, including cloud-only power strips (735948f)\n- Support QR-authorized Tuya cloud power commands without a local device connection (6a1d018)\n- docs: record factual changes for build-87 [skip ci] (34d4b72)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-93/Keystone-1.0.93-build-93.ipa",
+      "size": 2159954,
       "appPermissions": {}
     },
     {
