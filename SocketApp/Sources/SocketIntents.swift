@@ -31,7 +31,7 @@ struct SocketQuery: EntityQuery {
 
 struct ControlSocketIntent: AppIntent {
     static var title: LocalizedStringResource = "Control Socket"
-    static var description = IntentDescription("Turn on, turn off or toggle one Keystone power strip socket.")
+    static var description = IntentDescription("Turn on, turn off or toggle a Surge power strip outlet.")
     static var openAppWhenRun: Bool = false
     @Parameter(title: "Socket") var socket: SocketEntity
     @Parameter(title: "Action", default: .toggle) var action: SocketAction
@@ -51,7 +51,7 @@ enum AllSocketsAction: String, AppEnum {
 
 struct AllSocketsIntent: AppIntent {
     static var title: LocalizedStringResource = "Set All Sockets"
-    static var description = IntentDescription("Turn all sockets on, or all except Keystone off.")
+    static var description = IntentDescription("Turn all Surge outlets on, or all except Keystone off.")
     static var openAppWhenRun: Bool = false
     @Parameter(title: "Action", default: .off) var action: AllSocketsAction
     func perform() async throws -> some IntentResult {

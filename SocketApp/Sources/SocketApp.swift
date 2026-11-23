@@ -18,6 +18,8 @@ struct SocketApp: App {
 struct SocketHome: View {
     @EnvironmentObject var store: SocketStore
     @State private var showingSettings = false
+    @State private var showManualAddress = false
+    @StateObject private var finder = SurgeBridgeFinder()
 
     var body: some View {
         NavigationStack {
@@ -33,7 +35,7 @@ struct SocketHome: View {
                 }.padding(18)
             }
             .background(Color(red: 0.07, green: 0.09, blue: 0.13))
-            .navigationTitle("Socket")
+            .navigationTitle("Surge")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showingSettings = true } label: { Image(systemName: "gearshape") }
@@ -41,7 +43,21 @@ struct SocketHome: View {
             }
             .sheet(isPresented: $showingSettings) { settings }
             .refreshable { await store.refresh() }
-            .task { if store.paired { await store.refresh() } }
+            .task {
+                if store.paired { await store.refresh() }
+                else { finder.start() }
+            }
+            .onChange(of: finder.found) { _, hosts in
+                if !store.paired && hosts.count == 1 {
+                    store.host = hosts[0].host
+                    store.port = hosts[0].port
+                }
+            }
+            .onChange(of: store.paired) { _, paired in
+                if paired { finder.stop() }
+                else { finder.start() }
+            }
+            .onDisappear { finder.stop() }
         }
     }
 
@@ -112,21 +128,75 @@ struct SocketHome: View {
     private var pairCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Connect Keystone").font(.headline)
-            Text("Configure the power strip in the Keystone app first. Enter the ESP32 bridge's local IP (shown on Keystone's dashboard).")
+            Text("Surge finds the existing Keystone ESP32 bridge automatically. Don't enter the power strip's own IP address.")
                 .font(.subheadline).foregroundStyle(.secondary)
-            TextField("192.168.1.50", text: $store.host)
-                .textInputAutocapitalization(.never).autocorrectionDisabled()
-                .keyboardType(.numbersAndPunctuation)
-                .padding(12)
-                .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+            if finder.searching && finder.found.isEmpty {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Looking for Keystone on Wi-Fi…").font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+            if !finder.found.isEmpty {
+                ForEach(finder.found, id: \.host) { bridge in
+                    Button {
+                        store.host = bridge.host
+                        store.port = bridge.port
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "cpu.fill")
+                                .foregroundStyle(.mint)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(bridge.name).fontWeight(.semibold)
+                                Text("\(bridge.host):\(bridge.port)")
+                                    .font(.caption.monospaced()).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if store.host == bridge.host {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.mint)
+                            } else {
+                                Image(systemName: "circle").foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(12)
+                        .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            if finder.found.isEmpty {
+                Text(finder.searching ? "Make sure this iPhone and Keystone are on the same home Wi-Fi." :
+                         "No Keystone bridge found. You can try another scan or enter its address manually.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            HStack {
+                Button("Scan again") { finder.start() }
+                    .buttonStyle(.bordered)
+                Spacer()
+                Button(showManualAddress ? "Hide manual IP" : "Enter IP manually") {
+                    showManualAddress.toggle()
+                }
+                .font(.caption)
+            }
+            if showManualAddress || (finder.found.isEmpty && !finder.searching) {
+                TextField("Bridge IP, not strip IP", text: $store.host)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .keyboardType(.numbersAndPunctuation)
+                    .padding(12)
+                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+            } else if !store.host.isEmpty {
+                Text("Selected bridge: \(store.host):\(store.port)")
+                    .font(.caption.monospaced()).foregroundStyle(.secondary)
+            }
             Button { Task { await store.pair() } } label: {
                 HStack {
                     if store.busy == "pair" { ProgressView().tint(.black) }
-                    Text("Pair Socket")
+                    Text("Pair with Keystone")
                 }.frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .disabled(store.busy != nil || store.host.isEmpty)
+            Text("The bridge needs Keystone firmware build 175 or newer. Update from Keystone → Bridge → Firmware if prompted. Your Home pairing stays intact.")
+                .font(.caption).foregroundStyle(.secondary)
         }
         .padding(18)
         .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 20))
@@ -135,7 +205,7 @@ struct SocketHome: View {
     private var shortcutsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Siri & Shortcuts", systemImage: "bolt.fill").font(.headline)
-            Text("Find Socket in Apple Shortcuts, then choose Control Socket → a named outlet → On, Off, or Toggle. Set All Sockets preserves a Keystone-labelled outlet when turning everything off.")
+            Text("Find Surge in Apple Shortcuts, then choose Control Socket → a named outlet → On, Off, or Toggle. Set All Sockets preserves a Keystone-labelled outlet when turning everything off.")
                 .font(.subheadline).foregroundStyle(.secondary)
             Button("Open Shortcuts") {
                 if let url = URL(string: "shortcuts://") { UIApplication.shared.open(url) }
@@ -155,7 +225,7 @@ struct SocketHome: View {
                     LabeledContent("Status", value: store.paired ? "Paired" : "Not paired")
                     Button("Refresh") { Task { await store.refresh() } }
                     if store.paired {
-                        Button("Forget Socket pairing", role: .destructive) {
+                        Button("Forget Surge pairing", role: .destructive) {
                             Task { await store.forget() }
                         }
                     }

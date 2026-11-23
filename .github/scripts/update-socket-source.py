@@ -10,8 +10,8 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-source_file, ipa_file, url, notes_file = map(Path, sys.argv[1:5])
-url = str(url)
+source_file, ipa_file, notes_file = map(Path, [sys.argv[1], sys.argv[2], sys.argv[4]])
+url = sys.argv[3]
 if not url.startswith("https://github.com/soum91/keystone/releases/download/socket-build-"):
     raise SystemExit("Refusing unexpected release URL")
 with zipfile.ZipFile(ipa_file) as ipa:
@@ -46,12 +46,12 @@ previous = old_app.get("versions", [])
 versions = [new_entry] + [v for v in previous if v.get("buildVersion") != new_entry["buildVersion"]]
 versions = sorted(versions, key=lambda v: tuple(int(n) for n in v["version"].split(".") if n.isdigit()), reverse=True)[:25]
 app = {
-    "name": "Socket",
+    "name": "Surge",
     "bundleIdentifier": "com.soum91.socket",
     "developerName": "soum91",
-    "subtitle": "Power strip controls & Shortcuts",
-    "localizedDescription": "Individually control the Joly Joy-compatible power strip through an existing Keystone ESP32 bridge, with Apple Shortcuts actions and Apple Home integration through Keystone. Requires a compatible Tuya LAN strip and configured Keystone bridge.",
-    "iconURL": old_app.get("iconURL") or raw.get("iconURL", ""),
+    "subtitle": "Power strip control and Shortcuts",
+    "localizedDescription": "Control your Joly Joy-compatible smart power strip through the existing Keystone ESP32 bridge, with Apple Shortcuts and Apple Home integration. Compatible Tuya LAN strip and current Keystone firmware required.",
+    "iconURL": url.rsplit("/", 1)[0] + "/surge-icon.png",
     "tintColor": "34D399",
     "category": "utilities",
     "screenshotURLs": old_app.get("screenshotURLs", []),

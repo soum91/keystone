@@ -27,7 +27,14 @@ struct StripStatus: Decodable {
         }
     }
 }
-struct BridgeState: Decodable { let app: String; let strip: StripStatus? }
+struct BridgeState: Decodable {
+    let app: String
+    let build: Int?
+    let version: String?
+    let ip: String?
+    let name: String?
+    let strip: StripStatus?
+}
 struct PairState: Decodable { let token: String }
 struct BridgeResponseError: Decodable { let error: String? }
 struct SocketFailure: LocalizedError {
@@ -87,7 +94,13 @@ enum SocketAPI {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         } else if path.hasPrefix("/api/dev/") { request.httpMethod = "POST" }
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw SocketFailure(message: "Keystone did not answer at \(host):\(port). That may be the power strip's IP rather than the ESP32's. Select a discovered Keystone bridge on your Wi-Fi. (\(error.localizedDescription))")
+        }
         let code = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard code == 200 else {
             let message = (try? JSONDecoder().decode(BridgeResponseError.self, from: data))?.error
@@ -118,11 +131,23 @@ enum SocketAPI {
         defer { busy = nil }
         do {
             let result = try await SocketAPI.send(host: host, port: port, token: nil, path: "/api/info?lite=1")
-            guard try JSONDecoder().decode(BridgeState.self, from: result).app == "afterglow-bridge" else {
-                throw SocketFailure(message: "This isn't a Keystone bridge.")
+            let status = try JSONDecoder().decode(BridgeState.self, from: result)
+            guard status.app == "afterglow-bridge" else {
+                throw SocketFailure(message: "That address is not a Keystone bridge. Use the bridge shown by discovery, not the Joly Joy device IP.")
             }
-            let reply = try await SocketAPI.send(host: host, port: port, token: nil,
-                                                  path: "/api/dev/claim?app=socket&name=Socket")
+            if let build = status.build, build < 175 {
+                throw SocketFailure(message: "Keystone bridge firmware build \(build) is too old for Surge pairing. Open Keystone → Bridge → Firmware and update to build 175 or newer. Your HomeKit pairing is preserved.")
+            }
+            let reply: Data
+            do {
+                reply = try await SocketAPI.send(host: host, port: port, token: nil,
+                                                 path: "/api/dev/claim?app=socket&name=Surge")
+            } catch {
+                if error.localizedDescription.localizedCaseInsensitiveContains("unknown app") {
+                    throw SocketFailure(message: "This Keystone bridge responds, but its installed firmware does not know Surge yet. In Keystone → Bridge → Firmware update to build 175 or newer, then pair again. The device IP in Joly Joy is not the bridge IP.")
+                }
+                throw error
+            }
             let value = try JSONDecoder().decode(PairState.self, from: reply).token
             try SocketSecret.save(value)
             token = value
@@ -130,7 +155,7 @@ enum SocketAPI {
             UserDefaults.standard.set(host, forKey: "socket.host")
             UserDefaults.standard.set(port, forKey: "socket.port")
             await refresh()
-            message = "Socket paired with Keystone."
+            message = strip?.configured == true ? "Surge paired with Keystone." : "Surge paired. Now configure the separate channels in Keystone → Bridge → Power strip."
         } catch { message = error.localizedDescription }
     }
     func refresh() async {
@@ -208,6 +233,6 @@ enum SocketAPI {
         strip = nil
         reachable = false
         SocketCache.write([])
-        message = "This app is unpaired. Apple Home and Keystone remain unchanged."
+        message = "Surge is unpaired. Apple Home and Keystone remain unchanged."
     }
 }

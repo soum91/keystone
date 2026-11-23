@@ -1,6 +1,6 @@
-# Socket — Keystone power-strip iPhone app
+# Surge — Keystone power-strip iPhone app
 
-A separate SwiftUI app using the existing Keystone ESP32 bridge. The existing Keystone iPhone app still handles ESP32 firmware, OTA and strip setup. No other bridge firmware.
+Surge is a separate SwiftUI app using the existing Keystone ESP32 bridge. It keeps the existing `com.soum91.socket` bundle identifier to upgrade installed Socket builds without duplicate installations. The existing Keystone iPhone app still handles ESP32 firmware, OTA and strip setup. No other bridge firmware.
 
 ## Setup
 1. In Keystone → Bridge → Power strip, connect the actual strip using Smart Life if compatible; otherwise probe and configure its true Tuya data points. The JO-WFPS-3A2U-US manual alone does not prove that the device uses Tuya LAN.
