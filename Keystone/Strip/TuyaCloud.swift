@@ -295,6 +295,23 @@ actor TuyaClient {
         return nil
     }
 
+    /// Tuya's device-sharing cloud command path, also used by its official
+    /// Home Assistant Smart Life integration. Uses the existing QR-authorized
+    /// token and the current authenticated request signing.
+    /// Cloud success means accepted for delivery, NOT that the relay switched.
+    func sendCloudSwitch(deviceID: String, code: String, on: Bool) async throws {
+        guard !deviceID.isEmpty, deviceID.utf8.allSatisfy({
+            (48...57).contains($0) || (65...90).contains($0) ||
+            (97...122).contains($0) || $0 == 95 || $0 == 45
+        }) else { throw TuyaError(message: "Invalid Tuya device identifier.") }
+        guard code == "switch" || code == "led_switch" || code == "switch_led" ||
+              code == "power" || code.hasPrefix("switch_") else {
+            throw TuyaError(message: "That Tuya function isn't a power switch.")
+        }
+        _ = try await request("POST", "/v1.1/m/thing/\(deviceID)/commands",
+                              body: ["commands": [["code": code, "value": on]]])
+    }
+
     private func request(_ method: String, _ path: String, query: [String: Any]? = nil, body: [String: Any]? = nil) async throws -> Any? {
         try await refreshIfNeeded()
         return try await raw(method, path, query: query, body: body).result
