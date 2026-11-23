@@ -1,5 +1,13 @@
 # Changelog
 
+## [firmware-build-166] - 2026-11-23
+
+## Verified changes since firmware-build-165
+
+- Introduce verified HTTPS pull OTA handler for remote bridge maintenance ([`891553f8`](https://github.com/soum91/keystone/commit/891553f85ce8fe84cb22864749e38cffca7d3152); `Bridge/KeystoneBridge/RemoteOTA.h`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-165...firmware-build-166)
+
 ## [firmware-build-167] - 2026-11-23
 
 ## Verified changes since firmware-build-165
