@@ -20,6 +20,15 @@ static void begin() {
   tries = prefs.getUChar("roTries", 0);
   state = prefs.getString("roState", "idle");
   lastError = prefs.getString("roError", "");
+  // A local firmware upload can skip the remote updater altogether.
+  // Don't display an old HTTPS failure forever after a NEW build is installed.
+  uint32_t lastBootBuild = prefs.getUInt("roSeenBuild", 0);
+  prefs.putUInt("roSeenBuild", FW_BUILD);
+  if (!target && lastBootBuild && lastBootBuild != FW_BUILD) {
+    state = "idle"; lastError = ""; tries = 0;
+    prefs.putString("roState", state);
+    prefs.remove("roError"); prefs.remove("roTries");
+  }
   if (target && target <= FW_BUILD) {
     prefs.remove("roTarget"); prefs.remove("roTries");
     target = 0; tries = 0; state = "installed"; lastError = "";
