@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.75",
+          "buildVersion": "75",
+          "date": "2026-11-23T17:50:37Z",
+          "localizedDescription": "- Rename Socket UI to Surge, discover Keystone via Bonjour and explain firmware pairing failures (4edcfcd)\n- docs: record factual changes for socket-build-5 [skip ci] (2fd7fcc)\n- docs: record factual changes for build-74 [skip ci] (dadc6c2)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-75/Keystone-1.0.0-build-75.ipa",
+          "size": 2055644,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.74",
           "buildVersion": "74",
           "date": "2026-11-23T17:42:44Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-43/Keystone-1.0.0-build-43.ipa",
           "size": 1768586,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.42",
-          "buildVersion": "42",
-          "date": "2026-11-14T07:55:57Z",
-          "localizedDescription": "- Bridge 1.10.4: crash breadcrumbs, Home memory cost, Bluetooth only with real headroom (1fd6143)\n- docs: record factual changes for firmware-build-136 [skip ci] (512d841)\n- Bridge 1.10.3: power strip as one Home accessory, back off when memory is low (bf3b2d3)\n- docs: record factual changes for firmware-build-135 [skip ci] (11f238f)\n- docs: record factual changes for build-41 [skip ci] (397027d)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-42/Keystone-1.0.0-build-42.ipa",
-          "size": 1768227,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.74",
-      "versionDate": "2026-11-23T17:42:44Z",
-      "versionDescription": "- Publish Socket IPA in shared FlareStore feed and preserve multi-app source entries (e3d0936)\n- docs: record factual changes for build-73 [skip ci] (c694c05)\n- docs: record factual changes for firmware-build-175 [skip ci] (5d23b5b)\n- docs: record factual changes for socket-build-4 [skip ci] (a9ef80a)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-74/Keystone-1.0.0-build-74.ipa",
-      "size": 2055636,
+      "version": "1.0.0.75",
+      "versionDate": "2026-11-23T17:50:37Z",
+      "versionDescription": "- Rename Socket UI to Surge, discover Keystone via Bonjour and explain firmware pairing failures (4edcfcd)\n- docs: record factual changes for socket-build-5 [skip ci] (2fd7fcc)\n- docs: record factual changes for build-74 [skip ci] (dadc6c2)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-75/Keystone-1.0.0-build-75.ipa",
+      "size": 2055644,
       "appPermissions": {}
     },
     {
