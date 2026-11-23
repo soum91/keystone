@@ -253,16 +253,25 @@
       "appPermissions": {}
     },
     {
-      "name": "Socket",
+      "name": "Surge",
       "bundleIdentifier": "com.soum91.socket",
       "developerName": "soum91",
-      "subtitle": "Power strip controls & Shortcuts",
-      "localizedDescription": "Control independently switched outlets through your existing Keystone Bridge, with native Shortcuts and Apple Home integration via Keystone. Requires compatible Tuya LAN strip configured in Keystone.",
-      "iconURL": "https://raw.githubusercontent.com/soum91/keystone/main/Keystone/Assets.xcassets/AppIcon.appiconset/icon.png",
+      "subtitle": "Power strip control and Shortcuts",
+      "localizedDescription": "Control your Joly Joy-compatible smart power strip through the existing Keystone ESP32 bridge, with Apple Shortcuts and Apple Home integration. Compatible Tuya LAN strip and current Keystone firmware required.",
+      "iconURL": "https://github.com/soum91/keystone/releases/download/socket-build-6/surge-icon.png",
       "tintColor": "34D399",
       "category": "utilities",
       "screenshotURLs": [],
       "versions": [
+        {
+          "version": "1.0.6",
+          "buildVersion": "6",
+          "date": "2026-11-23T17:49:47Z",
+          "localizedDescription": "Hardware protocol and HomeKit USB mappings require real-device verification. Local Wi-Fi is needed for app Shortcuts.",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/socket-build-6/Socket-1.0.6-build-6.ipa",
+          "size": 211866,
+          "minOSVersion": "17.0"
+        },
         {
           "version": "1.0.4",
           "buildVersion": "4",
@@ -273,11 +282,11 @@
           "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.4",
-      "versionDate": "2026-11-23T17:04:22Z",
-      "versionDescription": "- First Socket iPhone release: per-outlet power controls and status over Keystone's bridge.\n- Native Apple Shortcuts actions: Control Socket and Set All Sockets.\n- Scoped Socket-only bridge pairing; no separate ESP32 firmware.\n- Hardware Tuya protocol, USB channel mapping and device operation require testing.",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/socket-build-4/Socket-1.0.4-build-4.ipa",
-      "size": 173962,
+      "version": "1.0.6",
+      "versionDate": "2026-11-23T17:49:47Z",
+      "versionDescription": "Hardware protocol and HomeKit USB mappings require real-device verification. Local Wi-Fi is needed for app Shortcuts.",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/socket-build-6/Socket-1.0.6-build-6.ipa",
+      "size": 211866,
       "appPermissions": {}
     }
   ],
