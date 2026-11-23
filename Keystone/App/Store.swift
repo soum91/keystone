@@ -373,19 +373,40 @@ final class Store: ObservableObject {
                 // once status reports the new installed build after reboot.
                 for _ in 0..<36 {
                     try? await Task.sleep(nanoseconds: 5_000_000_000)
-                    await refresh()
-                    if (info?.build ?? 0) >= l.build {
+                    // Never interpret the last cached status as a *new* failure
+                    // when the bridge is offline during its OTA maintenance boot.
+                    guard let observed = try? await BridgeAPI.info(link, timeout: 14, lite: true) else { continue }
+                    info = observed
+                    if (observed.build ?? 0) >= l.build {
                         updating = "Verified: bridge updated to build \(l.build)."
                         return
                     }
-                    if info?.remoteOta?.state == "failed" {
-                        updating = "Internet OTA failed: \(info?.remoteOta?.error ?? "unknown error"). The bridge has returned to normal mode; retry when the reported cause is resolved."
+                    if observed.remoteOta?.state == "failed" {
+                        updating = "Internet OTA failed: \(observed.remoteOta?.error ?? "unknown error"). The bridge has returned to normal mode; check Health/OTA diagnostics."
                         return
                     }
                 }
-                updating = "Request queued, but the bridge has not confirmed installation. Check again when the relay reconnects."
+                updating = "Remote update was accepted but its installation is unconfirmed. Check the installed build when the bridge reconnects."
             } catch {
-                updating = "Remote update request failed: \(error.localizedDescription)"
+                let reason = error.localizedDescription
+                // The broker may lose its reply precisely as the bridge restarts.
+                // A timeout does NOT prove that the authenticated OTA command
+                // failed. Probe fresh status instead of showing a false failure.
+                updating = "No relay acknowledgment; checking whether the bridge started updating…"
+                for _ in 0..<8 {
+                    try? await Task.sleep(nanoseconds: 5_000_000_000)
+                    guard let observed = try? await BridgeAPI.info(link, timeout: 12, lite: true) else { continue }
+                    info = observed
+                    if (observed.build ?? 0) >= l.build {
+                        updating = "Verified: bridge updated to build \(l.build)."
+                        return
+                    }
+                    if observed.remoteOta?.targetBuild == l.build {
+                        updating = "Bridge queued build \(l.build); awaiting download/installation."
+                        return
+                    }
+                }
+                updating = "Internet OTA request not confirmed: \(reason). Check installed build and OTA status before retrying; the relay reply may have been lost during reboot."
             }
             return
         }
