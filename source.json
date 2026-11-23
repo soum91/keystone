@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.0.74",
+          "buildVersion": "74",
+          "date": "2026-11-23T17:42:44Z",
+          "localizedDescription": "- Publish Socket IPA in shared FlareStore feed and preserve multi-app source entries (e3d0936)\n- docs: record factual changes for build-73 [skip ci] (c694c05)\n- docs: record factual changes for firmware-build-175 [skip ci] (5d23b5b)\n- docs: record factual changes for socket-build-4 [skip ci] (a9ef80a)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-74/Keystone-1.0.0-build-74.ipa",
+          "size": 2055636,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.0.73",
           "buildVersion": "73",
           "date": "2026-11-23T17:11:12Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-42/Keystone-1.0.0-build-42.ipa",
           "size": 1768227,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.41",
-          "buildVersion": "41",
-          "date": "2026-11-13T07:03:19Z",
-          "localizedDescription": "- Bridge 1.10.2: up to 4 phones per app; Keystone lists paired phones and can forget one (44922b1)\n- docs: record factual changes for build-40 [skip ci] (3a5eb39)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-41/Keystone-1.0.0-build-41.ipa",
-          "size": 1759906,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.0.73",
-      "versionDate": "2026-11-23T17:11:12Z",
-      "versionDescription": "- Avoid redundant Keystone IPA builds for standalone Socket changes (ef46992)\n- Separate AppShortcutsBuilder expressions without array comma (ecf6460)\n- Fix AppShortcutsBuilder syntax for Socket iOS compilation (c329f0c)\n- Restrict Socket pairing to outlet control and display its pairing in Keystone (5ac7c0d)\n- Complete Socket iPhone UI, App Intents, scoped bridge authentication and IPA CI (15e730c)\n- Start standalone Socket app project and Keystone client (3be5aac)\n- docs: record factual changes for build-67 [skip ci] (b497fa8)\n- docs: record factual changes for firmware-build-173 [skip ci] (50431e4)\n- Document Equinox-primary Govee feed and DewPoint/BLE fallback (ab78c1d)\n- Bump Keystone firmware to 1.11.10 for Equinox-first Govee feed (c4cacf0)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-73/Keystone-1.0.0-build-73.ipa",
-      "size": 2055652,
+      "version": "1.0.0.74",
+      "versionDate": "2026-11-23T17:42:44Z",
+      "versionDescription": "- Publish Socket IPA in shared FlareStore feed and preserve multi-app source entries (e3d0936)\n- docs: record factual changes for build-73 [skip ci] (c694c05)\n- docs: record factual changes for firmware-build-175 [skip ci] (5d23b5b)\n- docs: record factual changes for socket-build-4 [skip ci] (a9ef80a)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-74/Keystone-1.0.0-build-74.ipa",
+      "size": 2055636,
       "appPermissions": {}
     },
     {
