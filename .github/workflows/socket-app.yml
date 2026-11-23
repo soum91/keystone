@@ -10,6 +10,10 @@ on:
       - "Bridge/KeystoneBridge/Control.h"
   workflow_dispatch:
 
+concurrency:
+  group: surge-ipa-publish
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -119,3 +123,15 @@ jobs:
             sleep 3
           done
           test "$success" -eq 1
+          git fetch -q origin source
+          python3 - "$GITHUB_RUN_NUMBER" <<'PY'
+          import json,subprocess,sys
+          feed=json.loads(subprocess.check_output(["git","show","FETCH_HEAD:source.json"]))
+          app=next((x for x in feed.get("apps",[]) if x.get("bundleIdentifier")=="com.soum91.socket"),None)
+          assert app, "Surge was not published to FlareStore"
+          current=int(app.get("versions",[{}])[0].get("buildVersion",0))
+          expected=int(sys.argv[1])
+          assert current>=expected, (current,expected)
+          assert any(x.get("bundleIdentifier")=="com.soum91.keystone" for x in feed.get("apps",[]))
+          print("Verified FlareStore Surge build",current)
+          PY

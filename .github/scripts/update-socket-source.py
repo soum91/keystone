@@ -43,6 +43,9 @@ new_entry = {
 }
 old_app = next((app for app in apps if app.get("bundleIdentifier") == "com.soum91.socket"), {})
 previous = old_app.get("versions", [])
+if previous and int(previous[0].get("buildVersion", 0)) > int(new_entry["buildVersion"]):
+    print("A newer Surge IPA is already published; preserving the FlareStore feed.")
+    raise SystemExit(0)
 versions = [new_entry] + [v for v in previous if v.get("buildVersion") != new_entry["buildVersion"]]
 versions = sorted(versions, key=lambda v: tuple(int(n) for n in v["version"].split(".") if n.isdigit()), reverse=True)[:25]
 app = {
@@ -50,7 +53,7 @@ app = {
     "bundleIdentifier": "com.soum91.socket",
     "developerName": "soum91",
     "subtitle": "Power strip control and Shortcuts",
-    "localizedDescription": "Control your Joly Joy-compatible smart power strip through the existing Keystone ESP32 bridge, with Apple Shortcuts and Apple Home integration. Compatible Tuya LAN strip and current Keystone firmware required.",
+    "localizedDescription": "Surge controls the power strip through your existing Keystone ESP32 bridge or an independent Tuya Smart cloud QR login, with named outlet Shortcuts. Apple Home integration still requires a working Keystone LAN connection.",
     "iconURL": url.rsplit("/", 1)[0] + "/surge-icon.png",
     "tintColor": "34D399",
     "category": "utilities",
