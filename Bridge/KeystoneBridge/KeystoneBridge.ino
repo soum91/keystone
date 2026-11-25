@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.12"
+#define FW_VERSION "1.11.13"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
