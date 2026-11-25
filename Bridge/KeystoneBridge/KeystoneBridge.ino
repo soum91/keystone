@@ -1365,9 +1365,22 @@ static void handleBarPower() {
   server.send(200, "application/json", out);
 }
 
+// Wi-Fi can recover on a new DHCP address while HomeSpan's independent HAP
+// listener already works. The old one-shot serverUp flag left port 8080 bound
+// to a dead socket forever; keep routes registered, but re-open the TCP listener.
+static bool webRoutesRegistered = false;
+static IPAddress webBoundIP;
+static uint32_t webRebinds = 0;
 static void startNetworkServices() {
   if (WiFi.status() != WL_CONNECTED) return;
-  if (!serverUp) {
+  const IPAddress currentIP = WiFi.localIP();
+  if (serverUp && currentIP != webBoundIP) {
+    server.stop();
+    serverUp = false;
+    webRebinds++;
+    logEvent("API: DHCP address changed; reopening HTTP listener");
+  }
+  if (!webRoutesRegistered) {
     const char *headers[] = {"X-Afterglow-Token", "X-Subwave-Token", "X-Device-Token"};
     server.collectHeaders(headers, 3);
     server.on("/api/info", HTTP_GET, handleInfo);
@@ -1386,14 +1399,20 @@ static void startNetworkServices() {
     server.on("/api/remote", HTTP_POST, relay::handleApi);
     server.on("/api/control", HTTP_POST, control::handle);
     server.onNotFound([]() { server.send(404, "text/plain", "Keystone Bridge"); });
-    server.begin();
-    serverUp = true;
+    webRoutesRegistered = true;
     tuyadisc::onSeen = applySeen;
     tuyadisc::busy = []() { return (bool)otaActive; };
     otaStarting = tuyadisc::close;
     configTime(0, 0, "pool.ntp.org", "time.google.com");
-    logEvent("Online at " + WiFi.localIP().toString());
   }
+  if (!serverUp) {
+    server.begin();
+    serverUp = true;
+    webBoundIP = currentIP;
+    logEvent("API listening at " + currentIP.toString() + ":" + String(API_PORT));
+  }
+  // Do not call MDNS.end(): it would disrupt HomeSpan's working _hap._tcp
+  // service. HomeSpan owns mDNS; we add our service only once.
   if (!mdnsUp) {
     mdnsUp = MDNS.addService("afterglow", "tcp", API_PORT);
     if (mdnsUp) MDNS.addServiceTxt("afterglow", "tcp", "v", FW_VERSION);
@@ -1429,7 +1448,15 @@ static void netWatch() {
     } else {
       wifiDrops++;
       wifiConnectedSince = 0;
-      logEvent("Wi-Fi disconnected");
+      // Socket listeners created before a Wi-Fi reconnect can remain attached
+      // to the defunct interface. Close just Keystone's API; never touch the
+      // independent HomeKit listener or its mDNS registration.
+      if (serverUp) {
+        server.stop();
+        serverUp = false;
+        webRebinds++;
+      }
+      logEvent("Wi-Fi disconnected; local API will rebind after reassociation");
     }
   }
   if (connected) { lost = 0; return; }
