@@ -28,6 +28,8 @@ final class Store: ObservableObject {
     private var toastTask: Task<Void, Never>?
     private var displayEditedAt = Date.distantPast
     private var lastFullInfoAt = Date.distantPast
+    private var lastAddressCheckAt = Date.distantPast
+    private var findingAddress = false
 
     var isPaired: Bool { link.isSet }
 
@@ -164,9 +166,54 @@ final class Store: ObservableObject {
             if !viaRelay, !forgotten, let r = i.remote,
                relay == nil || relay?.on != r.on || (r.id != nil && relay?.id != r.id) { await fetchRelay() }
         } catch {
+            let underlying = error.localizedDescription
+            // HomeKit connects by Bonjour, but this app previously kept a
+            // permanently stale DHCP address. Recover only after an actual
+            // authenticated HTTP response from the SAME paired bridge.
+            if await recoverLocalAddress() { return }
             reachable = false
-            lastError = error.localizedDescription
+            lastError = underlying
         }
+    }
+
+    /// Recover a changed ESP32 DHCP address without forgetting its saved
+    /// pairing, HomeKit identity or remote relay settings. Never switch to an
+    /// unrelated Bonjour advertiser or claim another device's identity.
+    private func recoverLocalAddress() async -> Bool {
+        guard !findingAddress, !updateRunning, link.isSet,
+              Date().timeIntervalSince(lastAddressCheckAt) > 45 else { return false }
+        findingAddress = true
+        lastAddressCheckAt = .now
+        defer { findingAddress = false }
+        let previous = link
+        let finder = BridgeFinder()
+        finder.start()
+        defer { finder.stop() }
+        try? await Task.sleep(nanoseconds: 5_000_000_000)
+        for candidate in finder.found where candidate.host != previous.host {
+            guard let url = BridgeAPI.url(candidate.host, candidate.port, "/api/info?lite=1") else { continue }
+            var req = URLRequest(url: url)
+            req.cachePolicy = .reloadIgnoringLocalCacheData
+            req.timeoutInterval = 3
+            req.setValue(previous.token, forHTTPHeaderField: "X-Device-Token")
+            guard let (data, response) = try? await URLSession.shared.data(for: req),
+                  (response as? HTTPURLResponse)?.statusCode == 200,
+                  let found = try? JSONDecoder().decode(BridgeInfo.self, from: data),
+                  found.app == "afterglow-bridge", found.auth == true else { continue }
+            // The authenticated device token proves this is the existing
+            // paired bridge. Never reset it or claim a new slot.
+            guard link.token == previous.token, link.host == previous.host else { return false }
+            link.host = candidate.host
+            link.port = candidate.port
+            BridgeLink.stored = link
+            viaRelay = false
+            lastError = nil
+            apply(found)
+            NetLog.add("Recovered same paired Keystone bridge on Wi-Fi: \(previous.host) → \(candidate.host):\(candidate.port)")
+            await fetchRelay() // also repairs an old cached MQTT key, on trusted LAN only
+            return true
+        }
+        return false
     }
 
     // MARK: Remote access
