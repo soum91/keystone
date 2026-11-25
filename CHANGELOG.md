@@ -1,5 +1,21 @@
 # Changelog
 
+## [build-98] - 2026-11-25
+
+## Verified changes since build-93
+
+- Show one-tap authenticated Wi-Fi recovery when HomeKit works but Keystone times out ([`c321b73f`](https://github.com/soum91/keystone/commit/c321b73fb46a2a4fdbd3e9c0e1dea0a3c0d06787); `Keystone/Views/DashboardView.swift`)
+- Offer manual authenticated Wi-Fi bridge rediscovery without re-pairing ([`52a395b9`](https://github.com/soum91/keystone/commit/52a395b9c911461651893025ac2545e7f6228225); `Keystone/App/Store.swift`)
+- Automatically find changed Keystone DHCP IP by Bonjour and verify existing paired token ([`8e4f9958`](https://github.com/soum91/keystone/commit/8e4f995803f15e8f0ca798533723f1fb23215f09); `Keystone/App/Store.swift`)
+- Ignore empty MQTT responses and discard stale WebSocket data on reconnect ([`9b764edd`](https://github.com/soum91/keystone/commit/9b764edd83c0cbb74f048fc258116951dc2a58c4); `Shared/Relay.swift`)
+- Honor Afterglow lighting type when merging duplicate Keystone smart switch ([`b25f9fb0`](https://github.com/soum91/keystone/commit/b25f9fb0220ec78f0615ba4e6f14680231b478d0); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Register surge:// app link for Afterglow native Home integration panel ([`67b6b961`](https://github.com/soum91/keystone/commit/67b6b96165ac80bb42df2542ee78d3f756b0ca76); `SocketApp/project.yml`)
+- Prevent stale Surge releases overwriting FlareStore and verify published source ([`dbea04af`](https://github.com/soum91/keystone/commit/dbea04af05f201bc7b30e0ee37ff76566031f0bd); `.github/scripts/update-socket-source.py`, `.github/workflows/socket-app.yml`)
+- Preserve unknown Tuya outlet statuses and show bridge-side LAN diagnostics in Surge ([`15ce3a6e`](https://github.com/soum91/keystone/commit/15ce3a6eed7223f1b1c7a6ed297ad83a2237ff92); `SocketApp/Sources/SocketApp.swift`, `SocketApp/Sources/SurgeCloudStore.swift`)
+- Add Surge Tuya Smart cloud fallback, real outlet codes and Keystone DHCP rediscovery ([`3c05588e`](https://github.com/soum91/keystone/commit/3c05588e188e5ba01fcf803d1dc2421d22d5ddf1); `SocketApp/CHANGELOG.md`, `SocketApp/README.md`, `SocketApp/Sources/SocketApp.swift`, and 3 more)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-93...build-98)
+
 ## [firmware-build-186] - 2026-11-25
 
 ## Verified changes since firmware-build-185
