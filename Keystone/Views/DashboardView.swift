@@ -95,8 +95,15 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Label("Can't reach the bridge", systemImage: "wifi.exclamationmark").fontWeight(.semibold)
                 Text(e).font(.caption).foregroundStyle(.secondary)
-                Text(store.relay?.on == true ? "Keystone tried your Wi-Fi, then the remote relay." : "Remote access isn't set up on this phone yet: open Keystone once at home.")
+                Text(store.relay?.on == true ? "Keystone tried your Wi-Fi, then the remote relay. If Apple Home still responds, the saved bridge IP may have changed or the bridge network worker may be blocked." : "Remote access isn't set up on this phone yet: open Keystone once at home.")
                     .font(.caption).foregroundStyle(.secondary)
+                Button {
+                    Task { await store.findBridgeOnWiFi() }
+                } label: {
+                    Label("Find paired bridge on Wi-Fi", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.yellow)
             }
             .card()
         }
