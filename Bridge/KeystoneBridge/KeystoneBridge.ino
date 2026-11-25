@@ -559,7 +559,22 @@ static void mergeKsLights(std::vector<Light> &out) {
   for (auto &k : mine) {
     k.ks = true;
     bool replaced = false;
-    for (auto &L : out) if (L.id == k.id) { L = k; replaced = true; break; }
+    for (auto &L : out) if (L.id == k.id) {
+      // Keystone's generic cloud import may call a relay a Switch while
+      // Afterglow explicitly marks that SAME device as lighting. Preserve
+      // Keystone's updated IP/local key and DP map, but never erase the
+      // user's lighting designation on duplicate-device reconciliation.
+      // This does NOT make cloud-only Matter devices controllable via LAN.
+      bool isAfterglowLight = !L.relay;
+      String customLightName = L.name;
+      L = k;
+      if (isAfterglowLight && k.relay) {
+        L.relay = false;
+        if (customLightName.length()) L.name = customLightName;
+      }
+      replaced = true;
+      break;
+    }
     if (!replaced) out.push_back(k);
   }
 }
