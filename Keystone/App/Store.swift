@@ -176,6 +176,17 @@ final class Store: ObservableObject {
         }
     }
 
+    /// On-demand recovery when the user can control HomeKit but the saved IP
+    /// or relay route is no longer working. Does not change pairing.
+    func findBridgeOnWiFi() async {
+        lastAddressCheckAt = .distantPast
+        if await recoverLocalAddress() {
+            show("Found the paired bridge at \(link.host):\(link.port); remote access credentials refreshed.")
+        } else {
+            show("No authenticated Keystone bridge answered over local Wi-Fi. Check that the phone is on the same Wi-Fi; do not erase the HomeKit pairing.")
+        }
+    }
+
     /// Recover a changed ESP32 DHCP address without forgetting its saved
     /// pairing, HomeKit identity or remote relay settings. Never switch to an
     /// unrelated Bonjour advertiser or claim another device's identity.
