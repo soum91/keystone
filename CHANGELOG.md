@@ -1,5 +1,17 @@
 # Changelog
 
+## [firmware-build-188] - 2026-11-25
+
+## Verified changes since firmware-build-186
+
+- Rebind Keystone HTTP API on Wi-Fi recovery or DHCP changes without disturbing HomeKit ([`f4c0b63b`](https://github.com/soum91/keystone/commit/f4c0b63bf83658d2264b55f0f7f8a629e2fb52e9); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Show one-tap authenticated Wi-Fi recovery when HomeKit works but Keystone times out ([`c321b73f`](https://github.com/soum91/keystone/commit/c321b73fb46a2a4fdbd3e9c0e1dea0a3c0d06787); `Keystone/Views/DashboardView.swift`)
+- Offer manual authenticated Wi-Fi bridge rediscovery without re-pairing ([`52a395b9`](https://github.com/soum91/keystone/commit/52a395b9c911461651893025ac2545e7f6228225); `Keystone/App/Store.swift`)
+- Automatically find changed Keystone DHCP IP by Bonjour and verify existing paired token ([`8e4f9958`](https://github.com/soum91/keystone/commit/8e4f995803f15e8f0ca798533723f1fb23215f09); `Keystone/App/Store.swift`)
+- Ignore empty MQTT responses and discard stale WebSocket data on reconnect ([`9b764edd`](https://github.com/soum91/keystone/commit/9b764edd83c0cbb74f048fc258116951dc2a58c4); `Shared/Relay.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-186...firmware-build-188)
+
 ## [build-98] - 2026-11-25
 
 ## Verified changes since build-93
