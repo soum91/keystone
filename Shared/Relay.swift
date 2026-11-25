@@ -144,9 +144,13 @@ actor RelayLink {
 
     func disconnect() {
         pinger?.cancel()
+        pinger = nil
         ws?.cancel(with: .goingAway, reason: nil)
         ws = nil
         ready = false
+        // MQTT frames belong to one TCP/WebSocket session; a partial frame
+        // must never be carried into the next broker connection.
+        buffer.removeAll(keepingCapacity: true)
     }
 
     // MARK: Connection
@@ -230,7 +234,7 @@ actor RelayLink {
                 case .string(let s): d = Data(s.utf8)
                 @unknown default: d = Data()
                 }
-                Task { await self.ingest(d) }
+                Task { await self.ingest(d, from: task) }
                 self.receiveLoop(task)
             case .failure(let e):
                 Task { await self.dropped(e, task) }
@@ -249,7 +253,10 @@ actor RelayLink {
         for (k, c) in waiting { c.resume(throwing: RelayError.broker(e.localizedDescription)); waiting[k] = nil }
     }
 
-    private func ingest(_ d: Data) {
+    private func ingest(_ d: Data, from task: URLSessionWebSocketTask) {
+        // Old sockets can deliver a final receive callback AFTER reconnect.
+        // Never parse those bytes with the new broker's configuration/key.
+        guard task === ws else { return }
         buffer.append(d)
         while let pkt = Self.nextPacket(buffer) {
             let (type, body, used) = pkt
@@ -274,14 +281,29 @@ actor RelayLink {
         let b = [UInt8](body)
         guard b.count > 2 else { return }
         let tlen = Int(b[0]) << 8 | Int(b[1])
+        guard 2 + tlen <= b.count,
+              let topic = String(bytes: b[2..<(2 + tlen)], encoding: .utf8),
+              topic == "keystone/\(cfg?.id ?? "")/res" else { return }
         var p = 2 + tlen
         if (type >> 1) & 3 > 0 { p += 2 }
-        guard p <= b.count, let key = cfg?.symmetricKey,
-              let raw = Data(base64Encoded: Data(b[p...])),
+        guard p <= b.count else { return }
+        let cipher = Data(b[p...])
+        // A zero-payload MQTT PUBLISH is just the 29-byte response topic plus
+        // its two-byte length: 31 bytes. It isn't evidence of a wrong AES key.
+        if cipher.isEmpty {
+            NetLog.add("relay \(label): ignored empty MQTT response (31-byte topic frame)")
+            return
+        }
+        guard let key = cfg?.symmetricKey,
+              let raw = Data(base64Encoded: cipher),
+              raw.count >= 29,
               let box = try? AES.GCM.SealedBox(combined: raw),
               let plain = try? AES.GCM.open(box, using: key),
               let obj = try? JSONSerialization.jsonObject(with: plain) as? [String: Any],
-              let rid = obj["i"] as? String else { NetLog.add("relay: got \(b.count) bytes I couldn't read (wrong key?)"); return }
+              let rid = obj["i"] as? String else {
+            NetLog.add("relay \(label): discarded unreadable non-empty response (possible stale key or malformed payload)")
+            return
+        }
         let code = (obj["c"] as? Int) ?? 0
         let bodyData = Data(((obj["b"] as? String) ?? "").utf8)
         if let w = waiting.removeValue(forKey: rid) { w.resume(returning: (code, bodyData)) }
