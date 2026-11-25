@@ -1,5 +1,18 @@
 # Changelog
 
+## [firmware-build-186] - 2026-11-25
+
+## Verified changes since firmware-build-185
+
+- Honor Afterglow lighting type when merging duplicate Keystone smart switch ([`b25f9fb0`](https://github.com/soum91/keystone/commit/b25f9fb0220ec78f0615ba4e6f14680231b478d0); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+- Register surge:// app link for Afterglow native Home integration panel ([`67b6b961`](https://github.com/soum91/keystone/commit/67b6b96165ac80bb42df2542ee78d3f756b0ca76); `SocketApp/project.yml`)
+- Prevent stale Surge releases overwriting FlareStore and verify published source ([`dbea04af`](https://github.com/soum91/keystone/commit/dbea04af05f201bc7b30e0ee37ff76566031f0bd); `.github/scripts/update-socket-source.py`, `.github/workflows/socket-app.yml`)
+- Preserve unknown Tuya outlet statuses and show bridge-side LAN diagnostics in Surge ([`15ce3a6e`](https://github.com/soum91/keystone/commit/15ce3a6eed7223f1b1c7a6ed297ad83a2237ff92); `SocketApp/Sources/SocketApp.swift`, `SocketApp/Sources/SurgeCloudStore.swift`)
+- Add Surge Tuya Smart cloud fallback, real outlet codes and Keystone DHCP rediscovery ([`3c05588e`](https://github.com/soum91/keystone/commit/3c05588e188e5ba01fcf803d1dc2421d22d5ddf1); `SocketApp/CHANGELOG.md`, `SocketApp/README.md`, `SocketApp/Sources/SocketApp.swift`, and 3 more)
+- Treat relay OTA ACK timeout as uncertain; verify fresh bridge status before reporting failure ([`90703e60`](https://github.com/soum91/keystone/commit/90703e6005ebe24f98659cd7deb44cf4983837fa); `Keystone/App/Store.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/firmware-build-185...firmware-build-186)
+
 ## [socket-build-13] - 2026-11-23
 
 ## Verified changes since socket-build-10
