@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.98",
+          "buildVersion": "98",
+          "date": "2026-11-25T06:03:11Z",
+          "localizedDescription": "- Show one-tap authenticated Wi-Fi recovery when HomeKit works but Keystone times out (c321b73)\n- Offer manual authenticated Wi-Fi bridge rediscovery without re-pairing (52a395b)\n- Automatically find changed Keystone DHCP IP by Bonjour and verify existing paired token (8e4f995)\n- Ignore empty MQTT responses and discard stale WebSocket data on reconnect (9b764ed)\n- docs: record factual changes for firmware-build-186 [skip ci] (2e8acf7)\n- Honor Afterglow lighting type when merging duplicate Keystone smart switch (b25f9fb)\n- docs: record factual changes for socket-build-13 [skip ci] (996d080)\n- Register surge:// app link for Afterglow native Home integration panel (67b6b96)\n- docs: record factual changes for socket-build-11 [skip ci] (a6e3284)\n- Prevent stale Surge releases overwriting FlareStore and verify published source (dbea04a)\n- Preserve unknown Tuya outlet statuses and show bridge-side LAN diagnostics in Surge (15ce3a6)\n- Add Surge Tuya Smart cloud fallback, real outlet codes and Keystone DHCP rediscovery (3c05588)\n- docs: record factual changes for build-93 [skip ci] (01919ad)\n- docs: record factual changes for firmware-build-185 [skip ci] (fcecabb)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-98/Keystone-1.0.98-build-98.ipa",
+          "size": 2169128,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.93",
           "buildVersion": "93",
           "date": "2026-11-23T21:04:52Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-51/Keystone-1.0.0-build-51.ipa",
           "size": 1993185,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.50",
-          "buildVersion": "50",
-          "date": "2026-11-18T06:31:14Z",
-          "localizedDescription": "- Keystone: air purifier to Apple Home from the Devices screen (ef1d8df)\n- docs: record factual changes for firmware-build-150 [skip ci] (83ea88a)\n- docs: record factual changes for build-49 [skip ci] (b2dd458)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-50/Keystone-1.0.0-build-50.ipa",
-          "size": 1985850,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.93",
-      "versionDate": "2026-11-23T21:04:52Z",
-      "versionDescription": "- Treat relay OTA ACK timeout as uncertain; verify fresh bridge status before reporting failure (90703e6)\n- Clear legacy persisted OTA error on first boot into new firmware too (e43d6eb)\n- Clear stale HTTPS OTA error when firmware was updated through another path (0ed6b5b)\n- Prefer isolated local OTA preparation and verify upload server readiness before sending firmware (458705d)\n- Wire isolated local OTA server into early boot; bump firmware 1.11.12 (38e90f1)\n- Add minimal Wi-Fi-only authenticated local OTA upload boot with automatic recovery (3fbe398)\n- Add authenticated local-only request to reboot into isolated firmware-upload mode (90a4998)\n- Add direct Tuya-cloud on/off controls for cloud-only outlets and switches in Keystone (9fc81a9)\n- Track Tuya cloud switch states and confirm cloud commands using existing QR session (0b9aa90)\n- Expose actual Tuya cloud switch channels, including cloud-only power strips (735948f)\n- Support QR-authorized Tuya cloud power commands without a local device connection (6a1d018)\n- docs: record factual changes for build-87 [skip ci] (34d4b72)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-93/Keystone-1.0.93-build-93.ipa",
-      "size": 2159954,
+      "version": "1.0.98",
+      "versionDate": "2026-11-25T06:03:11Z",
+      "versionDescription": "- Show one-tap authenticated Wi-Fi recovery when HomeKit works but Keystone times out (c321b73)\n- Offer manual authenticated Wi-Fi bridge rediscovery without re-pairing (52a395b)\n- Automatically find changed Keystone DHCP IP by Bonjour and verify existing paired token (8e4f995)\n- Ignore empty MQTT responses and discard stale WebSocket data on reconnect (9b764ed)\n- docs: record factual changes for firmware-build-186 [skip ci] (2e8acf7)\n- Honor Afterglow lighting type when merging duplicate Keystone smart switch (b25f9fb)\n- docs: record factual changes for socket-build-13 [skip ci] (996d080)\n- Register surge:// app link for Afterglow native Home integration panel (67b6b96)\n- docs: record factual changes for socket-build-11 [skip ci] (a6e3284)\n- Prevent stale Surge releases overwriting FlareStore and verify published source (dbea04a)\n- Preserve unknown Tuya outlet statuses and show bridge-side LAN diagnostics in Surge (15ce3a6)\n- Add Surge Tuya Smart cloud fallback, real outlet codes and Keystone DHCP rediscovery (3c05588)\n- docs: record factual changes for build-93 [skip ci] (01919ad)\n- docs: record factual changes for firmware-build-185 [skip ci] (fcecabb)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-98/Keystone-1.0.98-build-98.ipa",
+      "size": 2169128,
       "appPermissions": {}
     },
     {
