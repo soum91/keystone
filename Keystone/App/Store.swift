@@ -623,7 +623,7 @@ enum Firmware {
         downloadRequest.timeoutInterval = 120
         let (downloaded, resp) = try await URLSession.shared.download(for: downloadRequest,
                                                                       delegate: downloadObserver)
-        let bin = try Data(contentsOf: downloaded)
+        let bin = try downloadObserver.readDownloadedFile(fallback: downloaded)
         let dlCode = (resp as? HTTPURLResponse)?.statusCode ?? 0
         guard dlCode == 200 else {
             throw BridgeError.message("GitHub answered \(dlCode) for build \(latest.build). Tap Check for updates and try again.")
