@@ -6,6 +6,9 @@ struct KeystoneWidgets: WidgetBundle {
     var body: some Widget {
         RoomWidget()
         BridgeHealthWidget()
+        ClimateWidget()
+        PowerStripWidget()
+        KeystoneOverviewWidget()
     }
 }
 
