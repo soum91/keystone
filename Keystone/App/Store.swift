@@ -28,6 +28,9 @@ final class Store: ObservableObject {
     private var toastTask: Task<Void, Never>?
     private var displayEditedAt = Date.distantPast
     private var lastFullInfoAt = Date.distantPast
+    // WidgetKit budgets reloads. Update health periodically and promptly for
+    // important connection changes, not on every 3-second status poll.
+    private var lastHealthWidgetReloadAt = Date.distantPast
     private var lastAddressCheckAt = Date.distantPast
     private var findingAddress = false
 
@@ -171,8 +174,12 @@ final class Store: ObservableObject {
             // permanently stale DHCP address. Recover only after an actual
             // authenticated HTTP response from the SAME paired bridge.
             if await recoverLocalAddress() { return }
+            let previouslyReachable = reachable
             reachable = false
             lastError = underlying
+            if previouslyReachable {
+                WidgetCenter.shared.reloadTimelines(ofKind: "KeystoneBridgeHealth")
+            }
         }
     }
 
@@ -290,7 +297,18 @@ final class Store: ObservableObject {
     }
 
     private func apply(_ i: BridgeInfo) {
-        let changedForWidget = info?.govee != i.govee || info?.tv?.state != i.tv?.state || info?.lightsOn != i.lightsOn
+        let old = info
+        let wasReachable = reachable
+        let changedForRoom = old?.govee != i.govee ||
+                             old?.tv?.state != i.tv?.state ||
+                             old?.lightsOn != i.lightsOn
+        let changedForHealth = !wasReachable ||
+                               old?.boot?.safeMode != i.boot?.safeMode ||
+                               old?.boot?.crashes != i.boot?.crashes ||
+                               old?.homekit?.connected != i.homekit?.connected ||
+                               old?.remote?.connected != i.remote?.connected ||
+                               old?.remote?.on != i.remote?.on ||
+                               old?.govee?.source != i.govee?.source
         info = i
         reachable = true
         lastSeen = .now
@@ -298,7 +316,13 @@ final class Store: ObservableObject {
         if let d = i.display, Date().timeIntervalSince(displayEditedAt) > 4 { display = d }
         Snapshot.stored = Snapshot(info: i, at: .now)
         if (i.lights ?? []).count > 0 { seedScenes(i) }
-        if changedForWidget { WidgetCenter.shared.reloadAllTimelines() }
+        if changedForRoom { WidgetCenter.shared.reloadTimelines(ofKind: "KeystoneRoom") }
+
+        let age = Date().timeIntervalSince(lastHealthWidgetReloadAt)
+        if age >= 5 * 60 || (changedForHealth && age >= 60) {
+            lastHealthWidgetReloadAt = .now
+            WidgetCenter.shared.reloadTimelines(ofKind: "KeystoneBridgeHealth")
+        }
     }
 
     // MARK: Display
