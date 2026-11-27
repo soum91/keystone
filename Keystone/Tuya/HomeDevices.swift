@@ -16,6 +16,8 @@ struct HomeDevice: Codable, Identifiable, Hashable {
     var host: String?
     var version: Double?
     var inHome = false
+    /// User-selected Apple Home service type, independent of the Tuya DP mapping.
+    var homeAsLight: Bool? = nil
 
     // Same lists as Afterglow.
     static let lightCategories: Set<String> = ["dj", "dd", "xdd", "fwd", "dc", "tgq", "tyndj", "sxd", "gyd", "fsd", "mbd", "tgkg"]
@@ -51,6 +53,10 @@ struct HomeDevice: Codable, Identifiable, Hashable {
         !isLight && !isPurifier && (category == "pc" || Self.switchCategories.contains(category) || statusCodes.contains { $0 == "switch" || $0.hasPrefix("switch_") })
     }
     var supported: Bool { isLight || isSwitch || isPurifier }
+    var canExposeAsLight: Bool {
+        isSwitch && ["kg", "tdq", "kgq"].contains(category) && powerCode != nil && cloudControlChannels.count <= 1
+    }
+    var exposeAsLight: Bool { canExposeAsLight && homeAsLight == true }
     var kind: String {
         if isLight { return "Light" }
         if isPurifier { return "Air purifier" }
@@ -184,7 +190,9 @@ struct HomeDevice: Codable, Identifiable, Hashable {
             d["ct"] = dp; d["ctMin"] = Int(tempRange.0); d["ctMax"] = Int(tempRange.1)
         }
         if let c = colourCode, let dp = dpID(for: c) { d["col"] = dp; d["colV1"] = isV1 || c == "colour_data" }
-        if d["bri"] == nil, d["ct"] == nil, d["col"] == nil, !isLight { d["kind"] = "switch" }
+        if d["bri"] == nil, d["ct"] == nil, d["col"] == nil {
+            d["kind"] = (isLight || exposeAsLight) ? "light" : "switch"
+        }
         return d
     }
 }
@@ -268,6 +276,7 @@ final class HomeDevices: ObservableObject {
             for var d in fresh {
                 if let old = devices.first(where: { $0.id == d.id }) {
                     d.host = old.host; d.version = old.version; d.inHome = old.inHome
+                    d.homeAsLight = old.homeAsLight
                     d.ranges = old.ranges; d.dpMap = old.dpMap
                     if d.localKey == nil { d.localKey = old.localKey }
                     if d.localKey != old.localKey { d.version = nil }   // re-paired: the key changed
@@ -387,6 +396,19 @@ final class HomeDevices: ObservableObject {
         return v >= 3.4 || !dps.isEmpty ? v : nil   // 3.4+ proves the key in the handshake; 3.3 needs real data
     }
 
+    /// Changes only the HomeKit service, not the device's actual Tuya category or data points.
+    func setHomeAsLight(_ id: String, _ on: Bool, link: BridgeLink) async -> String {
+        guard let i = devices.firstIndex(where: { $0.id == id }), devices[i].canExposeAsLight else {
+            return "This device is not an eligible single-channel wall switch."
+        }
+        devices[i].homeAsLight = on
+        save()
+        guard devices[i].inHome else {
+            return "Saved. Enable this switch in Apple Home on this screen to publish the selected type."
+        }
+        return await push(link)
+    }
+
     /// Turns a device's Apple Home tile on or off, then sends the list to the bridge.
     func setInHome(_ id: String, _ on: Bool, link: BridgeLink) async -> String {
         guard let i = devices.firstIndex(where: { $0.id == id }) else { return "" }
@@ -425,15 +447,26 @@ final class HomeDevices: ObservableObject {
             }
             let wanted = Set(chosen.map(\.id))
             let restarting = (r["restart"] as? Bool) == true
+            let mustBeLight = Set(chosen.filter(\.exposeAsLight).map(\.id))
             var verified = false
+            var confirmedIDs = false
             for attempt in 0..<(restarting ? 18 : 4) {
                 if attempt > 0 || restarting { try? await Task.sleep(nanoseconds: 2_000_000_000) }
                 if let info = try? await BridgeAPI.info(host: link.host, port: link.port, timeout: 3) {
                     let actual = Set((info.lights ?? []).filter { $0.ks == true }.map(\.id))
-                    if actual == wanted { verified = true; break }
+                    if actual == wanted {
+                        confirmedIDs = true
+                        let confirmedLights = Set((info.lights ?? []).filter { $0.homeKind == "light" }.map(\.id))
+                        if mustBeLight.isSubset(of: confirmedLights) { verified = true; break }
+                        // An older firmware cannot report the service type. Do not claim it is a light.
+                        if (info.lights ?? []).allSatisfy({ $0.homeKind == nil }) { break }
+                    }
                 }
             }
             guard verified else {
+                if confirmedIDs && !mustBeLight.isEmpty {
+                    throw BridgeError.message("Devices are on the bridge, but the selected HomeKit LightBulb type was not confirmed. Update Keystone firmware and check the service type before testing Siri.")
+                }
                 throw BridgeError.message("The bridge accepted the update but did not confirm the accessory list after restarting. Do not send it again until the bridge is reachable.")
             }
             syncFailure = nil

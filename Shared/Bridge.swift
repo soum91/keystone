@@ -16,7 +16,7 @@ struct BridgeLink: Codable, Equatable {
 
 /// Everything /api/info reports. All optional: older firmware leaves things out.
 struct BridgeInfo: Codable, Equatable {
-    struct Light: Codable, Equatable, Identifiable { var id: String; var name: String; var on: Bool?; var bri: Int?; var ok: Bool?; var ks: Bool?; var noIP: Bool? }
+    struct Light: Codable, Equatable, Identifiable { var id: String; var name: String; var on: Bool?; var bri: Int?; var ok: Bool?; var ks: Bool?; var noIP: Bool?; var homeKind: String? }
     struct TV: Codable, Equatable { var state: String?; var host: String? }
     struct Purifier: Codable, Equatable {
         var paired: Bool?; var configured: Bool?; var name: String?; var ok: Bool?; var on: Bool?; var auto: Bool?

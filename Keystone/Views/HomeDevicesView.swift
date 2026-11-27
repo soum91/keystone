@@ -226,6 +226,26 @@ struct HomeDevicesView: View {
             }
             .disabled(working != nil || model.busy != nil)
 
+            if d.canExposeAsLight {
+                Toggle("Expose as light in Apple Home", isOn: Binding(get: { d.exposeAsLight }, set: { enabled in
+                    Task {
+                        working = d.id
+                        store.show(await model.setHomeAsLight(d.id, enabled, link: store.link))
+                        working = nil
+                        await store.refresh()
+                    }
+                }))
+                .disabled(working != nil || model.busy != nil || (d.localKey ?? "").isEmpty)
+                if let actual = store.info?.lights?.first(where: { $0.id == d.id })?.homeKind {
+                    Text("Bridge service: \(actual == "light" ? "LightBulb" : "Switch")")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Text((d.localKey ?? "").isEmpty
+                     ? "Cloud-only: cannot publish through the bridge. Pair directly with Apple Home using Matter and choose Display As Light if available."
+                     : "For a wall switch wired to a light. Publishes an on/off HomeKit LightBulb so HomePod includes it in lighting commands. Other sockets and strips stay switches.")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+
             // Tuya's cloud-only devices cannot be bridged through a local key.
             // Their QR login can still control verified switch codes right here.
             // Keep these visibly distinct from the Apple Home membership toggle.

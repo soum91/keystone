@@ -30,7 +30,7 @@
 #include "TuyaLan.h"
 #include "Display.h"
 
-#define FW_VERSION "1.11.13"
+#define FW_VERSION "1.11.14"
 #include <esp_system.h>
 #if __has_include("esp_bt.h")
 #include "esp_bt.h"
@@ -1124,6 +1124,8 @@ static void handleInfo() {
     o["name"] = L.name;
     if (L.known) { o["on"] = L.on; o["bri"] = L.pct; }
     o["ok"] = L.ok;
+    // This is the service selected when the HomeKit database was built, not the Tuya product category.
+    o["homeKind"] = L.relay ? "switch" : "light";
     if (L.ks) o["ks"] = true;
     if (!L.ip.length()) o["noIP"] = true;
   }
