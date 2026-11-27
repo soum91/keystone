@@ -16,6 +16,7 @@ final class Store: ObservableObject {
     @Published var latest: Firmware.Latest?
     @Published var updating: String?
     @Published var updateRunning = false
+    @Published var firmwareProgress: FirmwareProgressState?
     @Published var relay = RelayConfig.stored
     @Published var viaRelay = false
     @Published var lastError: String?
@@ -448,24 +449,37 @@ final class Store: ObservableObject {
 
     func installUpdate() async {
         guard !updateRunning else { return }
+        firmwareProgress = .local(.checking, "Checking GitHub for the latest compatible firmware")
         // Always ask GitHub again first: a newer build replaces the old download link.
         if let chip = info?.chip, let fresh = try? await Firmware.latest(chip: chip) { latest = fresh }
-        guard let l = latest else { updating = "Couldn't reach GitHub to find the firmware. Check your internet and try again."; return }
-        if l.build <= (info?.build ?? 0) { updating = "Already up to date (build \(info?.build ?? 0))."; return }
+        guard let l = latest else {
+            updating = "Couldn't reach GitHub to find the firmware. Check your internet and try again."
+            firmwareProgress = .local(.failed, updating ?? "GitHub unavailable")
+            return
+        }
+        if l.build <= (info?.build ?? 0) {
+            updating = "Already up to date (build \(info?.build ?? 0))."
+            firmwareProgress = .local(.complete, updating ?? "Up to date")
+            return
+        }
         if viaRelay {
+            firmwareProgress = .internet("Requesting remote OTA for build \(l.build)")
             guard info?.remoteOta?.supported == true else {
                 updating = "Update the bridge once while on home Wi-Fi to enable future internet OTA."
+                firmwareProgress = .local(.failed, updating ?? "Internet OTA unavailable")
                 return
             }
             updateRunning = true
             defer { updateRunning = false }
             updating = "Requesting internet OTA for build \(l.build)…"
+            firmwareProgress = .internet(updating ?? "Contacting bridge")
             do {
                 let response = try await BridgeAPI.post("/api/ota/remote", ["build": l.build], link, timeout: 15)
                 guard response["queued"] as? Bool == true else {
                     throw BridgeError.message("Bridge did not confirm remote OTA request.")
                 }
                 updating = "Queued build \(l.build). ESP32 will restart, download from GitHub and verify SHA-256."
+                firmwareProgress = .internet("Request accepted. Bridge restarting for verified HTTPS OTA.")
                 // Relay disconnects while flashing. Only announce completion
                 // once status reports the new installed build after reboot.
                 for _ in 0..<36 {
@@ -476,40 +490,51 @@ final class Store: ObservableObject {
                     info = observed
                     if (observed.build ?? 0) >= l.build {
                         updating = "Verified: bridge updated to build \(l.build)."
+                        firmwareProgress = .local(.complete, updating ?? "Installed")
                         return
+                    }
+                    if let phase = observed.remoteOta?.state, !phase.isEmpty {
+                        firmwareProgress = .internet("Bridge reports: \(phase). Transfer percentage unavailable during isolated OTA.")
                     }
                     if observed.remoteOta?.state == "failed" {
                         updating = "Internet OTA failed: \(observed.remoteOta?.error ?? "unknown error"). The bridge has returned to normal mode; check Health/OTA diagnostics."
+                        firmwareProgress = .local(.failed, updating ?? "Remote update failed")
                         return
                     }
                 }
                 updating = "Remote update was accepted but its installation is unconfirmed. Check the installed build when the bridge reconnects."
+                firmwareProgress = .internet("Unconfirmed: bridge has not yet reported the new build.")
             } catch {
                 let reason = error.localizedDescription
                 // The broker may lose its reply precisely as the bridge restarts.
                 // A timeout does NOT prove that the authenticated OTA command
                 // failed. Probe fresh status instead of showing a false failure.
                 updating = "No relay acknowledgment; checking whether the bridge started updating…"
+                firmwareProgress = .internet("MQTT reply missing; checking the bridge's installed build.")
                 for _ in 0..<8 {
                     try? await Task.sleep(nanoseconds: 5_000_000_000)
                     guard let observed = try? await BridgeAPI.info(link, timeout: 12, lite: true) else { continue }
                     info = observed
                     if (observed.build ?? 0) >= l.build {
                         updating = "Verified: bridge updated to build \(l.build)."
+                        firmwareProgress = .local(.complete, updating ?? "Installed")
                         return
                     }
                     if observed.remoteOta?.targetBuild == l.build {
                         updating = "Bridge queued build \(l.build); awaiting download/installation."
+                        firmwareProgress = .internet("Bridge confirmed the OTA queue; waiting for installation.")
                         return
                     }
                 }
                 updating = "Internet OTA request not confirmed: \(reason). Check installed build and OTA status before retrying; the relay reply may have been lost during reboot."
+                firmwareProgress = .internet("No confirmation received; this isn't evidence of a failed flash.")
             }
             return
         }
         updateRunning = true
         defer { updateRunning = false }
         updating = "Starting…"
+        firmwareProgress = .local(.downloading, "Downloading firmware from GitHub")
         // The bridge's web server handles one request at a time: no status polling while the upload runs.
         stopPolling()
         defer { startPolling() }
@@ -520,16 +545,31 @@ final class Store: ObservableObject {
         UIApplication.shared.isIdleTimerDisabled = true
         defer { UIApplication.shared.isIdleTimerDisabled = false }
         do {
-            try await Firmware.install(l, link: link) { msg in Task { @MainActor in self.updating = msg } }
+            try await Firmware.install(l, link: link, progress: { msg in
+                Task { @MainActor in self.updating = msg }
+            }, detailed: { state in
+                Task { @MainActor in self.firmwareProgress = state }
+            })
+            firmwareProgress = .local(.reconnecting, "Waiting for the new firmware build to respond")
             reachable = false
             for _ in 0..<20 {
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
                 await refresh()
                 if reachable, (info?.build ?? 0) >= l.build { break }
             }
-            updating = (info?.build ?? 0) >= l.build ? "Updated to build \(l.build)." : "Sent. If the build doesn't change in a minute, pull to refresh."
+            if (info?.build ?? 0) >= l.build {
+                updating = "Verified: updated to build \(l.build)."
+                firmwareProgress = .local(.complete, updating ?? "Verified")
+            } else {
+                updating = "Upload accepted, but build \(l.build) has not been verified after reboot."
+                firmwareProgress = .local(.reconnecting, updating ?? "Awaiting bridge verification")
+            }
         } catch {
             updating = error.localizedDescription
+            var failed = FirmwareProgressState.local(.failed, "Update failed: \(error.localizedDescription)")
+            // Preserve the last measured amount; never call an uncertain upload 100%.
+            failed.overall = firmwareProgress?.overall
+            firmwareProgress = failed
         }
     }
 
