@@ -265,30 +265,48 @@ struct OverviewConfiguration: WidgetConfigurationIntent {
     init() { first = .health; second = .climate }
 }
 
-struct OverviewProvider: AppIntentTimelineProvider {
-    func placeholder(in context: Context) -> BridgeHealthEntry { .preview }
+// AppIntentConfiguration's builder receives exactly one TimelineEntry.
+// Keep the user's selected panels inside that entry, not a second closure arg.
+struct OverviewEntry: TimelineEntry {
+    let date: Date
+    let health: BridgeHealthEntry
+    let configuration: OverviewConfiguration
+}
 
-    func snapshot(for configuration: OverviewConfiguration, in context: Context) async -> BridgeHealthEntry {
-        if context.isPreview { return .preview }
-        let saved = Snapshot.stored
-        return BridgeHealthEntry(date: .now, info: saved?.info,
-                                 checkedAt: saved?.at, verified: false)
+struct OverviewProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> OverviewEntry {
+        OverviewEntry(date: .now, health: .preview, configuration: OverviewConfiguration())
     }
 
-    func timeline(for configuration: OverviewConfiguration, in context: Context) async -> Timeline<BridgeHealthEntry> {
+    func snapshot(for configuration: OverviewConfiguration, in context: Context) async -> OverviewEntry {
+        if context.isPreview {
+            return OverviewEntry(date: .now, health: .preview, configuration: configuration)
+        }
+        let saved = Snapshot.stored
+        let health = BridgeHealthEntry(date: .now, info: saved?.info,
+                                       checkedAt: saved?.at, verified: false)
+        return OverviewEntry(date: .now, health: health, configuration: configuration)
+    }
+
+    func timeline(for configuration: OverviewConfiguration, in context: Context) async -> Timeline<OverviewEntry> {
         let now = Date()
         let link = BridgeLink.stored
         if link.isSet, let info = try? await BridgeAPI.info(link, timeout: 4, lite: true) {
             Snapshot.stored = Snapshot(info: info, at: now)
             let fresh = BridgeHealthEntry(date: now, info: info, checkedAt: now, verified: true)
-            let aging = BridgeHealthEntry(date: now.addingTimeInterval(300),
+            let agedAt = now.addingTimeInterval(300)
+            let aging = BridgeHealthEntry(date: agedAt,
                                           info: info, checkedAt: now, verified: false)
-            return Timeline(entries: [fresh, aging],
-                            policy: .after(now.addingTimeInterval(15 * 60)))
+            return Timeline(entries: [
+                OverviewEntry(date: now, health: fresh, configuration: configuration),
+                OverviewEntry(date: agedAt, health: aging, configuration: configuration)
+            ], policy: .after(now.addingTimeInterval(15 * 60)))
         }
         let saved = Snapshot.stored
+        let fallback = BridgeHealthEntry(date: now, info: saved?.info,
+                                         checkedAt: saved?.at, verified: false)
         return Timeline(entries: [
-            BridgeHealthEntry(date: now, info: saved?.info, checkedAt: saved?.at, verified: false)
+            OverviewEntry(date: now, health: fallback, configuration: configuration)
         ], policy: .after(now.addingTimeInterval(15 * 60)))
     }
 }
@@ -297,8 +315,8 @@ struct KeystoneOverviewWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "KeystoneOverview",
                                intent: OverviewConfiguration.self,
-                               provider: OverviewProvider()) { entry, configuration in
-            KeystoneOverviewView(entry: entry, configuration: configuration)
+                               provider: OverviewProvider()) { entry in
+            KeystoneOverviewView(entry: entry.health, configuration: entry.configuration)
                 .containerBackground(for: .widget) { KeystoneWidgetStyle.background }
         }
         .configurationDisplayName("Keystone Overview")
