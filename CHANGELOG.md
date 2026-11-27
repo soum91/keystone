@@ -1,5 +1,17 @@
 # Changelog
 
+## [build-102] - 2026-11-27
+
+## Verified changes since build-98
+
+- Open Bridge diagnostics when tapping the health widget ([`b1841b06`](https://github.com/soum91/keystone/commit/b1841b06808aeed3b1bd423b1d75576017542c88); `Keystone/App/KeystoneApp.swift`)
+- Refresh Bridge Health widget when connectivity changes and at measured intervals ([`a2c72760`](https://github.com/soum91/keystone/commit/a2c727603f90d602a8fc5aef70d5d157dbc13dd0); `Keystone/App/Store.swift`)
+- Register Bridge Health alongside existing Room widget ([`5fd9a945`](https://github.com/soum91/keystone/commit/5fd9a9450338e0510dcfce8039b3b5a7dc451cd8); `KeystoneWidget/KeystoneWidget.swift`)
+- Add Bridge Health WidgetKit views with verified status, RAM, HomeKit, relay and Govee diagnostics ([`2556831e`](https://github.com/soum91/keystone/commit/2556831efd5cec3e12a0e67466fca48c7d63bfb5); `KeystoneWidget/BridgeHealthWidget.swift`)
+- Rebind Keystone HTTP API on Wi-Fi recovery or DHCP changes without disturbing HomeKit ([`f4c0b63b`](https://github.com/soum91/keystone/commit/f4c0b63bf83658d2264b55f0f7f8a629e2fb52e9); `Bridge/KeystoneBridge/KeystoneBridge.ino`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-98...build-102)
+
 ## [firmware-build-188] - 2026-11-25
 
 ## Verified changes since firmware-build-186
