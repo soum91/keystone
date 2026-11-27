@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.108",
+          "buildVersion": "108",
+          "date": "2026-11-27T05:29:41Z",
+          "localizedDescription": "- Expose selected wall switches as native HomeKit lights and verify bridge service type (9b2b17a)\n- Fix AppIntent widget builder by placing Overview configuration in its timeline entry (7077bcf)\n- Refresh AC, strip and overview widget timelines on actual device changes with rate limits (935c317)\n- Document integrated AC, strip and configurable Keystone widgets and safety constraints (08abe68)\n- Expose AC Climate, Power Strip and configurable Overview in Keystone widget gallery (8b7d86d)\n- Add Climate, Power Strip and configurable Overview widgets with verified device-state presentation (a8ff35b)\n- Add authenticated App Intents for verified AC and local power-strip widget controls (b8d2f10)\n- docs: record factual changes for build-102 [skip ci] (c53baf5)\n- Document Bridge Health widget freshness, sizes and diagnostics (8c5c489)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-108/Keystone-1.0.108-build-108.ipa",
+          "size": 2344230,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.102",
           "buildVersion": "102",
           "date": "2026-11-27T05:20:48Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-53/Keystone-1.0.0-build-53.ipa",
           "size": 1994148,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.52",
-          "buildVersion": "52",
-          "date": "2026-11-18T07:47:03Z",
-          "localizedDescription": "- Bridge 1.11.1 hears Tuya devices announce their address; Keystone uses it instead of scanning (330cf0c)\n- docs: record factual changes for build-51 [skip ci] (de79a14)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-52/Keystone-1.0.0-build-52.ipa",
-          "size": 1992974,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.102",
-      "versionDate": "2026-11-27T05:20:48Z",
-      "versionDescription": "- Open Bridge diagnostics when tapping the health widget (b1841b0)\n- Refresh Bridge Health widget when connectivity changes and at measured intervals (a2c7276)\n- Register Bridge Health alongside existing Room widget (5fd9a94)\n- Add Bridge Health WidgetKit views with verified status, RAM, HomeKit, relay and Govee diagnostics (2556831)\n- docs: require mandatory picker contract in Claude instructions [skip ci] (e887211)\n- docs: require end-to-end picker regression verification [skip ci] (2fa5d04)\n- docs: record factual changes for firmware-build-188 [skip ci] (4265f12)\n- docs: record factual changes for build-98 [skip ci] (eaf1a08)\n- Version 1.11.13: restore Keystone API after Wi-Fi/IP changes without resetting HomeKit (6626609)\n- Rebind Keystone HTTP API on Wi-Fi recovery or DHCP changes without disturbing HomeKit (f4c0b63)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-102/Keystone-1.0.102-build-102.ipa",
-      "size": 2227057,
+      "version": "1.0.108",
+      "versionDate": "2026-11-27T05:29:41Z",
+      "versionDescription": "- Expose selected wall switches as native HomeKit lights and verify bridge service type (9b2b17a)\n- Fix AppIntent widget builder by placing Overview configuration in its timeline entry (7077bcf)\n- Refresh AC, strip and overview widget timelines on actual device changes with rate limits (935c317)\n- Document integrated AC, strip and configurable Keystone widgets and safety constraints (08abe68)\n- Expose AC Climate, Power Strip and configurable Overview in Keystone widget gallery (8b7d86d)\n- Add Climate, Power Strip and configurable Overview widgets with verified device-state presentation (a8ff35b)\n- Add authenticated App Intents for verified AC and local power-strip widget controls (b8d2f10)\n- docs: record factual changes for build-102 [skip ci] (c53baf5)\n- Document Bridge Health widget freshness, sizes and diagnostics (8c5c489)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-108/Keystone-1.0.108-build-108.ipa",
+      "size": 2344230,
       "appPermissions": {}
     },
     {
