@@ -93,6 +93,17 @@ final class FirmwareBytesDelegate: NSObject, URLSessionDownloadDelegate, @unchec
     private let onBytes: @Sendable (Int64, Int64) -> Void
     private var lastPercent = -1
     private var lastUnknownBytes: Int64 = 0
+    // A download delegate can receive a file URL that becomes invalid as soon
+    // as didFinishDownloadingTo returns. Preserve a private copy before then.
+    private let retainedDownload = FileManager.default.temporaryDirectory
+        .appendingPathComponent("KeystoneOTA-\(UUID().uuidString).bin")
+
+    func readDownloadedFile(fallback URL: URL) throws -> Data {
+        let path = FileManager.default.fileExists(atPath: retainedDownload.path) ?
+                   retainedDownload : URL
+        defer { try? FileManager.default.removeItem(at: retainedDownload) }
+        return try Data(contentsOf: path)
+    }
 
     init(onBytes: @escaping @Sendable (Int64, Int64) -> Void) {
         self.onBytes = onBytes
@@ -119,8 +130,9 @@ final class FirmwareBytesDelegate: NSObject, URLSessionDownloadDelegate, @unchec
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
                     didFinishDownloadingTo location: URL) {
-        // The async URLSession.download(for:delegate:) call supplies its
-        // temporary file URL; no second file copy is needed here.
+        // The file may be deleted after this delegate callback returns.
+        // Keep a private copy until the install() caller validates the image.
+        try? FileManager.default.copyItem(at: location, to: retainedDownload)
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask,
