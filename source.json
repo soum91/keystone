@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.116",
+          "buildVersion": "116",
+          "date": "2026-11-27T06:07:01Z",
+          "localizedDescription": "- Prevent late OTA transfer callbacks from overwriting verified reboot and retry state (b4d8451)\n- Read retained OTA binary after download delegate callback completes (2dfee54)\n- Retain OTA download file before URLSession download delegate returns (97eb836)\n- Show live overall OTA progress, download and upload bars in Keystone Bridge firmware section (8b1f444)\n- Add overall OTA progress bars for real transfer bytes and explicitly indeterminate remote updates (7522e03)\n- Report true download/upload bytes and milestone-weighted OTA progress using URLSession delegates (859084f)\n- Publish overall OTA milestone progress and show indeterminate status for remote updates (948146a)\n- Model milestone-weighted overall OTA progress with real URLSession download/upload byte observers (19c6ae3)\n- docs: record factual changes for firmware-build-189 [skip ci] (76396e5)\n- docs: record factual changes for build-108 [skip ci] (d87c642)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-116/Keystone-1.0.116-build-116.ipa",
+          "size": 2371149,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.108",
           "buildVersion": "108",
           "date": "2026-11-27T05:29:41Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-54/Keystone-1.0.0-build-54.ipa",
           "size": 1996046,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.53",
-          "buildVersion": "53",
-          "date": "2026-11-18T08:15:07Z",
-          "localizedDescription": "- Bridge 1.11.2: settings work through the relay too (screen off now sticks); Keystone checks the screen change took (bfd653c)\n- docs: record factual changes for firmware-build-152 [skip ci] (419f5d2)\n- Fix build: move applySeen/handleTuyaSeen into TuyaApply.h (Arduino prototype order) (cc16b40)\n- docs: record factual changes for build-52 [skip ci] (dcce675)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-53/Keystone-1.0.0-build-53.ipa",
-          "size": 1994148,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.108",
-      "versionDate": "2026-11-27T05:29:41Z",
-      "versionDescription": "- Expose selected wall switches as native HomeKit lights and verify bridge service type (9b2b17a)\n- Fix AppIntent widget builder by placing Overview configuration in its timeline entry (7077bcf)\n- Refresh AC, strip and overview widget timelines on actual device changes with rate limits (935c317)\n- Document integrated AC, strip and configurable Keystone widgets and safety constraints (08abe68)\n- Expose AC Climate, Power Strip and configurable Overview in Keystone widget gallery (8b7d86d)\n- Add Climate, Power Strip and configurable Overview widgets with verified device-state presentation (a8ff35b)\n- Add authenticated App Intents for verified AC and local power-strip widget controls (b8d2f10)\n- docs: record factual changes for build-102 [skip ci] (c53baf5)\n- Document Bridge Health widget freshness, sizes and diagnostics (8c5c489)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-108/Keystone-1.0.108-build-108.ipa",
-      "size": 2344230,
+      "version": "1.0.116",
+      "versionDate": "2026-11-27T06:07:01Z",
+      "versionDescription": "- Prevent late OTA transfer callbacks from overwriting verified reboot and retry state (b4d8451)\n- Read retained OTA binary after download delegate callback completes (2dfee54)\n- Retain OTA download file before URLSession download delegate returns (97eb836)\n- Show live overall OTA progress, download and upload bars in Keystone Bridge firmware section (8b1f444)\n- Add overall OTA progress bars for real transfer bytes and explicitly indeterminate remote updates (7522e03)\n- Report true download/upload bytes and milestone-weighted OTA progress using URLSession delegates (859084f)\n- Publish overall OTA milestone progress and show indeterminate status for remote updates (948146a)\n- Model milestone-weighted overall OTA progress with real URLSession download/upload byte observers (19c6ae3)\n- docs: record factual changes for firmware-build-189 [skip ci] (76396e5)\n- docs: record factual changes for build-108 [skip ci] (d87c642)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-116/Keystone-1.0.116-build-116.ipa",
+      "size": 2371149,
       "appPermissions": {}
     },
     {
