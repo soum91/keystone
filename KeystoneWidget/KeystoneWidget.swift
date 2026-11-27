@@ -3,7 +3,10 @@ import SwiftUI
 
 @main
 struct KeystoneWidgets: WidgetBundle {
-    var body: some Widget { RoomWidget() }
+    var body: some Widget {
+        RoomWidget()
+        BridgeHealthWidget()
+    }
 }
 
 struct RoomEntry: TimelineEntry {
