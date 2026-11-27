@@ -54,9 +54,17 @@ struct RootView: View {
         .animation(.spring(duration: 0.3), value: store.toast)
         .animation(.easeInOut, value: store.isPaired)
         .onOpenURL { url in
-            guard url.scheme?.lowercased() == "keystone", url.host == "power-strip" else { return }
-            selectedTab = 3
-            showStripSetup = true
+            guard url.scheme?.lowercased() == "keystone" else { return }
+            switch url.host {
+            case "health":
+                // Tapping the health widget goes to the bridge diagnostics,
+                // never to a destructive recovery/reset action.
+                selectedTab = 3
+            case "power-strip":
+                selectedTab = 3
+                showStripSetup = true
+            default: break
+            }
         }
     }
 }
