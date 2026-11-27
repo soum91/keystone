@@ -608,9 +608,22 @@ enum Firmware {
         return newest
     }
 
-    static func install(_ latest: Latest, link: BridgeLink, header: String = "X-Device-Token", progress: @escaping (String) -> Void) async throws {
+    static func install(_ latest: Latest, link: BridgeLink, header: String = "X-Device-Token",
+                        progress: @escaping (String) -> Void,
+                        detailed: @escaping @Sendable (FirmwareProgressState) -> Void = { _ in }) async throws {
         progress("Downloading build \(latest.build)…")
-        let (bin, resp) = try await URLSession.shared.data(from: latest.url)
+        detailed(.local(.downloading, "Downloading build \(latest.build) from GitHub"))
+        let downloadObserver = FirmwareBytesDelegate { done, expected in
+            let fraction = expected > 0 ? Double(done) / Double(expected) : nil
+            detailed(.local(.downloading, "Downloading build \(latest.build) from GitHub",
+                            fraction: fraction, bytes: done,
+                            total: expected > 0 ? expected : nil))
+        }
+        var downloadRequest = URLRequest(url: latest.url)
+        downloadRequest.timeoutInterval = 120
+        let (downloaded, resp) = try await URLSession.shared.download(for: downloadRequest,
+                                                                      delegate: downloadObserver)
+        let bin = try Data(contentsOf: downloaded)
         let dlCode = (resp as? HTTPURLResponse)?.statusCode ?? 0
         guard dlCode == 200 else {
             throw BridgeError.message("GitHub answered \(dlCode) for build \(latest.build). Tap Check for updates and try again.")
@@ -618,6 +631,8 @@ enum Firmware {
         guard bin.count > 100_000, bin.first == 0xE9 else {
             throw BridgeError.message("The download (\(bin.count / 1024) KB) wasn't ESP32 firmware. Tap Check for updates and try again.")
         }
+        detailed(.local(.downloading, "Downloaded and validated \(bin.count / 1024) KiB",
+                        fraction: 1, bytes: Int64(bin.count), total: Int64(bin.count)))
         guard let u = BridgeAPI.url(link.host, link.port, "/api/update") else { throw BridgeError.message("Bad address.") }
         let boundary = "keystone-\(UUID().uuidString)"
         var body = Data()
@@ -657,6 +672,9 @@ enum Firmware {
             return obj["ready"] as? Bool == true && obj["mode"] as? String == "isolated"
         }
         func freshBoot(_ attempt: Int) async -> Bool {
+            let detail = attempt == 1 ? "Rebooting into low-memory firmware upload mode" :
+                                         "Retry \(attempt)/\(attempts): preparing bridge"
+            detailed(.local(.preparing, detail, attempt: attempt))
             progress(attempt == 1 ? "Preparing a low-memory firmware upload…"
                                   : "Preparing another firmware upload (\(attempt) of \(attempts))…")
             let prepared = (try? await BridgeAPI.postLocal("/api/admin",
@@ -693,12 +711,23 @@ enum Firmware {
                 break
             }
             progress("Sending \(bin.count / 1024) KB to the bridge… keep Keystone open with the screen on.")
+            detailed(.local(.uploading, "Sending firmware to the ESP32 over local Wi-Fi",
+                            fraction: 0, bytes: 0, total: Int64(body.count), attempt: attempt))
+            let uploadObserver = FirmwareBytesDelegate { done, expected in
+                // URLSession reports multipart HTTP bytes, not bytes flashed
+                // internally by the ESP32. Keep the label explicit.
+                let total = expected > 0 ? expected : Int64(body.count)
+                detailed(.local(.uploading, "Transferring firmware (HTTP upload)",
+                                fraction: total > 0 ? Double(done) / Double(total) : nil,
+                                bytes: done, total: total, attempt: attempt))
+            }
             do {
-                result = try await session.upload(for: req, from: body)
+                result = try await session.upload(for: req, from: body, delegate: uploadObserver)
                 break
             } catch let e as URLError where [.networkConnectionLost, .timedOut, .cannotConnectToHost, .notConnectedToInternet, .cannotFindHost].contains(e.code) {
                 lastError = e
                 progress("Connection dropped. Waiting for the bridge…")
+                detailed(.local(.preparing, "Upload interrupted; preparing retry", attempt: attempt))
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
             }
         }
@@ -708,6 +737,7 @@ enum Firmware {
         let code = (r as? HTTPURLResponse)?.statusCode ?? 0
         if code == 401 { throw BridgeError.message("The bridge rejected Keystone's token.") }
         guard code == 200 else { throw BridgeError.message("Update failed: \(String(decoding: data, as: UTF8.self))") }
-        progress("Installed. Restarting…")
+        detailed(.local(.installing, "ESP32 accepted the image; waiting for firmware reboot"))
+        progress("Upload accepted. Restarting the bridge…")
     }
 }
