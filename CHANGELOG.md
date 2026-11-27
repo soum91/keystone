@@ -1,5 +1,20 @@
 # Changelog
 
+## [build-116] - 2026-11-27
+
+## Verified changes since build-108
+
+- Prevent late OTA transfer callbacks from overwriting verified reboot and retry state ([`b4d8451e`](https://github.com/soum91/keystone/commit/b4d8451e4eb8fe8a51a40ca09fe45cb58f64794d); `Keystone/App/Store.swift`)
+- Read retained OTA binary after download delegate callback completes ([`2dfee548`](https://github.com/soum91/keystone/commit/2dfee548bc5fd8019b39a03ddffa523165342d0d); `Keystone/App/Store.swift`)
+- Retain OTA download file before URLSession download delegate returns ([`97eb836e`](https://github.com/soum91/keystone/commit/97eb836ed72b765ae498df6bd9e55a5b575f158e); `Keystone/App/FirmwareProgress.swift`)
+- Show live overall OTA progress, download and upload bars in Keystone Bridge firmware section ([`8b1f4445`](https://github.com/soum91/keystone/commit/8b1f444556b57dba2a8f24d8d905644adf52d674); `Keystone/Views/BridgeView.swift`)
+- Add overall OTA progress bars for real transfer bytes and explicitly indeterminate remote updates ([`7522e039`](https://github.com/soum91/keystone/commit/7522e039cd8cdc680aa5484525bece0fa39fe7ab); `Keystone/Views/FirmwareProgressView.swift`)
+- Report true download/upload bytes and milestone-weighted OTA progress using URLSession delegates ([`859084fd`](https://github.com/soum91/keystone/commit/859084fd4b3c6c72c64a4dd8c943d23cd85ad61c); `Keystone/App/Store.swift`)
+- Publish overall OTA milestone progress and show indeterminate status for remote updates ([`948146a1`](https://github.com/soum91/keystone/commit/948146a1b29aa13c53b6cdb4e1d968f8d746d320); `Keystone/App/Store.swift`)
+- Model milestone-weighted overall OTA progress with real URLSession download/upload byte observers ([`19c6ae32`](https://github.com/soum91/keystone/commit/19c6ae32a6e45c6adaea3474e8be9d5d1a7b0b57); `Keystone/App/FirmwareProgress.swift`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-108...build-116)
+
 ## [firmware-build-189] - 2026-11-27
 
 ## Verified changes since firmware-build-188
