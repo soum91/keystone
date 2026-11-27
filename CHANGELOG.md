@@ -1,5 +1,20 @@
 # Changelog
 
+## [build-108] - 2026-11-27
+
+## Verified changes since build-102
+
+- Expose selected wall switches as native HomeKit lights and verify bridge service type ([`9b2b17a7`](https://github.com/soum91/keystone/commit/9b2b17a75bc4a5aa9421d335d0d61811dbd48ad2); `Bridge/KeystoneBridge/KeystoneBridge.ino`, `Keystone/Tuya/HomeDevices.swift`, `Keystone/Views/HomeDevicesView.swift`, and 1 more)
+- Fix AppIntent widget builder by placing Overview configuration in its timeline entry ([`7077bcfb`](https://github.com/soum91/keystone/commit/7077bcfb7f27921e81eb8937c2b84ce4a8619e3a); `KeystoneWidget/KeystoneExtraWidgets.swift`)
+- Refresh AC, strip and overview widget timelines on actual device changes with rate limits ([`935c317c`](https://github.com/soum91/keystone/commit/935c317c26915f0c776f4cbeb4e417e8c3399c12); `Keystone/App/Store.swift`)
+- Document integrated AC, strip and configurable Keystone widgets and safety constraints ([`08abe680`](https://github.com/soum91/keystone/commit/08abe68029728320f029dd1cdec7fcd609c8b547); `README.md`)
+- Expose AC Climate, Power Strip and configurable Overview in Keystone widget gallery ([`8b7d86d3`](https://github.com/soum91/keystone/commit/8b7d86d307833b14a99904ac4cded4dfab9c4bf5); `KeystoneWidget/KeystoneWidget.swift`)
+- Add Climate, Power Strip and configurable Overview widgets with verified device-state presentation ([`a8ff35be`](https://github.com/soum91/keystone/commit/a8ff35bef8cbf9f2ae9d107e411b1f0616a8fceb); `KeystoneWidget/KeystoneExtraWidgets.swift`)
+- Add authenticated App Intents for verified AC and local power-strip widget controls ([`b8d2f10f`](https://github.com/soum91/keystone/commit/b8d2f10ff866d5b211d9564e6e89e378b73b0c2a); `KeystoneWidget/KeystoneControls.swift`)
+- Document Bridge Health widget freshness, sizes and diagnostics ([`8c5c4894`](https://github.com/soum91/keystone/commit/8c5c4894ca1516fbb855266a0a1e9947ee83f0e4); `README.md`)
+
+[Inspect exact code changes](https://github.com/soum91/keystone/compare/build-102...build-108)
+
 ## [build-102] - 2026-11-27
 
 ## Verified changes since build-98
