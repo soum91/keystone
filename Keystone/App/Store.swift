@@ -548,7 +548,21 @@ final class Store: ObservableObject {
             try await Firmware.install(l, link: link, progress: { msg in
                 Task { @MainActor in self.updating = msg }
             }, detailed: { state in
-                Task { @MainActor in self.firmwareProgress = state }
+                Task { @MainActor in
+                    guard self.updateRunning else { return }
+                    if let current = self.firmwareProgress {
+                        // Late URLSession delegate callbacks must not overwrite
+                        // completed flashing/reboot checks or a newer attempt.
+                        if current.phase == .reconnecting || current.phase == .complete ||
+                           current.phase == .failed { return }
+                        if state.phase == .downloading && current.stageNumber > 1 { return }
+                        if state.phase == .uploading && current.stageNumber > 3 { return }
+                        if let attempt = state.attempt, let old = current.attempt, attempt < old { return }
+                        if state.phase == .preparing && current.phase == .uploading &&
+                           state.attempt == current.attempt { return }
+                    }
+                    self.firmwareProgress = state
+                }
             })
             firmwareProgress = .local(.reconnecting, "Waiting for the new firmware build to respond")
             reachable = false
