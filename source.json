@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.0.102",
+          "buildVersion": "102",
+          "date": "2026-11-27T05:20:48Z",
+          "localizedDescription": "- Open Bridge diagnostics when tapping the health widget (b1841b0)\n- Refresh Bridge Health widget when connectivity changes and at measured intervals (a2c7276)\n- Register Bridge Health alongside existing Room widget (5fd9a94)\n- Add Bridge Health WidgetKit views with verified status, RAM, HomeKit, relay and Govee diagnostics (2556831)\n- docs: require mandatory picker contract in Claude instructions [skip ci] (e887211)\n- docs: require end-to-end picker regression verification [skip ci] (2fa5d04)\n- docs: record factual changes for firmware-build-188 [skip ci] (4265f12)\n- docs: record factual changes for build-98 [skip ci] (eaf1a08)\n- Version 1.11.13: restore Keystone API after Wi-Fi/IP changes without resetting HomeKit (6626609)\n- Rebind Keystone HTTP API on Wi-Fi recovery or DHCP changes without disturbing HomeKit (f4c0b63)",
+          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-102/Keystone-1.0.102-build-102.ipa",
+          "size": 2227057,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.0.98",
           "buildVersion": "98",
           "date": "2026-11-25T06:03:11Z",
@@ -234,22 +243,13 @@
           "downloadURL": "https://github.com/soum91/keystone/releases/download/build-52/Keystone-1.0.0-build-52.ipa",
           "size": 1992974,
           "minOSVersion": "17.0"
-        },
-        {
-          "version": "1.0.0.51",
-          "buildVersion": "51",
-          "date": "2026-11-18T06:35:45Z",
-          "localizedDescription": "- Keystone: Put everything in Apple Home button (all Smart Life lights, switches, plugs and the purifier) (9be3c3d)\n- docs: record factual changes for build-50 [skip ci] (9fc497d)",
-          "downloadURL": "https://github.com/soum91/keystone/releases/download/build-51/Keystone-1.0.0-build-51.ipa",
-          "size": 1993185,
-          "minOSVersion": "17.0"
         }
       ],
-      "version": "1.0.98",
-      "versionDate": "2026-11-25T06:03:11Z",
-      "versionDescription": "- Show one-tap authenticated Wi-Fi recovery when HomeKit works but Keystone times out (c321b73)\n- Offer manual authenticated Wi-Fi bridge rediscovery without re-pairing (52a395b)\n- Automatically find changed Keystone DHCP IP by Bonjour and verify existing paired token (8e4f995)\n- Ignore empty MQTT responses and discard stale WebSocket data on reconnect (9b764ed)\n- docs: record factual changes for firmware-build-186 [skip ci] (2e8acf7)\n- Honor Afterglow lighting type when merging duplicate Keystone smart switch (b25f9fb)\n- docs: record factual changes for socket-build-13 [skip ci] (996d080)\n- Register surge:// app link for Afterglow native Home integration panel (67b6b96)\n- docs: record factual changes for socket-build-11 [skip ci] (a6e3284)\n- Prevent stale Surge releases overwriting FlareStore and verify published source (dbea04a)\n- Preserve unknown Tuya outlet statuses and show bridge-side LAN diagnostics in Surge (15ce3a6)\n- Add Surge Tuya Smart cloud fallback, real outlet codes and Keystone DHCP rediscovery (3c05588)\n- docs: record factual changes for build-93 [skip ci] (01919ad)\n- docs: record factual changes for firmware-build-185 [skip ci] (fcecabb)",
-      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-98/Keystone-1.0.98-build-98.ipa",
-      "size": 2169128,
+      "version": "1.0.102",
+      "versionDate": "2026-11-27T05:20:48Z",
+      "versionDescription": "- Open Bridge diagnostics when tapping the health widget (b1841b0)\n- Refresh Bridge Health widget when connectivity changes and at measured intervals (a2c7276)\n- Register Bridge Health alongside existing Room widget (5fd9a94)\n- Add Bridge Health WidgetKit views with verified status, RAM, HomeKit, relay and Govee diagnostics (2556831)\n- docs: require mandatory picker contract in Claude instructions [skip ci] (e887211)\n- docs: require end-to-end picker regression verification [skip ci] (2fa5d04)\n- docs: record factual changes for firmware-build-188 [skip ci] (4265f12)\n- docs: record factual changes for build-98 [skip ci] (eaf1a08)\n- Version 1.11.13: restore Keystone API after Wi-Fi/IP changes without resetting HomeKit (6626609)\n- Rebind Keystone HTTP API on Wi-Fi recovery or DHCP changes without disturbing HomeKit (f4c0b63)",
+      "downloadURL": "https://github.com/soum91/keystone/releases/download/build-102/Keystone-1.0.102-build-102.ipa",
+      "size": 2227057,
       "appPermissions": {}
     },
     {
