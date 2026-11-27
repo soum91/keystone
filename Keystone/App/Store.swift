@@ -31,6 +31,7 @@ final class Store: ObservableObject {
     // WidgetKit budgets reloads. Update health periodically and promptly for
     // important connection changes, not on every 3-second status poll.
     private var lastHealthWidgetReloadAt = Date.distantPast
+    private var lastDeviceWidgetReloadAt = Date.distantPast
     private var lastAddressCheckAt = Date.distantPast
     private var findingAddress = false
 
@@ -317,6 +318,20 @@ final class Store: ObservableObject {
         Snapshot.stored = Snapshot(info: i, at: .now)
         if (i.lights ?? []).count > 0 { seedScenes(i) }
         if changedForRoom { WidgetCenter.shared.reloadTimelines(ofKind: "KeystoneRoom") }
+
+        let deviceWidgetsChanged = old?.ac != i.ac || old?.govee != i.govee ||
+                                   old?.strip != i.strip || old?.purifier != i.purifier ||
+                                   old?.tv != i.tv || old?.heap != i.heap ||
+                                   old?.remote != i.remote
+        // Keep interactive/status widgets current when Keystone is open, but
+        // do not hammer WidgetKit or the already memory-constrained ESP32.
+        if deviceWidgetsChanged &&
+           Date().timeIntervalSince(lastDeviceWidgetReloadAt) >= 120 {
+            lastDeviceWidgetReloadAt = .now
+            WidgetCenter.shared.reloadTimelines(ofKind: "KeystoneClimate")
+            WidgetCenter.shared.reloadTimelines(ofKind: "KeystonePowerStrip")
+            WidgetCenter.shared.reloadTimelines(ofKind: "KeystoneOverview")
+        }
 
         let age = Date().timeIntervalSince(lastHealthWidgetReloadAt)
         if age >= 5 * 60 || (changedForHealth && age >= 60) {
