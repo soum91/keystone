@@ -50,7 +50,11 @@ struct BridgeView: View {
                         } else if store.latest != nil {
                             LabeledContent("Updates", value: "Up to date")
                         }
-                        if let u = store.updating { Text(u).font(.footnote).foregroundStyle(.secondary) }
+                        if let progress = store.firmwareProgress {
+                            FirmwareProgressView(progress: progress, running: store.updateRunning)
+                        } else if let u = store.updating {
+                            Text(u).font(.footnote).foregroundStyle(.secondary)
+                        }
                         if let o = i.remoteOta {
                             LabeledContent("Internet OTA", value: o.supported == true ? (o.state ?? "Ready") : "Not supported")
                             if let error = o.error, !error.isEmpty {
